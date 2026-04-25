@@ -1,0 +1,14 @@
+{
+  "name": "indicator-guard-broker",
+  "version": "1.0.0",
+  "description": "Local CTI guard broker for Indicator Composer",
+  "main": "guard_broker_env.js",
+  "scripts": {
+    "start": "node guard_broker_env.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  }
+}

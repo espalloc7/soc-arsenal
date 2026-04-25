@@ -1,0 +1,1965 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Defender XDR – Phishing Query Helper</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =============================================================
+       DEFENDER XDR – Phishing Query Helper  |  Design System v2
+    ============================================================= */
+
+    :root {
+      --bg:            #03040a;
+      --surface:       #070b14;
+      --elevated:      #0d1220;
+      --border:        rgba(255,255,255,0.07);
+      --border-mid:    rgba(255,255,255,0.13);
+      --primary:       #22d3ee;
+      --primary-hover: #06b6d4;
+      --primary-glow:  rgba(34,211,238,0.20);
+      --primary-soft:  rgba(34,211,238,0.08);
+      --danger:        #f43f5e;
+      --success:       #10b981;
+      --warning:       #f59e0b;
+      --muted:         #475569;
+      --text:          #94a3b8;
+      --text-bright:   #e2e8f0;
+      --input-bg:      rgba(0,0,0,0.25);
+      --input-border:  rgba(255,255,255,0.08);
+      --card-bg:       rgba(7,11,20,0.85);
+      --card-border:   rgba(255,255,255,0.07);
+      --card-blur:     18px;
+      --radius:        10px;
+      --font-main:    'Outfit', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    :focus:not(:focus-visible) { outline: none; box-shadow: none; }
+    button::-moz-focus-inner, input::-moz-focus-inner { border: 0; }
+    * { -webkit-tap-highlight-color: transparent; }
+
+    html { overflow-y: scroll; scrollbar-gutter: stable; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse at 60% 0%,
+        rgba(15,28,64,0.9) 0%, rgba(5,8,20,0.95) 50%, var(--bg) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 36px 24px 80px; }
+
+    header {
+      margin-bottom: 28px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.45s ease-out both;
+    }
+    h1 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.03em;
+      margin: 0 0 6px 0; display: inline-flex; align-items: center;
+      gap: 10px; color: var(--text-bright);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #818cf8 55%, #c084fc 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .pill-ver {
+      font-size: 10px; background: var(--primary-soft); color: var(--primary);
+      padding: 2px 9px; border-radius: 99px; font-weight: 600;
+      border: 1px solid rgba(34,211,238,0.2); font-family: var(--font-mono);
+      -webkit-text-fill-color: var(--primary); letter-spacing: 0.03em;
+    }
+    .sub { color: var(--muted); font-size: 13px; max-width: 580px; margin: 0; font-weight: 400; line-height: 1.65; }
+
+    .main-grid { display: grid; grid-template-columns: 4fr 5fr; gap: 18px; align-items: stretch; }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--card-blur));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45), 0 8px 28px rgba(0,0,0,0.22);
+      display: flex; flex-direction: column; height: 100%;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.11); }
+
+    label {
+      display: block; font-size: 10px; font-weight: 700;
+      color: var(--muted); margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.09em;
+    }
+
+    .hint { font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .kbd {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11);
+      padding: 1px 5px; border-radius: 4px;
+      color: var(--text); font-family: var(--font-mono); font-size: 10px; line-height: 1.5;
+    }
+
+    textarea, input, select {
+      width: 100%; background: var(--input-bg); border: 1px solid var(--input-border);
+      color: var(--text-bright); border-radius: 7px; padding: 10px 13px;
+      font-size: 13px; font-family: var(--font-main); font-weight: 500;
+      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+    textarea:hover, input:hover, select:hover {
+      border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.025);
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
+      background: rgba(0,0,0,0.35); outline: none;
+    }
+    textarea { resize: vertical; line-height: 1.65; min-height: 80px; }
+
+    .input-group { margin-bottom: 14px; }
+    .input-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .input-header label { margin: 0; }
+
+    /* Whitelist (green tint) */
+    .whitelist-area textarea {
+      border-color: rgba(16,185,129,0.2);
+      background: rgba(16,185,129,0.03);
+      color: #86efac;
+    }
+    .whitelist-area textarea:focus {
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+      background: rgba(16,185,129,0.06);
+    }
+    .whitelist-area label { color: var(--success); opacity: 0.85; }
+
+    /* Buttons */
+    button {
+      border: 0; border-radius: 7px; padding: 10px 18px;
+      font-family: var(--font-main); font-weight: 600; letter-spacing: -0.01em;
+      font-size: 13px; cursor: pointer; transition: all 0.18s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    }
+
+    #generateBtn {
+      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-hover) 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 2px 10px rgba(34,211,238,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
+      color: #03040a; font-weight: 700;
+    }
+    #generateBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(34,211,238,0.32), inset 0 1px 0 rgba(255,255,255,0.14); }
+    #generateBtn:active { transform: translateY(0); }
+
+    button.secondary {
+      background: rgba(255,255,255,0.03); color: #94a3b8; border: 1px solid var(--border);
+    }
+    button.secondary:hover:not(:disabled) {
+      background: rgba(255,255,255,0.07); color: var(--text-bright); border-color: var(--border-mid);
+    }
+    button.secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    button.danger { background: rgba(244,63,94,0.06); color: var(--danger); border: 1px solid rgba(244,63,94,0.16); }
+    button.danger:hover { background: rgba(244,63,94,0.14); border-color: rgba(244,63,94,0.3); }
+
+    button.xs { padding: 3px 10px; font-size: 11px; min-height: 26px; }
+
+    /* Output */
+    #output {
+      height: 100%; min-height: 420px;
+      background: #02040b; color: #67e8f9;
+      font-family: var(--font-mono); font-size: 12px;
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 14px; resize: vertical; line-height: 1.65;
+    }
+    #output:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); outline: none; }
+
+    .tool-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; min-height: 28px; }
+    .tool-controls { display: flex; align-items: center; gap: 10px; }
+    .stat-pill { font-size: 11px; color: var(--muted); font-family: var(--font-main); }
+
+    /* Toast */
+    .toastContainer {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast {
+      background: var(--elevated);
+      border: 1px solid var(--border); border-left: 3px solid var(--primary);
+      padding: 14px; border-radius: 8px; color: var(--text); font-size: 13px;
+      width: 316px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); pointer-events: auto;
+      transform: translateX(40px); opacity: 0;
+      transition: all 0.28s cubic-bezier(0.16,1,0.3,1);
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.ok   { border-left-color: var(--success); }
+    .toast.err  { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warning); }
+    .toastTop { display: flex; justify-content: space-between; align-items: flex-start; }
+    .toastMsg { flex: 1; line-height: 1.45; font-size: 13px; }
+    .toastClose {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 16px; padding: 0; line-height: 1;
+      margin-top: -1px; font-family: inherit;
+    }
+    .toastClose:hover { color: var(--text-bright); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+  </style>
+
+  <!-- ═══════════════════════════════════════════════
+       Design System v3 — Mono Terminal
+       Overrides v2 design with new aesthetic layer
+  ═══════════════════════════════════════════════ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style id="ux-v3">
+
+    /* ── Token overrides ───────────────────────── */
+    :root {
+      --bg:            #060810;
+      --surface:       #0a0c18;
+      --elevated:      #0e1222;
+
+      --border:        rgba(255,255,255,0.07);
+      --border-mid:    rgba(255,255,255,0.13);
+      --border-bright: rgba(255,255,255,0.22);
+
+      --primary:       #a98b76;
+      --primary-hover: #bfa28c;
+      --primary-glow:  rgba(169,139,118,0.22);
+      --primary-soft:  rgba(169,139,118,0.09);
+      --primary-grad:  linear-gradient(135deg,#a98b76 0%,#bfa28c 36%,#f3e4c9 68%,#babf94 100%);
+      --on-primary:    #06070d;
+
+      --danger:        #ff2d55;
+      --success:       #00e878;
+      --warning:       #ff7a20;
+
+      --text:          #6a7c98;
+      --text-bright:   #aab8d0;
+      --muted:         #353f58;
+
+      --input-bg:      rgba(0,0,0,0.28);
+      --input-border:  rgba(255,255,255,0.08);
+
+      --card-bg:       rgba(8,10,20,0.97);
+      --card-border:   rgba(255,255,255,0.07);
+      --card-blur:     0px;
+
+      --radius:        0px;
+      --font-main:     'IBM Plex Mono', 'Courier New', monospace;
+      --font-mono:     'IBM Plex Mono', 'Courier New', monospace;
+    }
+
+    /* ── Body & background ─────────────────────── */
+    body {
+      font-family: var(--font-main);
+      font-size: 13px;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 88% 0%,   rgba(17,24,39,0.055) 0%, transparent 48%),
+        radial-gradient(ellipse at 12% 100%, rgba(0,50,100,0.09)    0%, transparent 48%);
+      background-attachment: fixed;
+    }
+
+    /* Subtle CRT scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.042) 3px,
+        rgba(0,0,0,0.042) 4px
+      );
+    }
+
+    /* Left accent strip */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        var(--primary) 0%,
+        rgba(17,24,39,0.28) 38%,
+        transparent 68%
+      );
+      z-index: 9997;
+      pointer-events: none;
+    }
+
+    /* ── Scrollbars ────────────────────────────── */
+    ::-webkit-scrollbar       { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 0; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Focus ring ────────────────────────────── */
+    :focus-visible {
+      outline: 1px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 0 !important;
+    }
+
+    /* ── Header ────────────────────────────────── */
+    header { position: relative; }
+    header::after {
+      content: '// SECURE OPS';
+      position: absolute;
+      top: 4px; right: 0;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      opacity: 0.55;
+      font-family: var(--font-main);
+      pointer-events: none;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-bright);
+      gap: 10px;
+    }
+
+    .gradient-text {
+      background: var(--primary-grad) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent !important;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .pill-ver {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 0;
+      -webkit-text-fill-color: var(--primary);
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+      font-size: 9px;
+    }
+
+    .sub {
+      font-size: 12px;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      font-family: var(--font-main);
+    }
+
+    /* ── Cards ─────────────────────────────────── */
+    .card {
+      background: rgba(8,10,20,0.97);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: 1px solid var(--border);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .card:hover {
+      border-color: rgba(255,255,255,0.10);
+      box-shadow: none;
+    }
+
+    /* ── Labels / Forms ────────────────────────── */
+    label {
+      font-family: var(--font-main);
+      letter-spacing: 0.10em;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .hint {
+      font-family: var(--font-main);
+      font-size: 10px;
+    }
+
+    .kbd {
+      border-radius: 0;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    textarea, input, select {
+      font-family: var(--font-main);
+      font-size: 12px;
+      border-radius: 0 !important;
+      color: var(--text-bright);
+    }
+    textarea:hover, input:hover, select:hover {
+      border-color: rgba(255,255,255,0.14);
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    /* ── Whitelist area ────────────────────────── */
+    .whitelist-area textarea {
+      border-color: rgba(0,232,120,0.20);
+      background: rgba(0,232,120,0.025);
+      color: #80ddb0;
+    }
+    .whitelist-area textarea:focus {
+      border-color: var(--success);
+      box-shadow: 0 0 0 2px rgba(0,232,120,0.08);
+      background: rgba(0,232,120,0.05);
+    }
+    .whitelist-area label { color: var(--success); opacity: 0.85; }
+
+    /* ── Buttons ───────────────────────────────── */
+    button {
+      font-family: var(--font-main);
+      border-radius: 0;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    #generateBtn {
+      background: var(--primary-grad);
+      border: 1px solid var(--primary);
+      color: var(--on-primary);
+      font-weight: 700;
+      box-shadow: 0 0 18px var(--primary-glow);
+    }
+    #generateBtn:hover {
+      background: var(--primary-grad);
+      border-color: var(--primary-hover);
+      box-shadow: 0 0 26px var(--primary-glow);
+      transform: none;
+    }
+    #generateBtn:active { transform: translateY(1px); }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border-mid);
+      color: var(--text);
+    }
+    button.secondary:hover:not(:disabled) {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.20);
+      color: var(--text-bright);
+    }
+    button.secondary:disabled { opacity: 0.28; cursor: not-allowed; }
+
+    button.danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255,45,85,0.22);
+    }
+    button.danger:hover {
+      background: rgba(255,45,85,0.08);
+      border-color: rgba(255,45,85,0.38);
+    }
+
+    /* ── KQL output textarea ───────────────────── */
+    #output {
+      border-radius: 0;
+      background: rgba(0,0,0,0.32) !important;
+      color: #88c8a0 !important;
+      font-family: var(--font-mono) !important;
+      font-size: 11px;
+      line-height: 1.72;
+      border: 1px solid var(--border);
+    }
+    #output:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    /* ── Tool header / stat pill ───────────────── */
+    .tool-header { gap: 10px; }
+    .tool-controls { gap: 8px; }
+    .stat-pill {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-main);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Toast ─────────────────────────────────── */
+    .toast {
+      border-radius: 0;
+      font-family: var(--font-main);
+      font-size: 11px;
+      background: rgba(8,10,20,0.98);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--primary);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.70);
+      letter-spacing: 0.01em;
+    }
+    .toastMsg { font-family: var(--font-main); }
+    .toast.ok   { border-left-color: var(--success); }
+    .toast.err  { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warning); }
+    .toastClose { font-family: var(--font-main); }
+
+    /* ── Animations ────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── CTI Results card ───────────────────────── */
+    body { padding-bottom: 56px; }
+    .cti-section { margin-top: 0; }
+    .cti-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .cti-head-meta {
+      display: flex; gap: 10px; align-items: center;
+      font-size: 11px; color: var(--muted);
+    }
+    .cti-empty {
+      padding: 32px 16px; text-align: center;
+      color: var(--muted); font-size: 11px;
+      border: 1px dashed var(--border); border-radius: 0;
+    }
+    .cti-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .cti-row {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.22);
+      border-radius: 0;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    .cti-row:hover { border-color: var(--border-mid); }
+    .cti-row.highlight {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(34,211,238,0.10);
+    }
+    .cti-row-head {
+      display: grid;
+      grid-template-columns: 78px 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cti-row-head:hover { background: rgba(255,255,255,0.02); }
+    .cti-row-type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-bright);
+      opacity: 0.7;
+    }
+    .cti-row-value {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cti-row-hits {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+    .cti-row-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+    .cti-row-ext {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--primary);
+      text-decoration: none;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .cti-row-ext:hover {
+      color: var(--primary-hover);
+      border-color: var(--primary);
+    }
+    .cti-row-caret {
+      color: var(--muted);
+      font-size: 10px;
+      transition: transform 0.18s ease;
+    }
+    .cti-row.open .cti-row-caret { transform: rotate(90deg); }
+    .cti-row-body {
+      display: none;
+      padding: 4px 14px 14px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.18);
+    }
+    .cti-row.open .cti-row-body { display: block; }
+
+    .cti-summary {
+      font-size: 11px;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 10px 0 12px 0;
+      border-bottom: 1px dashed var(--border);
+      margin-bottom: 12px;
+    }
+    .cti-providers {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .prov-card {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.28);
+      padding: 10px 12px;
+    }
+    .prov-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-bright);
+    }
+    .prov-name { font-weight: 600; }
+    .prov-status {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+    }
+    .prov-status.ok       { color: var(--success);  border-color: rgba(0,232,120,0.35); }
+    .prov-status.disabled { color: var(--muted);    border-color: rgba(53,63,88,0.35); }
+    .prov-status.error    { color: #a068ff;         border-color: rgba(160,102,255,0.35); }
+    .prov-status.unsupported { color: var(--muted); border-color: rgba(53,63,88,0.35); }
+    .prov-body { font-size: 11px; color: var(--text); font-family: var(--font-mono); line-height: 1.6; }
+    .prov-row { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+    .prov-row .k { color: var(--muted); }
+    .prov-row .v { color: var(--text-bright); text-align: right; word-break: break-all; }
+    .prov-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .prov-chip {
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+    .prov-chip.danger  { color: var(--danger);  border-color: rgba(255,45,85,0.35);  background: rgba(255,45,85,0.06); }
+    .prov-chip.warn    { color: var(--warning); border-color: rgba(255,122,32,0.35); background: rgba(255,122,32,0.06); }
+    .prov-chip.ok      { color: var(--success); border-color: rgba(0,232,120,0.35);  background: rgba(0,232,120,0.06); }
+    .prov-chip.trust   { color: var(--primary); border-color: rgba(34,211,238,0.35); background: rgba(34,211,238,0.06); }
+    .prov-link {
+      display: inline-block; margin-top: 4px;
+      font-size: 10px; color: var(--primary); text-decoration: none;
+      border-bottom: 1px dotted rgba(34,211,238,0.4);
+    }
+    .prov-link:hover { color: var(--primary-hover); }
+    .prov-footer { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
+
+    .vt-bars { display: flex; gap: 2px; margin-top: 4px; height: 6px; }
+    .vt-bar { flex: 0 0 auto; min-width: 4px; height: 100%; }
+    .vt-bar.mal   { background: var(--danger); }
+    .vt-bar.sus   { background: var(--warning); }
+    .vt-bar.harm  { background: var(--success); }
+    .vt-bar.und   { background: var(--muted); }
+    .vt-legend {
+      display: flex; gap: 10px; margin-top: 6px;
+      font-size: 9px; color: var(--muted); font-family: var(--font-mono);
+    }
+    .vt-legend span b { color: var(--text-bright); font-weight: 600; }
+
+    .abuse-bar { margin-top: 4px; height: 4px; background: rgba(255,255,255,0.05); position: relative; }
+    .abuse-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--danger); }
+    .abuse-bar-fill.low  { background: var(--success); }
+    .abuse-bar-fill.mid  { background: var(--warning); }
+    .abuse-bar-fill.high { background: var(--danger); }
+
+    /* ── Guard badges (CTI status) ──────────────── */
+    .guardBadge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px;
+      border: 1px solid var(--border);
+      cursor: default;
+      flex-shrink: 0;
+    }
+    .guardBadge svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .guard-malicious    { color: var(--danger);  background: rgba(255,45,85,0.10);   border-color: rgba(255,45,85,0.25); }
+    .guard-caution-safe { color: var(--primary); background: rgba(34,211,238,0.08);  border-color: rgba(34,211,238,0.25); }
+    .guard-review       { color: var(--warning); background: rgba(255,122,32,0.10);  border-color: rgba(255,122,32,0.25); }
+    .guard-checking     { color: #6699ff;        background: rgba(68,136,255,0.10);  border-color: rgba(68,136,255,0.25); }
+    .guard-error        { color: #a068ff;        background: rgba(160,102,255,0.10); border-color: rgba(160,102,255,0.25); }
+    .guard-unknown      { color: var(--muted);   background: rgba(53,63,88,0.10);    border-color: rgba(53,63,88,0.20); }
+
+    /* ── KQL bottom dock ────────────────────────── */
+    .kql-dock {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 900;
+      background: rgba(8,10,20,0.98);
+      border-top: 1px solid var(--border-mid);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      transform: translateY(calc(100% - 44px));
+      transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+    }
+    .kql-dock:hover,
+    .kql-dock.pinned,
+    .kql-dock:focus-within {
+      transform: translateY(0);
+    }
+    .kql-dock-handle {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 24px;
+      height: 44px; box-sizing: border-box;
+      cursor: default;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+    .kql-dock:hover .kql-dock-handle,
+    .kql-dock.pinned .kql-dock-handle {
+      border-bottom-color: var(--border);
+    }
+    .kql-dock-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px;
+      color: var(--text-bright);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .kql-dock-title .glow {
+      width: 6px; height: 6px; background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+    .kql-dock-right {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .kql-dock-stats {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .kql-dock-btn {
+      font-size: 10px; padding: 5px 10px;
+      font-family: var(--font-main);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-bright);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kql-dock-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .kql-dock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .kql-dock-btn.pin-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .kql-dock-body {
+      padding: 14px 24px 18px 24px;
+      max-height: 55vh;
+      overflow: auto;
+    }
+    .kql-dock-body #output {
+      width: 100%; box-sizing: border-box;
+      min-height: 220px;
+      resize: none;
+    }
+    .kql-dock-hint {
+      font-size: 10px; color: var(--muted);
+      margin-top: 8px; letter-spacing: 0.03em;
+    }
+
+    body.kql-pinned { padding-bottom: min(420px, 58vh); }
+
+    html[data-arsenal-theme="light"] body {
+      background-image: radial-gradient(ellipse at 60% 0%,
+        rgba(255,255,255,0.95) 0%, rgba(244,244,245,0.96) 48%, var(--bg) 100%);
+    }
+    html[data-arsenal-theme="light"] body::before { display: none; }
+    html[data-scanlines="off"] body::before { display: none; }
+    html[data-arsenal-theme="light"] body::after { opacity: 0.55; }
+    html[data-arsenal-theme="light"] .card,
+    html[data-arsenal-theme="light"] .toast {
+      background: var(--card-bg);
+      border-color: var(--card-border);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+    }
+    html[data-arsenal-theme="light"] .card:hover { border-color: var(--border-mid); }
+    html[data-arsenal-theme="light"] textarea,
+    html[data-arsenal-theme="light"] input,
+    html[data-arsenal-theme="light"] select {
+      background: var(--input-bg);
+      border-color: var(--input-border);
+      color: var(--text-bright);
+    }
+    html[data-arsenal-theme="light"] textarea:hover,
+    html[data-arsenal-theme="light"] input:hover,
+    html[data-arsenal-theme="light"] select:hover {
+      background: rgba(0,0,0,0.045);
+      border-color: var(--border-mid);
+    }
+    html[data-arsenal-theme="light"] textarea:focus,
+    html[data-arsenal-theme="light"] input:focus,
+    html[data-arsenal-theme="light"] select:focus {
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+    html[data-arsenal-theme="light"] textarea::placeholder,
+    html[data-arsenal-theme="light"] input::placeholder {
+      color: #52525b;
+      opacity: 0.78;
+    }
+    html[data-arsenal-theme="light"] .kbd {
+      background: rgba(0,0,0,0.04);
+      border-color: var(--border);
+    }
+    html[data-arsenal-theme="light"] button.secondary:hover:not(:disabled) {
+      background: rgba(0,0,0,0.045);
+      border-color: var(--border-mid);
+    }
+    html[data-arsenal-theme="light"] #generateBtn {
+      color: var(--on-primary);
+    }
+    html[data-arsenal-theme="light"] .whitelist-area textarea {
+      background: rgba(16,185,129,0.07);
+      color: #166534;
+      border-color: rgba(16,185,129,0.22);
+    }
+    html[data-arsenal-theme="light"] #output {
+      background: #f8fafc !important;
+      color: #166534 !important;
+      border-color: var(--border);
+    }
+    html[data-arsenal-theme="light"] .cti-row,
+    html[data-arsenal-theme="light"] .prov-card {
+      background: rgba(255,255,255,0.74);
+    }
+    html[data-arsenal-theme="light"] .cti-row-head:hover,
+    html[data-arsenal-theme="light"] tr:hover td {
+      background: rgba(0,0,0,0.035);
+    }
+    html[data-arsenal-theme="light"] .cti-row-body {
+      background: rgba(0,0,0,0.025);
+    }
+    html[data-arsenal-theme="light"] .abuse-bar {
+      background: rgba(0,0,0,0.08);
+    }
+    html[data-arsenal-theme="light"] .kql-dock {
+      background: rgba(255,255,255,0.97);
+      border-top-color: var(--border-mid);
+      box-shadow: 0 -12px 28px rgba(15,23,42,0.12);
+    }
+    html[data-arsenal-theme="light"] .kql-dock-btn {
+      background: rgba(255,255,255,0.72);
+      border-color: var(--border);
+      color: var(--text-bright);
+    }
+    html[data-arsenal-theme="light"] .kql-dock-btn:hover:not(:disabled) {
+      background: var(--primary-soft);
+    }
+
+  </style>
+
+  <!-- Arsenal animation layer -->
+  <style id="arsenal-anim">
+    /* Staggered card entrances */
+    .main-grid .card { animation: fadeUp 0.38s ease-out both; }
+    .main-grid .card:nth-child(1){ animation-delay: 0.06s; }
+    .main-grid .card:nth-child(2){ animation-delay: 0.14s; }
+
+    /* Accent strip pulse */
+    body::after {
+      animation: stripPulse 4s ease-in-out infinite;
+    }
+    @keyframes stripPulse {
+      0%,100%{ opacity:1; }
+      50%{ opacity:0.4; }
+    }
+
+    /* Smooth input transitions */
+    textarea, input, select {
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s !important;
+    }
+
+    /* Input group slide-up on focus */
+    .input-group { transition: transform 0.18s ease; }
+    .input-group:focus-within { transform: translateY(-1px); }
+
+    /* Generate button shimmer */
+    #generateBtn {
+      position: relative; overflow: hidden;
+    }
+    #generateBtn::after {
+      content: '';
+      position: absolute; top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.55s;
+    }
+    #generateBtn:hover::after { left: 150%; }
+
+    /* KQL dock glow pulse */
+    .kql-dock-title .glow {
+      animation: glowPulse 2.8s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%,100%{ box-shadow: 0 0 8px var(--primary); opacity:1; }
+      50%{ box-shadow: 0 0 20px var(--primary); opacity:0.65; }
+    }
+
+    /* Flash on history load */
+    @keyframes flashLoad {
+      0%{ background: var(--primary-soft); }
+      100%{ background: transparent; }
+    }
+    .flash-loaded { animation: flashLoad 1.2s ease-out forwards; }
+
+    /* Whitelist area gentle pulse border */
+    .whitelist-area textarea:focus {
+      animation: borderPulse 1.5s ease-in-out 1;
+    }
+    @keyframes borderPulse {
+      0%,100%{ box-shadow: 0 0 0 2px rgba(0,232,120,0.08); }
+      50%{ box-shadow: 0 0 0 4px rgba(0,232,120,0.16); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer" class="toastContainer" aria-live="polite" aria-relevant="additions" aria-atomic="false"></div>
+
+  <div class="wrap">
+    <header>
+      <h1>
+        <span class="gradient-text">Defender XDR</span>
+        <span style="font-weight:400; opacity:0.55; font-size: 0.88em;">Phishing Query Helper</span>
+        <span class="pill-ver">V2.9.1</span>
+      </h1>
+      <p class="sub">Generate optimized KQL queries for phishing investigations. Paste your IOCs below to build a multi-table hunt query.</p>
+    </header>
+
+    <div class="main-grid">
+      
+      <div class="card">
+
+        <div class="input-group">
+            <div class="input-header">
+                <label>Senders (Domain / Address)</label>
+            </div>
+            <textarea id="senders" placeholder="attacker@example.com&#10;malicious-domain.com" style="min-height:90px;"></textarea>
+        </div>
+
+        <div class="input-group">
+            <div class="input-header">
+                <label>URLs</label>
+            </div>
+            <textarea id="urls" placeholder="https://evil.site/login&#10;evil.site/reset" style="min-height:90px;"></textarea>
+        </div>
+
+        <div class="input-group">
+            <div class="input-header">
+                <label>Subjects</label>
+            </div>
+            <textarea id="subjects" placeholder="Urgent: Password Reset&#10;Invoice attached" style="min-height:70px;"></textarea>
+        </div>
+
+        <div class="input-group">
+            <div class="input-header">
+                <label>File Hashes</label>
+            </div>
+            <textarea id="hashes" placeholder="MD5, SHA1, or SHA256..." style="min-height:70px;"></textarea>
+        </div>
+
+        <div class="input-group whitelist-area" style="margin-top: auto; padding-top:16px;">
+            <div class="input-header">
+                <label>Whitelisted Senders (Safe)</label>
+                <span class="hint">Optional</span>
+            </div>
+            <textarea id="whitelist" placeholder="trusted.sender@partner.com" style="min-height:70px;"></textarea>
+        </div>
+
+        <div style="margin-top:24px;">
+            <button id="clearBtn" class="danger" style="width:100%;">Clear</button>
+        </div>
+      </div>
+
+      <div class="card cti-section">
+        <div class="cti-head">
+          <label style="margin:0; font-size:12px;">CTI Results</label>
+          <div class="cti-head-meta">
+            <span id="ctiStats">0 indicators</span>
+            <button id="ctiRefreshBtn" class="secondary" style="padding:6px 12px; font-size:11px;" disabled>Re-check all</button>
+          </div>
+        </div>
+        <div id="ctiList" class="cti-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── KQL dock (fixed bottom) ───────────────── -->
+  <div id="kqlDock" class="kql-dock" role="region" aria-label="KQL query panel">
+    <div class="kql-dock-handle">
+      <div class="kql-dock-title">
+        <span class="glow" aria-hidden="true"></span>
+        Phishing Hunt KQL
+      </div>
+      <div class="kql-dock-right">
+        <span id="kqlStats" class="kql-dock-stats">Ready</span>
+        <button id="kqlPinBtn" class="kql-dock-btn pin-btn" type="button" aria-pressed="false" title="Pin open">Pin</button>
+        <button id="copyBtn" class="kql-dock-btn" type="button" disabled>Copy KQL</button>
+      </div>
+    </div>
+    <div class="kql-dock-body">
+      <textarea id="output" readonly placeholder="KQL output will appear here..."></textarea>
+      <div class="kql-dock-hint">Hover to peek · Pin to keep open</div>
+    </div>
+  </div>
+
+  <script>
+    // --- STORAGE & AUTO-CLEAR ---
+    const STORAGE_KEY = "defender_phishing_helper_data_v1";
+    const AUTO_CLEAN_MINUTES = 15;
+    const isTr = () => document.documentElement.lang === "tr";
+    const uiText = (en, tr) => isTr() ? tr : en;
+    let inactivityTimer;
+
+    // --- CTI ---
+    const GUARD_API_URL = "http://127.0.0.1:8787/api/guard/check";
+    const GUARD_DEGRADED_SUMMARY = "Guard service unavailable. Review manually.";
+    let ctiState = {};
+    let ctiCheckTimer = null;
+
+    // --- UTILS ---
+    const el = (id) => document.getElementById(id);
+    const INPUT_IDS = ["senders", "urls", "subjects", "hashes", "whitelist"];
+    
+    // Save all inputs to localStorage
+    function saveToLocal(){
+      try {
+        const data = {};
+        INPUT_IDS.forEach(id => {
+          data[id] = el(id).value;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch(e) { console.warn("Storage full or blocked"); }
+    }
+
+    // Load inputs from localStorage
+    function loadFromLocal(){
+      try {
+        const d = localStorage.getItem(STORAGE_KEY);
+        if(d) {
+          const data = JSON.parse(d);
+          INPUT_IDS.forEach(id => {
+            if(data[id] !== undefined) el(id).value = data[id];
+          });
+        }
+      } catch(e) { console.error("Load error", e); }
+    }
+
+    // Auto-clear after inactivity
+    function resetInactivityTimer(){
+      if(inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        const clearableIds = ["senders", "urls", "subjects", "hashes"];
+        const hasData = clearableIds.some(id => el(id).value.trim() !== "") || el("output").value.trim() !== "";
+        if(hasData) {
+          clearableIds.forEach(id => el(id).value = "");
+          el("output").value = "";
+          el("kqlStats").textContent = uiText("Ready", "Hazır");
+          el("copyBtn").disabled = true;
+          ctiState = {};
+          saveToLocal();
+          renderCti();
+            showToast(uiText("Session timed out. Workspace cleared.", "Oturum zaman aşımına uğradı. Çalışma alanı temizlendi."), "warn", 5000);
+        }
+      }, AUTO_CLEAN_MINUTES * 60 * 1000);
+    }
+    
+    // Helper to format input lines for KQL dynamic lists
+    // Handles empty input gracefully by returning 'dynamic([""])' which works with the provided logic
+    function getSafeList(id) {
+        const raw = el(id).value.split(/\r?\n/).map(s => s.trim()).filter(x => x !== "");
+        if (raw.length === 0) return 'dynamic([""])';
+        // Escape quotes to prevent KQL syntax errors
+        const safe = raw.map(x => `"${x.replace(/"/g, '\\"')}"`).join(", ");
+        return `dynamic([${safe}])`;
+    }
+
+    // Toast System
+    const toastContainer = el("toastContainer");
+    function showToast(message, kind="ok", ms=3000){
+        const c = toastContainer;
+        if(!c) return;
+        const t = document.createElement("div");
+        t.className = `toast ${kind}`;
+
+        const top = document.createElement("div");
+        top.className = "toastTop";
+
+        const msg = document.createElement("div");
+        msg.className = "toastMsg";
+        msg.textContent = message || "";
+
+        const close = document.createElement("button");
+        close.className = "toastClose";
+        close.type = "button";
+        close.textContent = "×";
+
+        top.appendChild(msg);
+        top.appendChild(close);
+        t.appendChild(top);
+        c.appendChild(t);
+
+        requestAnimationFrame(()=> t.classList.add("show"));
+
+        let hideTimer = null;
+        const dismiss = ()=>{
+          if(hideTimer) clearTimeout(hideTimer);
+          t.classList.remove("show");
+          setTimeout(()=> t.remove(), 260);
+        };
+        close.addEventListener("click", dismiss);
+        hideTimer = setTimeout(dismiss, ms);
+    }
+
+    // --- CTI UTILS & RENDERERS ---
+    function escapeHtml(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function relativeTime(iso){
+      if(!iso) return "";
+      const t = new Date(iso).getTime();
+      if(!t) return "";
+      const diff = Math.max(0, Date.now() - t);
+      const s = Math.round(diff / 1000);
+      if(s < 60)  return `${s}s ago`;
+      const m = Math.round(s / 60);
+      if(m < 60)  return `${m}m ago`;
+      const h = Math.round(m / 60);
+      if(h < 24)  return `${h}h ago`;
+      return new Date(iso).toISOString().slice(0,16).replace("T"," ");
+    }
+
+    function kvRow(k, v){
+      return `<div class="prov-row"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(String(v))}</span></div>`;
+    }
+
+    function chips(items, cls){
+      if(!items || !items.length) return "";
+      const c = cls ? ` ${cls}` : "";
+      return `<div class="prov-chips">${items.map(t => `<span class="prov-chip${c}">${escapeHtml(String(t))}</span>`).join("")}</div>`;
+    }
+
+    function provStatusClass(status){
+      const s = String(status || "").toLowerCase();
+      if(s === "ok") return "ok";
+      if(s === "disabled") return "disabled";
+      if(s === "unsupported") return "unsupported";
+      return "error";
+    }
+
+    function mapGuardStatus(rawStatus){
+      switch(String(rawStatus || "").trim()){
+        case "trusted_infrastructure":
+          return { label:"Trusted Infra", className:"guard-caution-safe",
+            icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>` };
+        case "checking":
+          return { label:"Checking", className:"guard-checking",
+            icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"></path><path d="M20 4v6h-6"></path></svg>` };
+        case "error": case "degraded":
+          return { label:"Degraded", className:"guard-error",
+            icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg>` };
+        default:
+          return { label:"OK", className:"guard-unknown",
+            icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>` };
+      }
+    }
+
+    const PROVIDER_LABELS = {
+      virustotal:"VirusTotal", abuseipdb:"AbuseIPDB", ipinfo:"IPInfo",
+      otx:"AlienVault OTX", shodandb:"Shodan InternetDB",
+      malwarebazaar:"MalwareBazaar", urlhaus:"URLhaus"
+    };
+    const PROVIDER_ORDER = ["virustotal","abuseipdb","ipinfo","otx","shodandb","malwarebazaar","urlhaus"];
+
+    function anyrunLookupUrl(value){
+      const payload = JSON.stringify({ query: String(value), dateRange: 180 });
+      return `https://intelligence.any.run/analysis/lookup#${payload.replace(/"/g, "%22")}`;
+    }
+
+    function providerExtUrl(key, type, value, p){
+      const enc = encodeURIComponent(value);
+      switch(key){
+        case "virustotal":    return p && p.link ? p.link : null;
+        case "abuseipdb":     return type === "ip" ? `https://www.abuseipdb.com/check/${enc}` : null;
+        case "ipinfo":        return type === "ip" ? `https://ipinfo.io/${enc}` : null;
+        case "otx": {
+          const seg = type === "ip" ? "IPv4" : type === "domain" ? "domain" : type === "url" ? "url" : type === "hash" ? "file" : null;
+          return seg ? `https://otx.alienvault.com/indicator/${seg}/${enc}` : null;
+        }
+        case "shodandb":      return type === "ip" ? `https://www.shodan.io/host/${enc}` : null;
+        case "malwarebazaar": return type === "hash" ? `https://bazaar.abuse.ch/sample/${enc}/` : null;
+        case "urlhaus": {
+          if(type === "url") return `https://urlhaus.abuse.ch/browse.php?search=${enc}`;
+          if(type === "domain" || type === "ip") return `https://urlhaus.abuse.ch/host/${enc}/`;
+          return null;
+        }
+        default: return null;
+      }
+    }
+    const PROVIDER_SITE_LABEL = {
+      virustotal:"VirusTotal", abuseipdb:"AbuseIPDB", ipinfo:"IPInfo",
+      otx:"OTX", shodandb:"Shodan", malwarebazaar:"MalwareBazaar",
+      urlhaus:"URLhaus"
+    };
+
+    function renderVirusTotal(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      const mal=Number(p.maliciousScore||0), sus=Number(p.suspiciousScore||0),
+            harm=Number(p.harmlessScore||0), und=Number(p.undetectedScore||0);
+      const total=mal+sus+harm+und||1;
+      const bar=(n,cls)=>n>0?`<div class="vt-bar ${cls}" style="flex-grow:${n/total}"></div>`:"";
+      return `<div class="prov-body">
+        <div class="vt-bars">${bar(mal,"mal")}${bar(sus,"sus")}${bar(harm,"harm")}${bar(und,"und")}</div>
+        <div class="vt-legend"><span><b>${mal}</b> mal</span><span><b>${sus}</b> sus</span><span><b>${harm}</b> harm</span><span><b>${und}</b> und</span></div>
+      </div>`;
+    }
+
+    function renderAbuseIPDB(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      const score=Number(p.abuseConfidenceScore||0);
+      const cls=score>=75?"high":score>=25?"mid":"low";
+      const chipCls=score>=75?"danger":score>=25?"warn":"ok";
+      return `<div class="prov-body">
+        ${`<div class="prov-row"><span class="k">Confidence</span><span class="v"><span class="prov-chip ${chipCls}">${score}/100</span></span></div>`}
+        ${kvRow("Reports", p.totalReports??0)}
+        ${p.usageType?kvRow("Usage",p.usageType):""}
+        ${p.isWhitelisted?`<div class="prov-row"><span class="k">Whitelisted</span><span class="v"><span class="prov-chip trust">yes</span></span></div>`:""}
+        <div class="abuse-bar"><div class="abuse-bar-fill ${cls}" style="width:${score}%"></div></div>
+      </div>`;
+    }
+
+    function renderIPInfo(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      return `<div class="prov-body">
+        ${p.asn?kvRow("ASN",`AS${p.asn}`):""}
+        ${p.orgName?kvRow("Org",p.orgName):""}
+        ${p.country?kvRow("Country",p.country):""}
+        ${p.trusted?`<div class="prov-row"><span class="k">Trust</span><span class="v"><span class="prov-chip trust">trusted ASN</span></span></div>`:""}
+      </div>`;
+    }
+
+    function renderOTX(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      const pulses=Number(p.pulseCount||0), chipCls=pulses>0?"danger":"ok";
+      return `<div class="prov-body">
+        <div class="prov-row"><span class="k">Pulses</span><span class="v"><span class="prov-chip ${chipCls}">${pulses}</span></span></div>
+        ${kvRow("Reputation",p.reputation||0)}
+        ${p.malwareFamilies&&p.malwareFamilies.length?`<div class="prov-row"><span class="k">Malware</span><span class="v"></span></div>${chips(p.malwareFamilies,"danger")}`:""}
+      </div>`;
+    }
+
+    function renderShodanDB(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      if(!p.known) return `<div class="prov-body">Not indexed by Shodan.</div>`;
+      return `<div class="prov-body">
+        ${kvRow("Open ports",(p.ports||[]).length)}
+        ${p.hostnames&&p.hostnames.length?kvRow("Hostname",p.hostnames[0]):""}
+        ${p.vulns&&p.vulns.length?`<div class="prov-row"><span class="k">CVEs</span><span class="v">${p.vulns.length} found</span></div>${chips(p.vulns.slice(0,8),"danger")}`:""}
+        ${p.tags&&p.tags.length?`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>${chips(p.tags)}`:""}
+      </div>`;
+    }
+
+    function renderMalwareBazaar(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      if(!p.found) return `<div class="prov-body">Not found in MalwareBazaar.</div>`;
+      return `<div class="prov-body">
+        <div class="prov-row"><span class="k">Status</span><span class="v"><span class="prov-chip danger">KNOWN SAMPLE</span></span></div>
+        ${p.signature?kvRow("Family",p.signature):""}
+        ${p.fileType?kvRow("Type",p.fileType):""}
+        ${p.deliveryMethod?kvRow("Delivery",p.deliveryMethod):""}
+        ${p.tags&&p.tags.length?`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>${chips(p.tags.slice(0,8),"warn")}`:""}
+      </div>`;
+    }
+
+    function renderURLhaus(p){
+      if(p.status !== "ok") return `<div class="prov-body">${escapeHtml(p.summary||"")}</div>`;
+      if(!p.found) return `<div class="prov-body">Not found in URLhaus.</div>`;
+      return `<div class="prov-body">
+        <div class="prov-row"><span class="k">Status</span><span class="v"><span class="prov-chip danger">LISTED</span></span></div>
+        ${p.threat?kvRow("Threat",p.threat):""}
+        ${p.urlCount>1?kvRow("URLs",p.urlCount):""}
+        ${p.tags&&p.tags.length?`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>${chips(p.tags.slice(0,8),"warn")}`:""}
+      </div>`;
+    }
+
+    const PROVIDER_RENDERERS = {
+      virustotal:renderVirusTotal, abuseipdb:renderAbuseIPDB, ipinfo:renderIPInfo,
+      otx:renderOTX, shodandb:renderShodanDB, malwarebazaar:renderMalwareBazaar,
+      urlhaus:renderURLhaus
+    };
+
+    // --- CTI INDICATOR PARSING ---
+    function parsePhishingIndicators(){
+      const items = [], seen = new Set();
+
+      el("senders").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).forEach(v=>{
+        const domain = v.includes("@") ? v.split("@").pop().toLowerCase() : v.toLowerCase();
+        const key = "domain::"+domain;
+        if(!seen.has(key) && domain){ seen.add(key); items.push({value:domain,type:"domain",src:"senders"}); }
+      });
+
+      el("urls").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).forEach(v=>{
+        const key = "url::"+v.toLowerCase();
+        if(!seen.has(key)){ seen.add(key); items.push({value:v,type:"url",src:"urls"}); }
+      });
+
+      el("hashes").value.split(/\r?\n/).map(s=>s.trim().toLowerCase())
+        .filter(s=>/^[0-9a-f]{32,64}$/.test(s)).forEach(v=>{
+          const key = "hash::"+v;
+          if(!seen.has(key)){ seen.add(key); items.push({value:v,type:"hash",src:"hashes"}); }
+        });
+
+      return items;
+    }
+
+    // --- CTI CHECK ---
+    async function checkCtiForAll(force=false){
+      const items = parsePhishingIndicators();
+      const toCheck = force ? items : items.filter(it=>{
+        const k = it.type+"::"+it.value;
+        return !ctiState[k] || ctiState[k].guard_status === "unknown";
+      });
+      if(!toCheck.length){ renderCti(); return; }
+
+      toCheck.forEach(it=>{
+        const k = it.type+"::"+it.value;
+        ctiState[k] = {...(ctiState[k]||{}), value:it.value, type:it.type, src:it.src,
+          guard_status:"checking", summary:"Running CTI checks…", providers:{}, provider_hits:[]};
+      });
+      renderCti();
+
+      try {
+        const res = await fetch(GUARD_API_URL, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({indicators: toCheck.map(({value,type})=>({value,type}))})
+        });
+        if(!res.ok) throw new Error(`Guard API ${res.status}`);
+        const data = await res.json();
+        if(!Array.isArray(data.results)) throw new Error("Invalid payload");
+        toCheck.forEach((it,i)=>{
+          const r=data.results[i]||{}, k=it.type+"::"+it.value;
+          ctiState[k] = {value:it.value, type:it.type, src:it.src,
+            guard_status: r.guard_status||"degraded",
+            summary: r.summary||GUARD_DEGRADED_SUMMARY,
+            provider_summary: r.provider_summary||"",
+            warn_before_block: !!r.warn_before_block,
+            checked_at: r.checked_at||new Date().toISOString(),
+            providers: r.providers||{},
+            provider_hits: r.provider_hits||[]
+          };
+        });
+      } catch(err){
+        toCheck.forEach(it=>{
+          const k=it.type+"::"+it.value;
+          ctiState[k] = {...ctiState[k], guard_status:"degraded",
+            summary:GUARD_DEGRADED_SUMMARY, providers:{}, provider_hits:[]};
+        });
+        showToast(uiText("Guard service unavailable.", "Guard servisine ulaşılamıyor."), "warn", 4500);
+      }
+      renderCti();
+    }
+
+    function scheduleCtiCheck(){
+      clearTimeout(ctiCheckTimer);
+      ctiCheckTimer = setTimeout(()=>checkCtiForAll(false), 800);
+    }
+
+    // --- CTI RENDER ---
+    let ctiOpenKey = null;
+
+    function renderCti(){
+      const ctiList = el("ctiList");
+      const ctiStats = el("ctiStats");
+      const ctiRefreshBtn = el("ctiRefreshBtn");
+      if(!ctiList) return;
+
+      const items = parsePhishingIndicators();
+      ctiStats.textContent = isTr()
+        ? `${items.length} gösterge`
+        : `${items.length} indicator${items.length===1?"":"s"}`;
+      ctiRefreshBtn.disabled = items.length === 0;
+
+      if(items.length === 0){
+        ctiList.innerHTML = `<div class="cti-empty">${uiText("// No indicators yet. Add senders, URLs, or hashes on the left.", "// Henüz gösterge yok. Soldan gönderen, URL veya hash ekleyin.")}</div>`;
+        return;
+      }
+
+      ctiList.innerHTML = items.map(it=>{
+        const k = it.type+"::"+it.value;
+        const state = ctiState[k] || {guard_status:"unknown", summary:"Not checked yet.", providers:{}, provider_hits:[]};
+        const ui = mapGuardStatus(state.guard_status);
+        const isOpen = ctiOpenKey === k;
+        const providers = state.providers||{};
+        const activeKeys = PROVIDER_ORDER.filter(pk=>providers[pk]);
+        const hits = Array.isArray(state.provider_hits)?state.provider_hits.length:0;
+
+        const srcBadge = `<span class="prov-chip" style="font-size:9px;">${escapeHtml(it.src)}</span>`;
+
+        const anyrunCard = it.type === "url"
+          ? `<div class="prov-card">
+              <div class="prov-head">
+                <span class="prov-name">ANY.RUN TI Lookup</span>
+                <span class="prov-status ok">lookup</span>
+              </div>
+              <div class="prov-body">External lookup available for this URL.</div>
+              <div class="prov-footer"><a class="prov-link" href="${escapeHtml(anyrunLookupUrl(it.value))}" target="_blank" rel="noopener">Open in ANY.RUN →</a></div>
+            </div>`
+          : "";
+
+        const providerHtml = activeKeys.length
+          ? activeKeys.map(pk=>{
+              const p=providers[pk]||{};
+              const renderer=PROVIDER_RENDERERS[pk];
+              const extUrl=providerExtUrl(pk, it.type, it.value, p);
+              const extLink=extUrl?`<div class="prov-footer"><a class="prov-link" href="${escapeHtml(extUrl)}" target="_blank" rel="noopener">Open in ${escapeHtml(PROVIDER_SITE_LABEL[pk]||pk)} →</a></div>`:"";
+              return `<div class="prov-card">
+                <div class="prov-head">
+                  <span class="prov-name">${escapeHtml(PROVIDER_LABELS[pk]||pk)}</span>
+                  <span class="prov-status ${provStatusClass(p.status)}">${escapeHtml(p.status||"—")}</span>
+                </div>
+                ${renderer?renderer(p):`<div class="prov-body">${escapeHtml(p.summary||"")}</div>`}
+                ${extLink}
+              </div>`;
+            }).join("")
+          : anyrunCard ? "" : `<div class="prov-card"><div class="prov-body" style="color:var(--muted);">No provider responses yet.</div></div>`;
+
+        return `<div class="cti-row${isOpen?" open":""}" data-key="${escapeHtml(k)}">
+          <div class="cti-row-head" data-toggle="1">
+            <span class="cti-row-type">${escapeHtml(it.type)}</span>
+            <span class="cti-row-value">${escapeHtml(it.value)}</span>
+            <span class="guardBadge ${ui.className}" title="${escapeHtml(state.summary||ui.label)}">${ui.icon}</span>
+            <span class="cti-row-hits">${hits}/${PROVIDER_ORDER.length} hits</span>
+            <span class="cti-row-time">${escapeHtml(relativeTime(state.checked_at))}</span>
+          </div>
+          <div class="cti-row-body">
+            <div class="cti-summary">${escapeHtml(state.summary||"—")} ${srcBadge}</div>
+            <div class="cti-providers">${providerHtml}${anyrunCard}</div>
+          </div>
+        </div>`;
+      }).join("");
+
+    }
+
+    // --- LOGIC ---
+    function generateKql() {
+        const senderVal = el("senders").value.trim();
+        const urlVal = el("urls").value.trim();
+        const subVal = el("subjects").value.trim();
+        const hashVal = el("hashes").value.trim();
+
+        // Construct KQL using template literals and safe list generation
+        const kql = `let Lookback = 30d;
+let whitelistedUsers = ${getSafeList("whitelist")}; 
+let senderDomains = ${getSafeList("senders")}; 
+let urlDomains = ${getSafeList("urls")}; 
+let attachmentSHA256 = ${getSafeList("hashes")}; 
+let subjects = ${getSafeList("subjects")};
+let senderEnabled = coalesce(toscalar(print a=senderDomains | mv-expand x=a | summarize c=countif(isnotempty(tostring(x))) | project c), 0) > 0;
+let subjectEnabled = coalesce(toscalar(print a=subjects | mv-expand x=a | summarize c=countif(isnotempty(tostring(x))) | project c), 0) > 0;
+let urlEnabled = coalesce(toscalar(print a=urlDomains | mv-expand x=a | summarize c=countif(isnotempty(tostring(x))) | project c), 0) > 0;
+let attachmentEnabled = coalesce(toscalar(print a=attachmentSHA256 | mv-expand x=a | summarize c=countif(isnotempty(tostring(x))) | project c), 0) > 0;
+// IOC hit: Subject
+let detSubject =
+EmailEvents
+| where Timestamp > ago(Lookback)
+| where EmailDirection != "Intra-org"
+| where subjectEnabled
+| mv-expand s = subjects to typeof(string)
+| where isnotempty(s)
+| where Subject contains s
+| summarize SubjectCount=count() by NetworkMessageId;
+// IOC hit: Sender domain
+let detSender =
+EmailEvents
+| where Timestamp > ago(Lookback)
+| where EmailDirection != "Intra-org"
+| where senderEnabled
+| extend SenderAny = coalesce(SenderFromAddress, SenderMailFromAddress)
+| mv-expand d = senderDomains to typeof(string)
+| where isnotempty(d) and isnotempty(SenderAny)
+| where SenderAny contains d
+| summarize SenderDomainCount = count() by NetworkMessageId;
+// IOC hit: URL
+let detUrl =
+EmailUrlInfo
+| where Timestamp > ago(Lookback)
+| where urlEnabled
+| where Url has_any (urlDomains) 
+| summarize UrlIoCCount=count() by NetworkMessageId;
+// IOC hit: URL Click
+let detClick =
+UrlClickEvents
+| where Timestamp > ago(Lookback)
+| where urlEnabled
+| where Url has_any (urlDomains) 
+| summarize ClickIoCCount=count() by NetworkMessageId;
+// IOC hit: Attachment SHA
+let detAtt =
+EmailAttachmentInfo
+| where Timestamp > ago(Lookback)
+| where attachmentEnabled
+| where SHA256 has_any (attachmentSHA256)
+| summarize AttachmentIoCCount=count() by NetworkMessageId;
+// Hit mesajlar
+let hitMsgIds = materialize(
+    union
+        (detSubject | project NetworkMessageId),
+        (detSender  | project NetworkMessageId),
+        (detUrl     | project NetworkMessageId),
+        (detClick   | project NetworkMessageId),
+        (detAtt     | project NetworkMessageId)
+    | distinct NetworkMessageId
+);
+// Enrichment: Email metadata
+hitMsgIds
+| join kind=inner (
+    EmailEvents
+    | where Timestamp > ago(Lookback)
+    | where EmailDirection != "Intra-org"
+    | where NetworkMessageId in (hitMsgIds)
+    | extend SenderAny = coalesce(SenderFromAddress, SenderMailFromAddress)
+    | extend SenderDomain = coalesce(SenderFromDomain, SenderMailFromDomain, tostring(split(SenderAny,"@")[1]))
+    | summarize arg_max(
+        Timestamp,
+        Subject,
+        SenderFromAddress,
+        SenderMailFromAddress,
+        SenderAny,
+        SenderDomain,
+        RecipientEmailAddress,
+        LatestDeliveryAction,
+        LatestDeliveryLocation,
+        ThreatTypes,
+        OrgLevelPolicy,
+        EmailAction
+      ) by NetworkMessageId
+    | project-rename EmailTs=Timestamp
+) on NetworkMessageId
+// Enrichment blokları aynen
+| join kind=leftouter (EmailUrlInfo | where Timestamp > ago(Lookback) | where NetworkMessageId in (hitMsgIds) | summarize Urls=make_set(Url,100), UrlTs=min(Timestamp) by NetworkMessageId) on NetworkMessageId
+| join kind=leftouter (UrlClickEvents | where Timestamp > ago(Lookback) | where NetworkMessageId in (hitMsgIds) | summarize Accounts=make_set(AccountUpn,50), Actions=make_set(ActionType,20), IPs=make_set(IPAddress,50), ClickTs=min(Timestamp) by NetworkMessageId) on NetworkMessageId
+| join kind=leftouter (EmailAttachmentInfo | where Timestamp > ago(Lookback) | where NetworkMessageId in (hitMsgIds) | summarize fileHash=make_set(strcat(FileName,":",SHA256),50), AttTs=min(Timestamp) by NetworkMessageId) on NetworkMessageId
+| join kind=leftouter detSubject on NetworkMessageId
+| join kind=leftouter detSender on NetworkMessageId
+| join kind=leftouter detUrl on NetworkMessageId
+| join kind=leftouter detClick on NetworkMessageId
+| join kind=leftouter detAtt on NetworkMessageId
+| extend Timestamp=coalesce(ClickTs, UrlTs, AttTs, EmailTs)
+| extend UrlAny=iff(isnotempty(Urls), tostring(Urls), "")
+| extend fileHash=iff(isnotempty(fileHash), fileHash, dynamic([]))
+| extend HitSourcesRaw=strcat(
+    iff(coalesce(SubjectCount,0)>0,"Subject, ",""),
+    iff(coalesce(SenderDomainCount,0)>0,"SenderDomain, ",""),
+    iff(coalesce(UrlIoCCount,0)>0,"Url, ",""),
+    iff(coalesce(ClickIoCCount,0)>0,"UrlClick, ",""),
+    iff(coalesce(AttachmentIoCCount,0)>0,"Attachment, ","")
+  )
+| extend HitSources=trim_end(", ", HitSourcesRaw)
+// Excludes (TEK YER)
+| where SenderAny !contains "postmaster"
+| where not(SenderAny in~ (whitelistedUsers))
+| where (not(senderEnabled)) or (not(RecipientEmailAddress has_any (senderDomains)))
+| project HitSources, Timestamp, NetworkMessageId, Subject, SenderAny, SenderDomain, RecipientEmailAddress, ThreatTypes, OrgLevelPolicy, EmailAction, UrlAny, fileHash, LatestDeliveryAction, LatestDeliveryLocation, Accounts, Actions, IPs
+| order by Timestamp desc`;
+
+        el("output").value = kql;
+        
+        // Stats & Enable Copy
+        el("kqlStats").textContent = isTr() ? `${kql.length} karakter üretildi` : `${kql.length} chars generated`;
+        el("copyBtn").disabled = false;
+        
+        saveToLocal();
+    }
+
+    // --- EVENTS ---
+
+    // Ctrl+Enter Shortcut
+    INPUT_IDS.forEach(id => {
+        el(id).addEventListener("keydown", (e) => {
+            if(e.ctrlKey && e.key === "Enter"){
+                e.preventDefault();
+                generateKql();
+            }
+        });
+        // Auto-save & Auto-generate on input change
+        el(id).addEventListener("input", () => {
+            saveToLocal();
+            generateKql();
+        });
+    });
+    
+    // Clear Button (EXCLUDES WHITELIST from clearing)
+    el("clearBtn").addEventListener("click", () => {
+        // Only clear specific fields
+        const clearableIds = ["senders", "urls", "subjects", "hashes"];
+        const hasData = clearableIds.some(id => el(id).value.trim() !== "") || el("output").value.trim() !== "";
+        
+        if (!hasData) {
+            showToast(uiText("Workspace already empty.", "Çalışma alanı zaten boş."), "warn");
+            return;
+        }
+
+        if(confirm(uiText("Clear workspace? This will remove all IOCs.", "Çalışma alanı temizlensin mi? Bu işlem tüm IOC değerlerini kaldırır."))){
+            clearableIds.forEach(id => el(id).value = "");
+            el("output").value = "";
+            el("kqlStats").textContent = uiText("Ready", "Hazır");
+            el("copyBtn").disabled = true;
+            ctiState = {};
+            saveToLocal();
+            renderCti();
+            showToast(uiText("Workspace cleared.", "Çalışma alanı temizlendi."), "ok");
+        }
+    });
+
+    // Copy Button
+    el("copyBtn").addEventListener("click", async () => {
+        const val = el("output").value.trim();
+        if (!val) {
+            showToast(uiText("No KQL to copy.", "Kopyalanacak KQL yok."), "warn");
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(val);
+            if(window.parent !== window){
+                window.parent.postMessage({
+                    type:'arsenal_query',
+                    tool:'phish',
+                    preview: val.slice(0,140),
+                    query: val,
+                    ts: Date.now(),
+                    formData: {
+                      senders:  (document.getElementById('senders')  || {}).value || '',
+                      urls:     (document.getElementById('urls')     || {}).value || '',
+                      subjects: (document.getElementById('subjects') || {}).value || '',
+                      hashes:   (document.getElementById('hashes')  || {}).value || '',
+                      whitelist:(document.getElementById('whitelist')|| {}).value || ''
+                    }
+                }, '*');
+            }
+            showToast(uiText("KQL copied.", "KQL kopyalandı."), "ok");
+        } catch(e) {
+            showToast(uiText("Copy failed", "Kopyalama başarısız."), "warn");
+        }
+    });
+
+    // --- INACTIVITY TRACKING ---
+    window.onload = resetInactivityTimer;
+    document.onmousemove = resetInactivityTimer;
+    document.onkeydown = resetInactivityTimer;
+    document.onclick = resetInactivityTimer;
+
+    // --- CTI INPUT LISTENERS ---
+    ["senders","urls","hashes"].forEach(id=>{
+      el(id).addEventListener("input", scheduleCtiCheck);
+    });
+
+    // --- CTI LIST TOGGLE ---
+    el("ctiList").addEventListener("click", (e)=>{
+      const head = e.target.closest("[data-toggle]");
+      if(!head) return;
+      const rowEl = head.closest(".cti-row");
+      if(!rowEl) return;
+      const key = rowEl.getAttribute("data-key");
+      ctiOpenKey = (ctiOpenKey === key) ? null : key;
+      renderCti();
+    });
+
+    // --- RE-CHECK BUTTON ---
+    el("ctiRefreshBtn").addEventListener("click", ()=>checkCtiForAll(true));
+
+    // --- KQL DOCK PIN ---
+    const kqlDock = el("kqlDock");
+    const kqlPinBtn = el("kqlPinBtn");
+    const KQL_PIN_KEY = "defender_phishing_kql_pinned_v1";
+    function setKqlPinned(pinned){
+      if(pinned){
+        kqlDock.classList.add("pinned");
+        kqlPinBtn.classList.add("active");
+        kqlPinBtn.setAttribute("aria-pressed","true");
+        document.body.classList.add("kql-pinned");
+      } else {
+        kqlDock.classList.remove("pinned");
+        kqlPinBtn.classList.remove("active");
+        kqlPinBtn.setAttribute("aria-pressed","false");
+        document.body.classList.remove("kql-pinned");
+      }
+      try { localStorage.setItem(KQL_PIN_KEY, pinned?"1":"0"); } catch{}
+    }
+    kqlPinBtn.addEventListener("click", ()=>setKqlPinned(!kqlDock.classList.contains("pinned")));
+    try { if(localStorage.getItem(KQL_PIN_KEY)==="1") setKqlPinned(true); } catch{}
+
+    // --- LOAD SAVED DATA ---
+    loadFromLocal();
+
+    // --- GENERATE KQL ON LOAD ---
+    generateKql();
+
+    // --- INITIAL CTI CHECK ---
+    checkCtiForAll(false);
+  </script>
+
+<!-- ── Arsenal lang + load bridge ─────────────── -->
+<script>
+(function(){
+  const TR = {
+    'Phishing Query Helper': 'Kimlik Avı Sorgu Yardımcısı',
+    'Senders (Domain / Address)': 'Göndericiler (Alan Adı / Adres)',
+    'URLs': "URL'ler",
+    'Subjects': 'Konu Satırları',
+    'File Hashes': "Dosya Hash'leri",
+    'Whitelisted Senders (Safe)': 'İzin Verilen Göndericiler (Güvenli)',
+    'Optional': 'İsteğe Bağlı',
+    'Generate KQL': 'KQL Oluştur',
+    'Copy KQL': "KQL'yi Kopyala",
+    'Clear': 'Temizle',
+    'Pin': 'Sabitle',
+    'Phishing Hunt KQL': "Kimlik Avı Araştırma KQL'i",
+    'Lookback Window': 'Geriye Dönük Aralık',
+    'Ready': 'Hazır',
+    'CTI Results': 'Tehdit İstihbaratı Sonuçları',
+    'Re-check all': 'Tümünü Yeniden Kontrol Et',
+    'Hover to peek · Pin to keep open': 'Önizlemek için üzerine gel · Açık tutmak için sabitle',
+  };
+  const EN = Object.fromEntries(Object.entries(TR).map(([k,v])=>[v,k]));
+
+  function applyLang(lang){
+    document.documentElement.lang = lang === 'tr' ? 'tr' : 'en';
+    const map = lang === 'tr' ? TR : EN;
+    // Labels
+    document.querySelectorAll('label').forEach(el => {
+      const t = el.textContent.trim();
+      if(map[t]) el.textContent = map[t];
+    });
+    // Buttons
+    document.querySelectorAll('button').forEach(el => {
+      const t = el.textContent.trim();
+      if(map[t]) el.textContent = map[t];
+    });
+    document.querySelectorAll('.hint, .kql-dock-hint').forEach(el => {
+      const t = el.textContent.trim();
+      if(map[t]) el.textContent = map[t];
+    });
+    const sub = document.querySelector('.sub');
+    if(sub){
+      sub.textContent = lang === 'tr'
+        ? 'Kimlik avı incelemeleri için optimize edilmiş KQL sorguları üretin. Çok tablolu bir av sorgusu oluşturmak için IOC değerlerini girin.'
+        : 'Generate optimized KQL queries for phishing investigations. Paste your IOCs below to build a multi-table hunt query.';
+    }
+    const placeholders = lang === 'tr'
+      ? {
+          senders: 'saldirgan@ornek.com\nzararli-alanadi.com',
+          urls: 'https://zararli.site/giris\nzararli.site/sifirla',
+          subjects: 'Acil: Parola Sıfırlama\nFatura ektedir',
+          hashes: 'MD5, SHA1 veya SHA256...',
+          whitelist: 'guvenilir.gonderen@partner.com',
+          output: 'KQL çıktısı burada görünecek...'
+        }
+      : {
+          senders: 'attacker@example.com\nmalicious-domain.com',
+          urls: 'https://evil.site/login\nevil.site/reset',
+          subjects: 'Urgent: Password Reset\nInvoice attached',
+          hashes: 'MD5, SHA1, or SHA256...',
+          whitelist: 'trusted.sender@partner.com',
+          output: 'KQL output will appear here...'
+        };
+    Object.entries(placeholders).forEach(([id, text]) => {
+      const field = document.getElementById(id);
+      if(field) field.placeholder = text;
+    });
+    const stats = document.getElementById('kqlStats');
+    if(stats && (stats.textContent.trim() === 'Ready' || stats.textContent.trim() === 'Hazır')){
+      stats.textContent = lang === 'tr' ? 'Hazır' : 'Ready';
+    }
+    const ctiStats = document.getElementById('ctiStats');
+    if(ctiStats && /^(0 indicators|0 gösterge)$/.test(ctiStats.textContent.trim())){
+      ctiStats.textContent = lang === 'tr' ? '0 gösterge' : '0 indicators';
+    }
+    const pin = document.getElementById('kqlPinBtn');
+    if(pin) pin.title = lang === 'tr' ? 'Açık tutmak için sabitle' : 'Pin open';
+    const dock = document.getElementById('kqlDock');
+    if(dock) dock.setAttribute('aria-label', lang === 'tr' ? 'KQL sorgu paneli' : 'KQL query panel');
+    // h1 gradient text
+    const grad = document.querySelector('.gradient-text');
+    if(grad && grad.textContent.includes('Defender')) {
+      // leave brand name
+    }
+    // Page sub-title
+    document.querySelectorAll('h1 span:not(.gradient-text):not(.pill-ver)').forEach(el => {
+      if(el.textContent.includes('Phishing Query Helper'))
+        el.textContent = lang === 'tr' ? 'Kimlik Avı Sorgu Yardımcısı' : 'Phishing Query Helper';
+    });
+    // KQL dock title
+    const dockTitle = document.querySelector('.kql-dock-title');
+    if(dockTitle){
+      const txt = lang === 'tr' ? "Kimlik Avı Araştırma KQL'i" : 'Phishing Hunt KQL';
+      const glow = dockTitle.querySelector('.glow');
+      dockTitle.textContent = txt;
+      if(glow) dockTitle.prepend(glow);
+    }
+  }
+
+  window.addEventListener('message', e => {
+    if(!e.data) return;
+    if(e.data.type === 'arsenal_lang') applyLang(e.data.lang);
+    if(e.data.type === 'arsenal_load_query'){
+      if(e.data.formData){
+        const fd = e.data.formData;
+        ['senders','urls','subjects','hashes','whitelist'].forEach(id => {
+          const inp = document.getElementById(id);
+          if(inp && fd[id] !== undefined) inp.value = fd[id];
+        });
+        if(typeof generateKql === 'function') generateKql();
+        // flash card
+        const card = document.querySelector('.card');
+        if(card){ card.classList.add('flash-loaded'); setTimeout(()=>card.classList.remove('flash-loaded'),1300); }
+      } else if(e.data.query){
+        const box = document.getElementById('output');
+        if(box){ box.value = e.data.query; }
+        const stats = document.getElementById('kqlStats');
+        if(stats) stats.textContent = e.data.query.length + ' chars';
+        const copyBtn = document.getElementById('copyBtn');
+        if(copyBtn) copyBtn.disabled = false;
+      }
+    }
+  });
+})();
+</script>
+<script>
+/* Arsenal theme sync bridge */
+(function(){
+  /* Premium palette set — matches Arsenal.html.
+     3-stop dual-tone gradients (primary → mid → secondary) with
+     per-palette angle for character. */
+  const PALETTES = {
+    obsidian:   { angle:145, dark:{p:'#e4e4e7',m:'#a1a1aa',s:'#52525b',on:'#0a0a0a',solid:'#d4d4d8'}, light:{p:'#0f172a',m:'#334155',s:'#1e293b',on:'#fafafa',solid:'#18181b'} },
+    havana:     { angle:120, dark:{p:'#fbbf77',m:'#e89a5c',s:'#c26846',on:'#1a0e06',solid:'#e89a5c'}, light:{p:'#659999',m:'#c87b2a',s:'#f4791f',on:'#ffffff',solid:'#d06a1e'} },
+    meridian:   { angle:115, dark:{p:'#67e8f9',m:'#60a5fa',s:'#a78bfa',on:'#050b1f',solid:'#60a5fa'}, light:{p:'#614385',m:'#4a4a8f',s:'#516395',on:'#ffffff',solid:'#5a4a8f'} },
+    watermelon: { angle:135, dark:{p:'#fb7185',m:'#f472b6',s:'#86efac',on:'#1a0509',solid:'#f472b6'}, light:{p:'#dd3e54',m:'#e07050',s:'#6be585',on:'#ffffff',solid:'#dd3e54'} },
+    aurora:     { angle:150, dark:{p:'#86efac',m:'#60a5fa',s:'#c084fc',on:'#03150e',solid:'#60a5fa'}, light:{p:'#1f4037',m:'#3d8b74',s:'#99f2c8',on:'#ffffff',solid:'#2d6a5a'} },
+    shifter:    { angle:125, dark:{p:'#f0abfc',m:'#e879f9',s:'#fb7185',on:'#1a0514',solid:'#e879f9'}, light:{p:'#bc4e9c',m:'#d93880',s:'#f80759',on:'#ffffff',solid:'#c93a8a'} },
+  };
+  const LEGACY = {
+    vesper:'shifter',
+    champagne:'havana', emerald:'aurora', sapphire:'meridian',
+    rosegold:'watermelon', copper:'shifter', platinum:'obsidian',
+    amber:'havana', cyan:'meridian', matrix:'aurora',
+    crimson:'watermelon', amethyst:'meridian',
+    hunt01:'havana', hunt02:'meridian', hunt03:'meridian',
+    hunt04:'meridian', hunt05:'watermelon', hunt06:'aurora',
+    hunt07:'meridian',
+    mono:'obsidian', amoled:'obsidian', ink:'obsidian',
+    violet:'meridian', ocean:'meridian', black:'obsidian',
+    graphite:'obsidian', arctic:'meridian', ion:'aurora',
+    ember:'shifter', pulse:'watermelon',
+  };
+  function hexRgb(h){ const v=h.replace('#',''); const n=parseInt(v.length===3?v.split('').map(c=>c+c).join(''):v,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  function rgba(h,a){ const [r,g,b]=hexRgb(h); return `rgba(${r},${g},${b},${a})`; }
+  const THEMES = {
+    light:{'--bg':'#eef2f7','--surface':'#ffffff','--elevated':'#f8fafc','--border':'rgba(15,23,42,0.12)','--border-mid':'rgba(15,23,42,0.20)','--border-bright':'rgba(15,23,42,0.28)','--text':'#334155','--text-bright':'#0f172a','--muted':'#64748b','--input-bg':'#f8fafc','--input-border':'rgba(15,23,42,0.13)','--card-bg':'rgba(255,255,255,0.98)','--card-border':'rgba(15,23,42,0.12)'},
+    amoledDark:{'--bg':'#000000','--surface':'#0a0a0a','--elevated':'#141414','--border':'rgba(255,255,255,0.08)','--border-mid':'rgba(255,255,255,0.15)','--border-bright':'rgba(255,255,255,0.22)','--text':'#a3a3a3','--text-bright':'#fafafa','--muted':'#525252','--input-bg':'rgba(255,255,255,0.03)','--input-border':'rgba(255,255,255,0.08)','--card-bg':'rgba(10,10,10,0.9)','--card-border':'rgba(255,255,255,0.06)'},
+  };
+  function apply(msg){
+    const r = document.documentElement.style;
+    const isLight = msg.theme === 'light';
+    const key = (PALETTES[msg.accent] ? msg.accent : (LEGACY[msg.accent] || 'obsidian'));
+    const p = PALETTES[key] || PALETTES.obsidian;
+    const v = isLight ? p.light : p.dark;
+    const angle = p.angle || 135;
+    const solid = v.solid || (isLight ? v.m : v.p);
+    const themeKey = isLight ? 'light' : 'amoledDark';
+    Object.entries(THEMES[themeKey]).forEach(([k,val]) => r.setProperty(k, val));
+    r.setProperty('--primary',       solid);
+    r.setProperty('--primary-hover', v.s);
+    r.setProperty('--primary-mid',   v.m);
+    r.setProperty('--primary-glow',  rgba(solid, 0.22));
+    r.setProperty('--primary-soft',  rgba(solid, isLight ? 0.10 : 0.08));
+    r.setProperty('--primary-grad',  `linear-gradient(${angle}deg, ${v.p} 0%, ${v.m} 52%, ${v.s} 100%)`);
+    r.setProperty('--primary-angle', angle + 'deg');
+    r.setProperty('--on-primary',    v.on);
+    document.documentElement.setAttribute('data-arsenal-theme', isLight ? 'light' : 'dark');
+  }
+  window.addEventListener('message', e => {
+    if(e.data?.type === 'arsenal:theme') apply(e.data);
+    if(e.data?.type === 'arsenal:scanlines') {
+      document.documentElement.setAttribute('data-scanlines', e.data.enabled === false ? 'off' : 'on');
+    }
+  });
+  try { window.parent.postMessage({type:'arsenal:ready'}, '*'); } catch(e){}
+})();
+</script>
+</body>
+</html>

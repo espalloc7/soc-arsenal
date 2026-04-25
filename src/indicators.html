@@ -1,0 +1,4578 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Defender XDR – TI Indicator CSV Builder</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =============================================================
+       DEFENDER XDR – CTI TOOLKIT  |  Design System v2
+       Theme : Cyber Ops / Refined Dark + Cyan Accent
+       Font  : Outfit (UI) + JetBrains Mono (code)
+    ============================================================= */
+
+    :root {
+      /* Backgrounds */
+      --bg:            #03040a;
+      --surface:       #070b14;
+      --elevated:      #0d1220;
+
+      /* Borders */
+      --border:        rgba(255,255,255,0.07);
+      --border-mid:    rgba(255,255,255,0.13);
+      --border-bright: rgba(255,255,255,0.20);
+
+      /* Accent – Electric Cyan */
+      --primary:       #22d3ee;
+      --primary-hover: #06b6d4;
+      --primary-glow:  rgba(34,211,238,0.20);
+      --primary-soft:  rgba(34,211,238,0.08);
+
+      /* Semantic */
+      --danger:        #f43f5e;
+      --success:       #10b981;
+      --warning:       #f59e0b;
+
+      /* Text */
+      --text:          #94a3b8;
+      --text-bright:   #e2e8f0;
+      --muted:         #475569;
+
+      /* Form inputs */
+      --input-bg:      rgba(0,0,0,0.25);
+      --input-border:  rgba(255,255,255,0.08);
+
+      /* Cards */
+      --card-bg:       rgba(7,11,20,0.85);
+      --card-border:   rgba(255,255,255,0.07);
+      --card-blur:     18px;
+
+      --radius:        10px;
+      --font-main:    'Outfit', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* Accessibility: keyboard focus ring */
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    /* Remove mouse-click outlines without nuking keyboard nav */
+    :focus:not(:focus-visible) { outline: none; box-shadow: none; }
+
+    button::-moz-focus-inner, input::-moz-focus-inner { border: 0; }
+    * { -webkit-tap-highlight-color: transparent; }
+
+    html { overflow-y: scroll; scroll-behavior: smooth; scrollbar-gutter: stable; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse at 60% 0%,
+        rgba(15,28,64,0.9) 0%, rgba(5,8,20,0.95) 50%, var(--bg) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Scrollbars ────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 36px 24px 80px;
+    }
+
+    /* ── Header ────────────────────────────────────────────── */
+    header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.45s ease-out both;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 6px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-bright);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #818cf8 55%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .pill-ver {
+      font-size: 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 2px 9px;
+      border-radius: 99px;
+      font-weight: 600;
+      border: 1px solid rgba(34,211,238,0.2);
+      font-family: var(--font-mono);
+      -webkit-text-fill-color: var(--primary);
+      letter-spacing: 0.03em;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 580px;
+      margin: 0;
+      font-weight: 400;
+      line-height: 1.65;
+    }
+
+    /* ── Grid ──────────────────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 4fr 5fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* ── Cards ─────────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(var(--card-blur));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45), 0 8px 28px rgba(0,0,0,0.22);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.11); }
+
+    /* ── Forms ─────────────────────────────────────────────── */
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.11);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-bright);
+      border-radius: 7px;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-family: var(--font-main);
+      font-weight: 500;
+      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+
+    textarea:hover, input:hover, select:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.025);
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
+      background: rgba(0,0,0,0.35);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .input-group { margin-bottom: 14px; }
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .input-header label { margin: 0; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+    /* ── Buttons ───────────────────────────────────────────── */
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 18px;
+      font-family: var(--font-main);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    #addBtn {
+      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-hover) 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 2px 10px rgba(34,211,238,0.22),
+                  inset 0 1px 0 rgba(255,255,255,0.14);
+      color: #03040a;
+      font-weight: 700;
+      width: 100%;
+    }
+    #addBtn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(34,211,238,0.32),
+                  inset 0 1px 0 rgba(255,255,255,0.14);
+    }
+    #addBtn:active { transform: translateY(0); }
+
+    button.secondary {
+      background: rgba(255,255,255,0.03);
+      color: #94a3b8;
+      border: 1px solid var(--border);
+    }
+    button.secondary:hover:not(:disabled) {
+      background: rgba(255,255,255,0.07);
+      color: var(--text-bright);
+      border-color: var(--border-mid);
+    }
+    button.secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    button.danger {
+      background: rgba(244,63,94,0.06);
+      color: var(--danger);
+      border: 1px solid rgba(244,63,94,0.16);
+    }
+    button.danger:hover {
+      background: rgba(244,63,94,0.14);
+      border-color: rgba(244,63,94,0.3);
+    }
+
+    .btn-icon {
+      width: 30px; height: 30px; padding: 0;
+      background: transparent; border: 1px solid transparent;
+      color: var(--muted); border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.08); color: var(--text-bright); }
+    .btn-icon.danger-hover:hover { background: rgba(244,63,94,0.12); color: var(--danger); }
+
+    button.xs { padding: 3px 10px; font-size: 11px; min-height: 26px; }
+
+    /* ── Button row ────────────────────────────────────────── */
+    .btnRow { margin-top: auto; padding-top: 16px; display: flex; gap: 10px; }
+    .btnLeft { flex: 1; }
+    .btnRight { display: flex; gap: 8px; }
+
+    /* ── Drop zone ─────────────────────────────────────────── */
+    .dropZone {
+      margin-top: 12px;
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: 1px dashed rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.02);
+      color: #94a3b8;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s, transform 0.18s;
+      user-select: none;
+    }
+    .dropZone:hover {
+      border-color: rgba(34,211,238,0.38);
+      background: rgba(34,211,238,0.05);
+    }
+    .dropZone.dragover {
+      border-color: rgba(34,211,238,0.65);
+      background: rgba(34,211,238,0.10);
+      transform: translateY(-1px);
+    }
+    .dropZoneIcon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid rgba(34,211,238,0.18);
+      flex-shrink: 0;
+    }
+    .dropZoneIcon svg {
+      width: 16px; height: 16px; display: block;
+      stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .dropZoneText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .dropZoneText strong { font-size: 12px; font-weight: 600; color: var(--text-bright); }
+    .dropZoneText span   { font-size: 11px; color: var(--muted); }
+
+    /* ── Preview box ───────────────────────────────────────── */
+    .previewBox {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--input-border);
+      border-radius: 7px;
+      padding: 4px 0;
+      height: 160px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-top: 5px;
+      margin-bottom: 0;
+      flex-grow: 1;
+    }
+    .previewLine {
+      padding: 6px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .previewLine:last-child { border-bottom: none; }
+    .previewLine:hover { background: rgba(255,255,255,0.03); }
+
+    .previewVal { color: #cbd5e1; word-break: break-all; flex: 1; min-width: 0; }
+    .previewBad .previewVal { color: var(--danger); text-decoration: line-through; opacity: 0.65; }
+    .previewDup .previewVal { color: var(--warning); }
+
+    .typeBadge {
+      font-size: 9px; font-weight: 700; padding: 2px 7px;
+      border-radius: 4px; min-width: 56px; text-align: center;
+      letter-spacing: 0.04em; flex-shrink: 0;
+    }
+
+    /* ── Type badges ───────────────────────────────────────── */
+    .badge-IpAddress  { background: rgba(6,182,212,0.10); color: #22d3ee; border: 1px solid rgba(6,182,212,0.2); }
+    .badge-DomainName { background: rgba(234,179,8,0.10); color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
+    .badge-Url        { background: rgba(249,115,22,0.10); color: #fb923c; border: 1px solid rgba(249,115,22,0.2); }
+    .badge-FileMd5    { background: rgba(139,92,246,0.10); color: #c084fc; border: 1px solid rgba(139,92,246,0.2); }
+    .badge-FileSha1   { background: rgba(236,72,153,0.10); color: #f472b6; border: 1px solid rgba(236,72,153,0.2); }
+    .badge-FileSha256 { background: rgba(16,185,129,0.10); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .badgeUnknown     { background: rgba(244,63,94,0.10);  color: var(--danger); border: 1px solid rgba(244,63,94,0.2); }
+
+    /* ── Stats panel — boşluğu sayıları büyüterek kapatır ─── */
+    .stats-grid {
+      flex: 1;               /* kalan dikey alanı doldur */
+      min-height: 90px;
+      margin-top: 14px;
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.20);
+    }
+
+    .stat-card {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      transition: background 0.18s;
+      position: relative;
+      padding: 12px 6px;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .stat-card:last-child { border-right: none; }
+    .stat-card:hover { background: rgba(255,255,255,0.03); }
+
+    .stat-card:nth-child(1)::before { background: var(--primary); }
+    .stat-card:nth-child(2)::before { background: #c084fc; }
+    .stat-card:nth-child(3)::before { background: #fb923c; }
+    .stat-card:nth-child(4)::before { background: #fbbf24; }
+
+    .stat-card:nth-child(1) .stat-value { color: var(--primary); }
+    .stat-card:nth-child(2) .stat-value { color: #c084fc; }
+    .stat-card:nth-child(3) .stat-value { color: #fb923c; }
+    .stat-card:nth-child(4) .stat-value { color: #fbbf24; }
+
+    .stat-label {
+      font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+      font-weight: 700; white-space: nowrap;
+    }
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 38px; font-weight: 700;
+      line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { flex-wrap: wrap; min-height: 120px; }
+      .stat-card { flex: 1 1 50%; border-bottom: 1px solid var(--border); }
+    }
+
+    /* ── Table card ────────────────────────────────────────── */
+    .table-card { margin-top: 18px; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+    .table-header-wrap {
+      position: relative;
+      padding: 0 20px; height: 54px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.01);
+    }
+
+    .header-default {
+      display: flex; gap: 12px; align-items: center;
+      transition: opacity 0.2s; width: 100%;
+    }
+
+    /* ── Bulk panel ────────────────────────────────────────── */
+    .bulk-panel {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(7,11,20,0.97);
+      backdrop-filter: blur(14px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+      border-bottom: 1px solid var(--primary);
+      opacity: 0; pointer-events: none; transform: translateY(-4px);
+      transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+    }
+    .bulk-panel.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .bulk-left { display: flex; align-items: center; gap: 10px; }
+    .bulk-actions { display: flex; gap: 7px; align-items: center; }
+
+    .bulk-count-badge {
+      background: var(--primary); color: #03040a;
+      font-weight: 700; font-size: 11px;
+      padding: 3px 9px; border-radius: 99px;
+      box-shadow: 0 0 14px var(--primary-glow);
+    }
+
+    .bulk-select {
+      width: auto; padding: 0 10px; height: 30px; font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-mid); color: var(--text-bright);
+      border-radius: 6px; font-family: var(--font-main);
+    }
+    .bulk-select:hover { border-color: var(--text); background: rgba(255,255,255,0.09); }
+    .bulk-select:focus { border-color: var(--primary); background: #0a0a14; outline: none; }
+
+    .pill-badge {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+      padding: 2px 9px; border-radius: 99px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--muted); font-weight: 500;
+    }
+    .pill-badge b { color: var(--text-bright); font-weight: 700; }
+
+    /* ── Checkbox ──────────────────────────────────────────── */
+    .col-check { width: 40px; padding: 0; text-align: center; vertical-align: middle; }
+    .chk-wrap {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%; min-height: 40px;
+    }
+
+    .chk {
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      width: 15px !important; height: 15px !important;
+      min-width: 15px !important; min-height: 15px !important;
+      max-width: 15px !important; max-height: 15px !important;
+      background-color: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.28);
+      border-radius: 4px;
+      margin: 0; padding: 0; cursor: pointer;
+      position: relative; display: inline-block; flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .chk:hover { border-color: var(--primary); background-color: var(--primary-soft); }
+    .chk:checked {
+      background-color: var(--primary); border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+    }
+    .chk:checked::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2303040a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+      background-size: 9px 9px; background-position: center; background-repeat: no-repeat;
+    }
+    .chk:indeterminate {
+      background-color: var(--primary); border-color: var(--primary);
+    }
+    .chk:indeterminate::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 7px; height: 2px; background: #03040a; border-radius: 1px;
+    }
+
+    /* ── Table ─────────────────────────────────────────────── */
+    .table-wrap {
+      width: 100%; max-height: 520px; overflow: auto;
+    }
+
+    thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    th.col-check, td.col-check {
+      position: sticky; left: 0; z-index: 3;
+      background: rgba(7,11,20,0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+    thead { background: rgba(0,0,0,0.2); }
+    th, td { padding: 11px 18px; vertical-align: middle; border-bottom: 1px solid var(--border); }
+    th {
+      color: var(--muted); font-weight: 700; font-size: 10px;
+      text-transform: uppercase; text-align: left;
+      letter-spacing: 0.08em; height: 40px;
+    }
+
+    .col-action { width: 210px; }
+    .col-sev    { width: 170px; }
+    .col-alert  { width: 120px; }
+    .col-exp    { width: 150px; }
+    .col-guard  { width: 60px; text-align: center; }
+    .col-val    { max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+
+    .guardHead { text-align: center; padding-left: 8px; padding-right: 8px; }
+    .guardHeadIcon {
+      width: 16px; height: 16px; margin: 0 auto;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--muted); opacity: 0.9;
+    }
+    .guardHeadIcon svg {
+      width: 14px; height: 14px; display: block;
+      stroke: currentColor; fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .guardCell { text-align: center; vertical-align: middle; }
+    .guardBadge {
+      width: 24px; height: 24px; border-radius: 99px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      cursor: help;
+    }
+    .guardBadge:hover { transform: translateY(-1px); border-color: var(--border-mid); }
+    .guardBadge svg {
+      width: 12px; height: 12px; display: block;
+      stroke: currentColor; fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .guard-malicious    { color: #f87171; background: rgba(244,63,94,0.11); border-color: rgba(244,63,94,0.22); }
+    .guard-caution-safe { color: #22d3ee; background: rgba(34,211,238,0.11); border-color: rgba(34,211,238,0.22); }
+    .guard-review       { color: #fbbf24; background: rgba(251,191,36,0.11); border-color: rgba(251,191,36,0.22); }
+    .guard-checking     { color: #818cf8; background: rgba(129,140,248,0.11); border-color: rgba(129,140,248,0.22); }
+    .guard-error        { color: #c084fc; background: rgba(192,132,252,0.11); border-color: rgba(192,132,252,0.22); }
+    .guard-unknown      { color: #475569; background: rgba(71,85,105,0.10); border-color: rgba(71,85,105,0.20); }
+
+    tr:last-child td { border-bottom: 0; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr.selected-row td { background: rgba(34,211,238,0.06); }
+    tbody tr:focus-visible td { background: rgba(34,211,238,0.07); outline: none; }
+    tbody tr.selected-row:focus-visible td { background: rgba(34,211,238,0.11); }
+
+    td select, td input {
+      height: 30px; padding: 0 10px; font-size: 12px;
+      background: transparent; border: 1px solid transparent;
+      border-radius: 5px; color: var(--text-bright);
+      font-family: var(--font-main);
+    }
+    td select:hover, td input:hover { border-color: var(--border-mid); background: rgba(0,0,0,0.22); }
+    td select:focus, td input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); outline: none; }
+
+    .mono { font-family: var(--font-mono); color: #cbd5e1; font-size: 12px; }
+
+    /* ── KQL section ───────────────────────────────────────── */
+    .kql-section { margin-top: 18px; }
+    .kqlBox {
+      background: #02040b;
+      color: #67e8f9;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 14px;
+      resize: vertical;
+      min-height: 180px;
+      line-height: 1.65;
+    }
+    .kqlBox:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); outline: none; }
+    .kqlTools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+    /* ── Toast system ──────────────────────────────────────── */
+    .toastContainer {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast {
+      background: var(--elevated);
+      border: 1px solid var(--border); border-left: 3px solid var(--primary);
+      padding: 14px; border-radius: 8px; color: var(--text); font-size: 13px;
+      width: 316px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); pointer-events: auto;
+      transform: translateX(40px); opacity: 0;
+      transition: all 0.28s cubic-bezier(0.16,1,0.3,1);
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.ok   { border-left-color: var(--success); }
+    .toast.err  { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warning); }
+    .toastTop { display: flex; justify-content: space-between; align-items: flex-start; }
+    .toastMsg { flex: 1; line-height: 1.45; font-size: 13px; }
+    .toastClose {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 16px; padding: 0; line-height: 1;
+      margin-top: -1px; font-family: inherit;
+    }
+    .toastClose:hover { color: var(--text-bright); }
+
+    /* ── Animations ────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+
+  <!-- ═══════════════════════════════════════════════
+       Design System v3 — Mono Terminal
+       Overrides v2 design with new aesthetic layer
+  ═══════════════════════════════════════════════ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style id="ux-v3">
+    /* ── Token overrides ───────────────────────── */
+    :root {
+      --bg:            #060810;
+      --surface:       #0a0c18;
+      --elevated:      #0e1222;
+
+      --border:        rgba(255,255,255,0.07);
+      --border-mid:    rgba(255,255,255,0.13);
+      --border-bright: rgba(255,255,255,0.22);
+
+      --primary:       #a98b76;
+      --primary-hover: #bfa28c;
+      --primary-glow:  rgba(169,139,118,0.22);
+      --primary-soft:  rgba(169,139,118,0.09);
+      --primary-grad:  linear-gradient(135deg,#a98b76 0%,#bfa28c 36%,#f3e4c9 68%,#babf94 100%);
+      --on-primary:    #06070d;
+
+      --danger:        #ff2d55;
+      --success:       #00e878;
+      --warning:       #ff7a20;
+
+      --text:          #6a7c98;
+      --text-bright:   #aab8d0;
+      --muted:         #353f58;
+
+      --input-bg:      rgba(0,0,0,0.28);
+      --input-border:  rgba(255,255,255,0.08);
+
+      --card-bg:       rgba(8,10,20,0.97);
+      --card-border:   rgba(255,255,255,0.07);
+      --card-blur:     0px;
+
+      --radius:        0px;
+      --font-main:     'IBM Plex Mono', 'Courier New', monospace;
+      --font-mono:     'IBM Plex Mono', 'Courier New', monospace;
+    }
+
+    /* ── Body & background ─────────────────────── */
+    body {
+      font-family: var(--font-main);
+      font-size: 13px;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 88% 0%,   rgba(17,24,39,0.055) 0%, transparent 48%),
+        radial-gradient(ellipse at 12% 100%, rgba(0,50,100,0.09)    0%, transparent 48%);
+      background-attachment: fixed;
+    }
+
+    /* Very subtle CRT scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.042) 3px,
+        rgba(0,0,0,0.042) 4px
+      );
+    }
+
+    /* Left accent strip */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom,
+        var(--primary) 0%,
+        rgba(17,24,39,0.28) 38%,
+        transparent 68%
+      );
+      z-index: 9997;
+      pointer-events: none;
+    }
+
+    /* ── Scrollbars ────────────────────────────── */
+    ::-webkit-scrollbar       { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 0; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Focus ring ────────────────────────────── */
+    :focus-visible {
+      outline: 1px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 0 !important;
+    }
+
+    /* ── Header ────────────────────────────────── */
+    header {
+      position: relative;
+      padding-bottom: 22px;
+      margin-bottom: 26px;
+    }
+    header::after {
+      content: '// SECURE OPS';
+      position: absolute;
+      top: 4px; right: 0;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      opacity: 0.55;
+      font-family: var(--font-main);
+      pointer-events: none;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-bright);
+      gap: 10px;
+    }
+
+    /* Brand mark — gradient across the palette's three stops */
+    .gradient-text {
+      background: var(--primary-grad) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent !important;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .pill-ver {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 0;
+      -webkit-text-fill-color: var(--primary);
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+      font-size: 9px;
+    }
+
+    .sub {
+      font-size: 12px;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      font-family: var(--font-main);
+    }
+
+    /* ── Cards ─────────────────────────────────── */
+    .card {
+      background: rgba(8,10,20,0.97);
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: 1px solid var(--border);
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .card:hover {
+      border-color: rgba(255,255,255,0.10);
+      box-shadow: none;
+    }
+
+    /* ── Labels / Forms ────────────────────────── */
+    label {
+      font-family: var(--font-main);
+      letter-spacing: 0.10em;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .hint {
+      font-family: var(--font-main);
+      font-size: 10px;
+      letter-spacing: 0.01em;
+    }
+
+    .kbd {
+      border-radius: 0;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      letter-spacing: 0;
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.10);
+    }
+
+    textarea, input, select {
+      font-family: var(--font-main);
+      font-size: 12px;
+      border-radius: 0 !important;
+      color: var(--text-bright);
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    /* ── Buttons ───────────────────────────────── */
+    button {
+      font-family: var(--font-main);
+      border-radius: 0;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    #addBtn {
+      background: var(--primary-grad);
+      border: 1px solid var(--primary);
+      color: var(--on-primary);
+      font-weight: 700;
+      box-shadow: 0 0 18px var(--primary-glow);
+    }
+    #addBtn:hover {
+      background: var(--primary-grad);
+      border-color: var(--primary-hover);
+      box-shadow: 0 0 26px var(--primary-glow);
+      transform: none;
+    }
+    #addBtn:active { transform: translateY(1px); }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border-mid);
+      color: var(--text);
+    }
+    button.secondary:hover:not(:disabled) {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.20);
+      color: var(--text-bright);
+    }
+    button.secondary:disabled { opacity: 0.28; cursor: not-allowed; }
+
+    button.danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(255,45,85,0.22);
+    }
+    button.danger:hover {
+      background: rgba(255,45,85,0.08);
+      border-color: rgba(255,45,85,0.38);
+    }
+
+    .btn-icon {
+      border-radius: 0;
+      width: 28px; height: 28px;
+    }
+    .btn-icon.danger-hover:hover {
+      background: rgba(255,45,85,0.10);
+      color: var(--danger);
+    }
+
+    /* ── Drop zone ─────────────────────────────── */
+    .dropZone {
+      border-radius: 0;
+      border: 1px dashed rgba(255,255,255,0.09);
+    }
+    .dropZone:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .dropZone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      border-style: solid;
+    }
+    .dropZoneIcon {
+      border-radius: 0;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .dropZoneText strong { color: var(--text-bright); font-family: var(--font-main); }
+    .dropZoneText span   { color: var(--muted); font-family: var(--font-main); }
+
+    /* ── Preview box ───────────────────────────── */
+    .previewBox {
+      border-radius: 0;
+      font-family: var(--font-mono);
+    }
+    .previewVal { color: var(--text-bright); font-family: var(--font-mono); }
+    .previewBad .previewVal { color: var(--danger); }
+    .previewDup .previewVal { color: var(--warning); }
+
+    /* ── Type badges ───────────────────────────── */
+    .typeBadge {
+      border-radius: 0;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.07em;
+    }
+    .badge-IpAddress  { background: rgba(68,136,255,0.09);  color: #6699ff; border: 1px solid rgba(68,136,255,0.22); }
+    .badge-DomainName { background: rgba(232,168,32,0.09);  color: #e8a820; border: 1px solid rgba(232,168,32,0.24); }
+    .badge-Url        { background: rgba(255,140,32,0.09);  color: #ff8c20; border: 1px solid rgba(255,140,32,0.22); }
+    .badge-FileMd5    { background: rgba(160,102,255,0.09); color: #a068ff; border: 1px solid rgba(160,102,255,0.22); }
+    .badge-FileSha1   { background: rgba(255,68,180,0.09);  color: #ff44b4; border: 1px solid rgba(255,68,180,0.22); }
+    .badge-FileSha256 { background: rgba(0,232,120,0.09);   color: #00e878; border: 1px solid rgba(0,232,120,0.22); }
+    .badgeUnknown     { background: rgba(255,45,85,0.07);   color: var(--danger); border: 1px solid rgba(255,45,85,0.20); }
+
+    /* ── Stats grid ────────────────────────────── */
+    .stats-grid { border-radius: 0; }
+    .stat-card::before { height: 1px; top: unset; bottom: 0; }
+    .stat-card:nth-child(1)::before { background: var(--primary); }
+    .stat-card:nth-child(2)::before { background: #a068ff; }
+    .stat-card:nth-child(3)::before { background: #6699ff; }
+    .stat-card:nth-child(4)::before { background: #ff8c20; }
+    .stat-card:nth-child(1) .stat-value { color: var(--primary); }
+    .stat-card:nth-child(2) .stat-value { color: #a068ff; }
+    .stat-card:nth-child(3) .stat-value { color: #6699ff; }
+    .stat-card:nth-child(4) .stat-value { color: #ff8c20; }
+    .stat-value { font-family: var(--font-mono); letter-spacing: -0.04em; }
+    .stat-label { font-family: var(--font-main); letter-spacing: 0.10em; color: var(--muted); }
+
+    /* ── Table card ────────────────────────────── */
+    .table-card { border-radius: 0; }
+    .table-header-wrap { background: rgba(0,0,0,0.08); }
+    .header-default h3 {
+      font-family: var(--font-main) !important;
+      font-size: 11px !important;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-bright) !important;
+    }
+    .pill-badge {
+      border-radius: 0;
+      font-family: var(--font-main);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Bulk panel ────────────────────────────── */
+    .bulk-panel {
+      backdrop-filter: none;
+      background: rgba(6,8,16,0.98);
+      border-bottom: 1px solid var(--primary);
+    }
+    .bulk-count-badge {
+      border-radius: 0;
+      background: var(--primary);
+      color: var(--on-primary);
+      font-family: var(--font-main);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      box-shadow: none;
+    }
+    .bulk-select {
+      border-radius: 0;
+      font-family: var(--font-main);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .bulk-select:focus { border-color: var(--primary); }
+
+    /* ── Checkbox ──────────────────────────────── */
+    .chk {
+      border-radius: 0 !important;
+      border-color: rgba(255,255,255,0.20);
+    }
+    .chk:hover      { border-color: var(--primary); background-color: var(--primary-soft); }
+    .chk:checked    { background-color: var(--primary); border-color: var(--primary); }
+    .chk:indeterminate { background-color: var(--primary); border-color: var(--primary); }
+    .chk:checked::after {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306070d' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+
+    /* ── Table ─────────────────────────────────── */
+    table { font-family: var(--font-mono); font-size: 11px; }
+    th {
+      font-family: var(--font-main);
+      font-size: 9px;
+      letter-spacing: 0.10em;
+      color: var(--muted);
+    }
+    thead th {
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    th.col-check, td.col-check {
+      background: rgba(6,8,18,0.97);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    td select, td input {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      border-radius: 0;
+    }
+    td select:focus, td input:focus { border-color: var(--primary); }
+    tr:hover td { background: rgba(255,255,255,0.012); }
+    tr.selected-row td { background: var(--primary-soft); }
+    tbody tr:focus-visible td { background: var(--primary-soft); }
+    tbody tr.selected-row:focus-visible td { background: var(--primary-soft); }
+
+    /* ── Guard badges ──────────────────────────── */
+    .guardBadge { border-radius: 0; width: 22px; height: 22px; }
+    .guard-malicious    { color: var(--danger);  background: rgba(255,45,85,0.10);   border-color: rgba(255,45,85,0.25); }
+    .guard-caution-safe { color: var(--primary); background: var(--primary-soft);  border-color: var(--primary); }
+    .guard-review       { color: var(--warning); background: rgba(255,122,32,0.10);  border-color: rgba(255,122,32,0.25); }
+    .guard-checking     { color: #6699ff;        background: rgba(68,136,255,0.10);  border-color: rgba(68,136,255,0.25); }
+    .guard-error        { color: #a068ff;        background: rgba(160,102,255,0.10); border-color: rgba(160,102,255,0.25); }
+    .guard-unknown      { color: var(--muted);   background: rgba(53,63,88,0.10);    border-color: rgba(53,63,88,0.20); }
+
+    /* ── KQL box ───────────────────────────────── */
+    .kqlBox {
+      border-radius: 0;
+      background: rgba(0,0,0,0.32);
+      color: #88c8a0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.72;
+    }
+    .kqlBox:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    /* ── Toast ─────────────────────────────────── */
+    .toast {
+      border-radius: 0;
+      font-family: var(--font-main);
+      font-size: 11px;
+      background: rgba(8,10,20,0.98);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--primary);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.70);
+      letter-spacing: 0.01em;
+    }
+    .toastMsg { font-family: var(--font-main); }
+    .toast.ok   { border-left-color: var(--success); }
+    .toast.err  { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warning); }
+    .toastClose { font-family: var(--font-main); }
+
+    /* ── Mono class ────────────────────────────── */
+    .mono { font-family: var(--font-mono); color: var(--text-bright); font-size: 11px; }
+
+    /* ── Animations (keep same names, just tweak) ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    /* ── CTI Results card ───────────────────────── */
+    body { padding-bottom: 56px; }
+    .cti-section { margin-top: 18px; }
+    .cti-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .cti-head-meta {
+      display: flex; gap: 10px; align-items: center;
+      font-size: 11px; color: var(--muted);
+    }
+    .cti-empty {
+      padding: 32px 16px; text-align: center;
+      color: var(--muted); font-size: 11px;
+      border: 1px dashed var(--border); border-radius: 0;
+    }
+    .cti-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .cti-row {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.22);
+      border-radius: 0;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    .cti-row:hover { border-color: var(--border-mid); }
+    .cti-row.highlight {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+    .cti-row-head {
+      display: grid;
+      grid-template-columns: 78px 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cti-row-head:hover { background: rgba(255,255,255,0.02); }
+    .cti-row-type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-bright);
+      opacity: 0.7;
+    }
+    .cti-row-value {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cti-row-hits {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+    .cti-row-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+    .cti-row-ext {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--primary);
+      text-decoration: none;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .cti-row-ext:hover {
+      color: var(--primary-hover);
+      border-color: var(--primary);
+    }
+    .cti-row-caret {
+      color: var(--muted);
+      font-size: 10px;
+      transition: transform 0.18s ease;
+    }
+    .cti-row.open .cti-row-caret { transform: rotate(90deg); }
+    .cti-row-body {
+      display: none;
+      padding: 4px 14px 14px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.18);
+    }
+    .cti-row.open .cti-row-body { display: block; }
+
+    .cti-summary {
+      font-size: 11px;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 10px 0 12px 0;
+      border-bottom: 1px dashed var(--border);
+      margin-bottom: 12px;
+    }
+    .cti-providers {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
+    .prov-card {
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.28);
+      padding: 10px 12px;
+    }
+    .prov-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-bright);
+    }
+    .prov-name { font-weight: 600; }
+    .prov-status {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+    }
+    .prov-status.ok       { color: var(--success);  border-color: rgba(0,232,120,0.35); }
+    .prov-status.disabled { color: var(--muted);    border-color: rgba(53,63,88,0.35); }
+    .prov-status.error    { color: #a068ff;         border-color: rgba(160,102,255,0.35); }
+    .prov-status.unsupported { color: var(--muted); border-color: rgba(53,63,88,0.35); }
+    .prov-body { font-size: 11px; color: var(--text); font-family: var(--font-mono); line-height: 1.6; }
+    .prov-row { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+    .prov-row .k { color: var(--muted); }
+    .prov-row .v { color: var(--text-bright); text-align: right; word-break: break-all; }
+    .prov-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .prov-chip {
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+    .prov-chip.danger  { color: var(--danger);  border-color: rgba(255,45,85,0.35);  background: rgba(255,45,85,0.06); }
+    .prov-chip.warn    { color: var(--warning); border-color: rgba(255,122,32,0.35); background: rgba(255,122,32,0.06); }
+    .prov-chip.ok      { color: var(--success); border-color: rgba(0,232,120,0.35);  background: rgba(0,232,120,0.06); }
+    .prov-chip.trust   { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
+    .prov-link {
+      display: inline-block; margin-top: 4px;
+      font-size: 10px; color: var(--primary); text-decoration: none;
+      border-bottom: 1px dotted var(--primary);
+    }
+    .prov-link:hover { color: var(--primary-hover); }
+    .prov-footer { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
+
+    .vt-bars { display: flex; gap: 2px; margin-top: 4px; height: 6px; }
+    .vt-bar { flex: 0 0 auto; min-width: 4px; height: 100%; }
+    .vt-bar.mal   { background: var(--danger); }
+    .vt-bar.sus   { background: var(--warning); }
+    .vt-bar.harm  { background: var(--success); }
+    .vt-bar.und   { background: var(--muted); }
+    .vt-legend {
+      display: flex; gap: 10px; margin-top: 6px;
+      font-size: 9px; color: var(--muted); font-family: var(--font-mono);
+    }
+    .vt-legend span b { color: var(--text-bright); font-weight: 600; }
+
+    .abuse-bar { margin-top: 4px; height: 4px; background: rgba(255,255,255,0.05); position: relative; }
+    .abuse-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--danger); }
+    .abuse-bar-fill.low  { background: var(--success); }
+    .abuse-bar-fill.mid  { background: var(--warning); }
+    .abuse-bar-fill.high { background: var(--danger); }
+
+    /* ── KQL bottom dock ────────────────────────── */
+    .kql-dock {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 900;
+      background: rgba(8,10,20,0.98);
+      border-top: 1px solid var(--border-mid);
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      transform: translateY(calc(100% - 44px));
+      transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+    }
+    .kql-dock:hover,
+    .kql-dock.pinned,
+    .kql-dock:focus-within {
+      transform: translateY(0);
+    }
+    .kql-dock-handle {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 24px;
+      height: 44px; box-sizing: border-box;
+      cursor: default;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+    .kql-dock:hover .kql-dock-handle,
+    .kql-dock.pinned .kql-dock-handle {
+      border-bottom-color: var(--border);
+    }
+    .kql-dock-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px;
+      color: var(--text-bright);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .kql-dock-title .glow {
+      width: 6px; height: 6px; background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+    .kql-dock-right {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .kql-dock-stats {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .kql-dock-btn {
+      font-size: 10px; padding: 5px 10px;
+      font-family: var(--font-main);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-bright);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kql-dock-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .kql-dock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .kql-dock-btn.pin-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .kql-dock-body {
+      padding: 14px 24px 18px 24px;
+      max-height: 55vh;
+      overflow: auto;
+    }
+    .kql-dock-body .kqlBox {
+      width: 100%; box-sizing: border-box;
+      min-height: 220px;
+      resize: none;
+    }
+    .kql-dock-hint {
+      font-size: 10px; color: var(--muted);
+      margin-top: 8px; letter-spacing: 0.03em;
+    }
+
+    body.kql-pinned { padding-bottom: min(420px, 58vh); }
+
+    html[data-arsenal-theme="light"] body {
+      background-image: radial-gradient(ellipse at 60% 0%,
+        rgba(255,255,255,0.95) 0%, rgba(244,244,245,0.96) 48%, var(--bg) 100%);
+    }
+    html[data-arsenal-theme="light"] body::before { display: none; }
+    html[data-scanlines="off"] body::before { display: none; }
+    html[data-arsenal-theme="light"] body::after { opacity: 0.55; }
+    html[data-arsenal-theme="light"] .card,
+    html[data-arsenal-theme="light"] .table-card,
+    html[data-arsenal-theme="light"] .toast {
+      background: var(--card-bg);
+      border-color: var(--card-border);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+    }
+    html[data-arsenal-theme="light"] .card:hover { border-color: var(--border-mid); }
+    html[data-arsenal-theme="light"] textarea,
+    html[data-arsenal-theme="light"] input,
+    html[data-arsenal-theme="light"] select {
+      background: var(--input-bg);
+      border-color: var(--input-border);
+      color: var(--text-bright);
+    }
+    html[data-arsenal-theme="light"] textarea:hover,
+    html[data-arsenal-theme="light"] input:hover,
+    html[data-arsenal-theme="light"] select:hover {
+      background: rgba(0,0,0,0.045);
+      border-color: var(--border-mid);
+    }
+    html[data-arsenal-theme="light"] textarea:focus,
+    html[data-arsenal-theme="light"] input:focus,
+    html[data-arsenal-theme="light"] select:focus {
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+    html[data-arsenal-theme="light"] textarea::placeholder,
+    html[data-arsenal-theme="light"] input::placeholder {
+      color: #52525b;
+      opacity: 0.78;
+    }
+    html[data-arsenal-theme="light"] .kbd,
+    html[data-arsenal-theme="light"] .dropZoneIcon {
+      background: rgba(0,0,0,0.04);
+      border-color: var(--border);
+    }
+    html[data-arsenal-theme="light"] button.secondary:hover:not(:disabled) {
+      background: rgba(0,0,0,0.045);
+      border-color: var(--border-mid);
+    }
+    html[data-arsenal-theme="light"] #addBtn {
+      color: var(--on-primary);
+    }
+    html[data-arsenal-theme="light"] .dropZone {
+      border-color: var(--border);
+      background: rgba(255,255,255,0.62);
+    }
+    html[data-arsenal-theme="light"] .dropZone:hover,
+    html[data-arsenal-theme="light"] .dropZone.dragover {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+    }
+    html[data-arsenal-theme="light"] .previewBox,
+    html[data-arsenal-theme="light"] .stat-card,
+    html[data-arsenal-theme="light"] .bulk-panel,
+    html[data-arsenal-theme="light"] .cti-row,
+    html[data-arsenal-theme="light"] .prov-card {
+      background: rgba(255,255,255,0.74);
+    }
+    html[data-arsenal-theme="light"] thead th,
+    html[data-arsenal-theme="light"] th.col-check,
+    html[data-arsenal-theme="light"] td.col-check,
+    html[data-arsenal-theme="light"] .table-header-wrap {
+      background: rgba(255,255,255,0.92);
+    }
+    html[data-arsenal-theme="light"] .cti-row-head:hover,
+    html[data-arsenal-theme="light"] tr:hover td {
+      background: rgba(0,0,0,0.035);
+    }
+    html[data-arsenal-theme="light"] .cti-row-body {
+      background: rgba(0,0,0,0.025);
+    }
+    html[data-arsenal-theme="light"] .abuse-bar {
+      background: rgba(0,0,0,0.08);
+    }
+    html[data-arsenal-theme="light"] .kqlBox {
+      background: #f8fafc;
+      color: #166534;
+      border-color: var(--border);
+    }
+    html[data-arsenal-theme="light"] .kql-dock {
+      background: rgba(255,255,255,0.97);
+      border-top-color: var(--border-mid);
+      box-shadow: 0 -12px 28px rgba(15,23,42,0.12);
+    }
+    html[data-arsenal-theme="light"] .kql-dock-btn {
+      background: rgba(255,255,255,0.72);
+      border-color: var(--border);
+      color: var(--text-bright);
+    }
+    html[data-arsenal-theme="light"] .kql-dock-btn:hover:not(:disabled) {
+      background: var(--primary-soft);
+    }
+
+  </style>
+
+  <!-- Arsenal animation layer -->
+  <style id="arsenal-anim">
+    /* Entrance stagger */
+    .card { animation: fadeUp 0.38s ease-out both; }
+    .card:nth-child(1){ animation-delay:0.04s; }
+    .card:nth-child(2){ animation-delay:0.10s; }
+    .card:nth-child(3){ animation-delay:0.16s; }
+    .card:nth-child(4){ animation-delay:0.22s; }
+    .table-card       { animation-delay:0.18s; }
+
+    /* Accent strip pulse */
+    body::after {
+      animation: stripPulse 4s ease-in-out infinite;
+    }
+    @keyframes stripPulse {
+      0%,100%{ opacity:1; }
+      50%{ opacity:0.45; }
+    }
+
+    /* Smooth input transitions */
+    textarea, input, select {
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, color 0.2s !important;
+    }
+
+    /* Button shimmer */
+    #addBtn, .kql-dock-btn {
+      position: relative; overflow: hidden;
+    }
+    #addBtn::after {
+      content:'';
+      position:absolute; top:0; left:-100%;
+      width:60%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transition: left 0.5s;
+    }
+    #addBtn:hover::after { left:140%; }
+
+    /* Table row hover */
+    tbody tr {
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: var(--primary-soft); }
+
+    /* KQL dock glow */
+    .kql-dock-title .glow {
+      animation: glowPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%,100%{ box-shadow: 0 0 8px var(--primary); opacity:1; }
+      50%{ box-shadow: 0 0 18px var(--primary); opacity:0.7; }
+    }
+
+    /* History flash when loaded */
+    @keyframes flashLoad {
+      0%{ background: var(--primary-soft); }
+      100%{ background: transparent; }
+    }
+    .flash-loaded { animation: flashLoad 1.2s ease-out forwards; }
+
+    /* CTI row slide-in */
+    .cti-row {
+      animation: fadeUp 0.28s ease-out both;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer" class="toastContainer" aria-live="polite" aria-relevant="additions" aria-atomic="false"></div>
+
+  <div class="wrap">
+    <header>
+      <h1>
+        <span class="gradient-text">Defender XDR</span>
+        <span style="font-weight:400; opacity:0.55; font-size: 0.88em;">Indicator Composer</span>
+        <span class="pill-ver">V6.0</span>
+      </h1>
+      <p class="sub">An analyst-focused tool for validating, formatting, and staging indicators for Microsoft Defender XDR. </p>
+    </header>
+
+    <div class="main-grid">
+      
+      <div class="card">
+        <div class="input-header">
+          <label>Input Indicators (One per line)</label>
+          <span class="hint"><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> to quick add</span>
+        </div>
+        
+        <textarea id="input" placeholder="Examples:
+1.2.3.4
+evil.example.com
+https://malicious-site.com/login
+44d88612fea8a8f36de82e1278abb02f"></textarea>
+        <input id="bulkFileInput" type="file" accept=".txt,.csv,.ioc,text/plain,text/csv" style="display:none;" />
+
+        
+<div id="dropZone" class="dropZone" role="button" tabindex="0" aria-label="Import indicators file">
+  <div class="dropZoneIcon" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 16V7"></path>
+      <path d="M8.5 10.5 12 7l3.5 3.5"></path>
+      <path d="M20 16.5v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"></path>
+    </svg>
+  </div>
+  <div class="dropZoneText">
+    <strong>Drop file here</strong> or click to import
+    <span>.txt, .csv, .ioc</span>
+  </div>
+</div>
+
+        <div style="margin-top:16px; flex-grow:1; display:flex; flex-direction:column;">
+          <label>Indicators Preview</label>
+          <div id="previewBox" class="previewBox custom-scroll">
+            <div class="previewLine muted" style="justify-content:center; height:100%; color:var(--muted);">Waiting for input...</div>
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <div class="btnLeft">
+            <button id="addBtn">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add to List
+            </button>
+          </div>
+          <div class="btnRight">
+            <button id="clearBtn" class="danger">Clear</button>
+            <button id="exportBtn" class="secondary" disabled>Export CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <label style="color:var(--primary); margin-bottom:16px; font-size:10px; letter-spacing:1px; opacity:0.8;">DEFAULT SETTINGS (FOR NEW ENTRIES)</label>
+        
+        <div class="row">
+          <div>
+            <label>Severity</label>
+            <select id="defSeverity">
+              <option selected>Informational</option>
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+          <div>
+            <label>Generate Alert</label>
+            <select id="defAlert">
+              <option value="False" selected>False</option>
+              <option value="True">True</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Expiration</label>
+            <input id="defExpire" type="datetime-local" step="60" />
+          </div>
+          <div>
+            <label>RBAC Groups</label>
+            <input id="defRbac" placeholder="Optional: GroupName" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+             <label>Title</label>
+             <input id="defTitle" value="Malicious" placeholder="Malicious" />
+          </div>
+          <div>
+             <label>Description</label>
+             <input id="defDesc" value="Malicious" placeholder="Malicious" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Action</label>
+            <input id="defRec" placeholder="e.g. Block and investigate" />
+          </div>
+          <div>
+            <label>Category</label>
+            <input id="defCat" placeholder="e.g. SuspiciousActivity" />
+          </div>
+        </div>
+
+        <label>MITRE Techniques</label>
+        <input id="defMitre" placeholder="e.g. T1046, T1059.001" style="margin-bottom:0;" />
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total IOCs</span>
+            <span class="stat-value" id="caseCount">0</span>
+          </div>
+          <div class="stat-card">
+             <span class="stat-label">Hash (File)</span>
+             <span class="stat-value" id="hashCount">0</span>
+          </div>
+          <div class="stat-card">
+             <span class="stat-label">Network</span>
+             <span class="stat-value" id="netCount">0</span>
+          </div>
+          <div class="stat-card">
+             <span class="stat-label">Unique Domains</span>
+             <span class="stat-value" id="domainCount">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-header-wrap">
+        
+        <div class="header-default">
+            <h3 style="margin:0; font-size:16px; font-weight:600; color:white;">Staged Indicators</h3>
+            <div class="pill-badge">Count: <b id="count">0</b></div>
+        </div>
+
+        <div id="bulkPanel" class="bulk-panel">
+            <div class="bulk-left">
+                <span class="bulk-count-badge"><span id="bulkCount">0</span> Selected</span>
+                <span style="color:var(--muted); font-size:12px;">Modify selected items:</span>
+            </div>
+            <div class="bulk-actions">
+              <select id="bulkActionSelect" class="bulk-select">
+                 <option value="">Set Action...</option>
+                 <option value="BlockAndRemediate">BlockAndRemediate</option>
+                 <option value="Block">Block</option>
+                 <option value="Audit">Audit</option>
+                 <option value="Allowed">Allowed</option>
+              </select>
+              <select id="bulkSeveritySelect" class="bulk-select">
+                 <option value="">Set Severity...</option>
+                 <option value="Informational">Informational</option>
+                 <option value="Low">Low</option>
+                 <option value="Medium">Medium</option>
+                 <option value="High">High</option>
+              </select>
+              <select id="bulkAlertSelect" class="bulk-select">
+                 <option value="">Set Alert...</option>
+                 <option value="True">True</option>
+                 <option value="False">False</option>
+              </select>
+              <div style="width:1px; height:20px; background:rgba(255,255,255,0.15); margin:0 4px;"></div>
+              <button id="bulkDeleteBtn" class="danger xs" style="height:32px;">Delete</button>
+            </div>
+        </div>
+      </div>
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-check">
+                <div class="chk-wrap">
+                  <input type="checkbox" id="checkAll" class="chk">
+                </div>
+              </th>
+              <th>Type</th>
+              <th>Value</th>
+              <th class="col-guard guardHead" title="Guard status" aria-label="Guard status">
+                <span class="guardHeadIcon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"></path>
+                  </svg>
+                </span>
+              </th>
+              <th class="col-action">Action</th>
+              <th class="col-sev">Severity</th>
+              <th class="col-alert">Alert</th>
+              <th class="col-exp">Expiration</th>
+              <th class="td-remove" style="width:60px; text-align:center;"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            </tbody>
+        </table>
+      </div>
+      <div style="padding:12px 24px;">
+        <div class="hint">Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.</div>
+      </div>
+    </div>
+
+    <div class="card cti-section">
+      <div class="cti-head">
+        <label style="margin:0; font-size:12px;">CTI Results</label>
+        <div class="cti-head-meta">
+          <span id="ctiStats">0 indicators</span>
+          <button id="ctiRefreshBtn" class="secondary" style="padding:6px 12px; font-size:11px;" disabled>Re-check all</button>
+        </div>
+      </div>
+      <div id="ctiList" class="cti-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ── KQL dock (fixed bottom) ──────────────────── -->
+  <div id="kqlDock" class="kql-dock" role="region" aria-label="KQL query panel">
+    <div class="kql-dock-handle">
+      <div class="kql-dock-title">
+        <span class="glow" aria-hidden="true"></span>
+        Advanced Hunting KQL
+      </div>
+      <div class="kql-dock-right">
+        <span id="kqlStats" class="kql-dock-stats">0 indicators</span>
+        <button id="kqlPinBtn" class="kql-dock-btn pin-btn" type="button" aria-pressed="false" title="Pin open">Pin</button>
+        <button id="copyKqlBtn" class="kql-dock-btn" type="button" disabled>Copy KQL</button>
+      </div>
+    </div>
+    <div class="kql-dock-body">
+      <textarea id="kqlBox" class="kqlBox" readonly placeholder="// No data yet. Add indicators above to generate query."></textarea>
+      <div class="kql-dock-hint">Hover to peek · Pin to keep open · Blank lines and blocks are auto-cleaned.</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const COLS = ["IndicatorType","IndicatorValue","ExpirationTime","Action","Severity","Title","Description","RecommendedActions","RbacGroups","Category","MitreTechniques","GenerateAlert"];
+  let list = [];
+  const isTr = () => document.documentElement.lang === "tr";
+  const uiText = (en, tr) => isTr() ? tr : en;
+
+  const HEX = /^[0-9a-fA-F]+$/;
+  const HASH_TYPES = new Set(["FileMd5","FileSha1","FileSha256"]);
+  const STORAGE_KEY = "defender_ti_builder_data_v1";
+  const GUARD_API_URL = "http://127.0.0.1:8787/api/guard/check";
+  const GUARD_DEGRADED_SUMMARY = "Guard service unavailable or response invalid. Review manually before blocking.";
+  
+  const AUTO_CLEAN_MINUTES = 15;
+  let inactivityTimer;
+
+  function isMd5(s){ return s.length===32 && HEX.test(s); }
+  function isSha1(s){ return s.length===40 && HEX.test(s); }
+  function isSha256(s){ return s.length===64 && HEX.test(s); }
+  function isIPv4(s){
+    const m = s.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if(!m) return false;
+    for(let i=1;i<=4;i++){
+      const n = Number(m[i]);
+      if(Number.isNaN(n) || n<0 || n>255) return false;
+    }
+    return true;
+  }
+  function isIPv6(s){
+    return /^[0-9a-fA-F:]+$/.test(s) && s.includes(":") && s.length >= 2 && s.length <= 45;
+  }
+  function isUrl(s){
+    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(s)) return false;
+    try { new URL(s); return true; } catch { return false; }
+  }
+  function isDomain(s){
+    if(s.includes("://")) return false;
+    if(s.includes("/") || s.includes("\\") || s.includes("@") || /\s/.test(s)) return false;
+    const d = s.endsWith(".") ? s.slice(0,-1) : s;
+    if(d.length<3 || d.length>253) return false;
+    const parts = d.split(".");
+    if(parts.length < 2) return false;
+    const tld = parts[parts.length-1];
+    if(!/^[a-zA-Z]{2,63}$/.test(tld)) return false;
+    for(const p of parts){
+      if(p.length<1 || p.length>63) return false;
+      if(!/^[a-zA-Z0-9-]+$/.test(p)) return false;
+      if(p.startsWith("-") || p.endsWith("-")) return false;
+    }
+    return true;
+  }
+
+  function detectType(val){
+    const v = val.trim();
+    if(!v) return { ok:false, reason:"Empty" };
+    if(isSha256(v)) return { ok:true, type:"FileSha256" };
+    if(isSha1(v))   return { ok:true, type:"FileSha1" };
+    if(isMd5(v))    return { ok:true, type:"FileMd5" };
+    if(isIPv4(v) || isIPv6(v)) return { ok:true, type:"IpAddress" };
+    if(isUrl(v))               return { ok:true, type:"Url" };
+    if(isDomain(v))            return { ok:true, type:"DomainName" };
+    return { ok:false, reason:"Unrecognized" };
+  }
+
+  function allowedActionsForType(indicatorType){
+    return HASH_TYPES.has(indicatorType) ? ["BlockAndRemediate","Block","Audit","Allowed"] : ["Block","Audit","Allowed"];
+  }
+  function defaultActionForType(indicatorType){
+    return HASH_TYPES.has(indicatorType) ? "BlockAndRemediate" : "Block";
+  }
+
+  function csvEscape(s){
+    const str = (s ?? "").toString();
+    if(/[",\n\r]/.test(str)) return `"${str.replace(/"/g,'""')}"`;
+    return str;
+  }
+  function localTimestampForFilename(date = new Date()){
+    const pad = n => String(n).padStart(2, "0");
+    return [
+      date.getFullYear(),
+      pad(date.getMonth() + 1),
+      pad(date.getDate())
+    ].join("-") + "-" + [
+      pad(date.getHours()),
+      pad(date.getMinutes()),
+      pad(date.getSeconds())
+    ].join("-");
+  }
+  function expirationToIso(value){
+    const raw = (value ?? "").toString().trim();
+    if(!raw) return "";
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? raw : d.toISOString();
+  }
+  function expirationToInputValue(value){
+    const raw = (value ?? "").toString().trim();
+    if(!raw) return "";
+    const d = new Date(raw);
+    if(Number.isNaN(d.getTime())){
+      return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw) ? raw.slice(0, 16) : "";
+    }
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function rowForCsv(row){
+    return {...row, ExpirationTime: expirationToIso(row.ExpirationTime)};
+  }
+  function toCsv(rows){
+    const header = COLS.join(",");
+    const lines = rows.map(r => {
+      const exportRow = rowForCsv(r);
+      return COLS.map(c => csvEscape(exportRow[c] ?? "")).join(",");
+    });
+    return [header, ...lines].join("\r\n");
+  }
+  function download(filename, content, mime="text/csv;charset=utf-8"){
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function saveToLocal(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch(e) { console.warn("Storage full or blocked"); }
+  }
+  function loadFromLocal(){
+    try {
+      const d = localStorage.getItem(STORAGE_KEY);
+      if(d) {
+        list = JSON.parse(d);
+        list.forEach(i => {
+          i.selected = false;
+          ensureGuardShape(i);
+        });
+      }
+    } catch(e) { console.error("Load error", e); }
+  }
+
+  function resetInactivityTimer(){
+    if(inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      if(list.length > 0) {
+        list = [];
+        render();
+
+        // ✅ ALSO clear the input indicators box
+        input.value = "";
+
+        refreshPreview();
+        saveToLocal();
+        showToast(uiText("Session timed out. Workspace cleared.", "Oturum zaman aşımına uğradı. Çalışma alanı temizlendi."), "warn", 5000);
+      }
+    }, AUTO_CLEAN_MINUTES * 60 * 1000);
+  }
+
+
+  const el = (id)=>document.getElementById(id);
+  const input = el("input");
+  const bulkFileInput = el("bulkFileInput");
+  const dropZone = el("dropZone");
+  const previewBox = el("previewBox");
+  const addBtn = el("addBtn");
+  const exportBtn = el("exportBtn");
+  const clearBtn = el("clearBtn");
+  const tbody = el("tbody");
+  const count = el("count");
+
+  const kqlBox = el("kqlBox");
+  const copyKqlBtn = el("copyKqlBtn");
+  const toastContainer = el("toastContainer");
+  const kqlStats = el("kqlStats");
+  const ctiList = el("ctiList");
+  const ctiStats = el("ctiStats");
+  const ctiRefreshBtn = el("ctiRefreshBtn");
+  const kqlDock = el("kqlDock");
+  const kqlPinBtn = el("kqlPinBtn");
+
+  const checkAll = el("checkAll");
+  const bulkPanel = el("bulkPanel");
+  const bulkCount = el("bulkCount");
+  const bulkActionSelect = el("bulkActionSelect");
+  const bulkSeveritySelect = el("bulkSeveritySelect");
+  const bulkAlertSelect = el("bulkAlertSelect");
+  const bulkDeleteBtn = el("bulkDeleteBtn");
+
+  const defaults = {
+    severity: el("defSeverity"),
+    alert: el("defAlert"),
+    expire: el("defExpire"),
+    title: el("defTitle"),
+    desc: el("defDesc"),
+    rec: el("defRec"),
+    rbac: el("defRbac"),
+    cat: el("defCat"),
+    mitre: el("defMitre")
+  };
+
+  function escapeHtml(s){
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+  function makeDedupKey(type, value){
+    return `${type}::${(value ?? "").trim().toLowerCase()}`;
+  }
+  function getMaliciousFallback(s){
+    const v = (s ?? "").toString().trim();
+    return v.length ? v : "Malicious";
+  }
+  function setPreviewMessage(msg){
+    previewBox.innerHTML = `<div class="previewLine muted">${escapeHtml(msg)}</div>`;
+  }
+
+  function getDefaultGuardState(){
+    return {
+      status: "unknown",
+      label: "Unknown",
+      className: "guard-unknown",
+      summary: "Not checked yet.",
+      provider_summary: "",
+      warn_before_block: false,
+      checked_at: "",
+      providers: {},
+      provider_hits: []
+    };
+  }
+
+  function ensureGuardShape(row){
+    if(!row || typeof row !== "object") return getDefaultGuardState();
+    if(!row._guard || typeof row._guard !== "object"){
+      row._guard = getDefaultGuardState();
+    } else {
+      row._guard = Object.assign(getDefaultGuardState(), row._guard);
+    }
+    return row._guard;
+  }
+
+  function mapGuardStatus(rawStatus){
+  switch(String(rawStatus || "").trim()){
+    case "trusted_infrastructure":
+      return {
+        label: "Trusted Infra",
+        className: "guard-caution-safe",
+        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>`
+      };
+    case "checking":
+      return {
+        label: "Checking",
+        className: "guard-checking",
+        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"></path><path d="M20 4v6h-6"></path></svg>`
+      };
+    case "error":
+    case "degraded":
+      return {
+        label: "Degraded",
+        className: "guard-error",
+        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg>`
+      };
+    default:
+      return {
+        label: "OK",
+        className: "guard-unknown",
+        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>`
+      };
+  }
+}
+
+  function setGuardState(row, partial){
+    const current = ensureGuardShape(row);
+    const next = Object.assign({}, current, partial || {});
+    const ui = mapGuardStatus(next.status);
+    next.label = ui.label;
+    next.className = ui.className;
+    row._guard = next;
+    return row._guard;
+  }
+
+  function isBlockingAction(action){
+    return action === "Block" || action === "BlockAndRemediate";
+  }
+
+  function needsGuardCheck(row){
+    const guard = ensureGuardShape(row);
+    return !guard.checked_at || guard.status === "unknown" || guard.status === "degraded" || guard.status === "error";
+  }
+
+  function shouldWarnBeforeBlock(row){
+    const guard = ensureGuardShape(row);
+    return !!guard.warn_before_block;
+  }
+
+  function getGuardTooltip(row){
+    const guard = ensureGuardShape(row);
+    return [guard.summary, guard.provider_summary].filter(Boolean).join("\n");
+  }
+
+  function guardBadgeHtml(row){
+  const guard = ensureGuardShape(row);
+  const ui = mapGuardStatus(guard.status);
+  const title = escapeHtml(getGuardTooltip(row) || ui.label);
+  return `<span class="guardBadge ${ui.className}" title="${title}" aria-label="${escapeHtml(ui.label)}">${ui.icon}</span>`;
+}
+
+  async function postGuardCheck(rows){
+    const payload = {
+      indicators: rows.map(r => ({
+        value: r.IndicatorValue,
+        type: r.IndicatorType
+      }))
+    };
+
+    const res = await fetch(GUARD_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      throw new Error(`Guard API returned ${res.status}`);
+    }
+
+    const data = await res.json();
+    if(!data || !Array.isArray(data.results)){
+      throw new Error("Guard API returned an invalid payload");
+    }
+    return data.results;
+  }
+
+  async function checkGuardsForRows(rows){
+    const targetRows = (rows || []).filter(Boolean);
+    if(!targetRows.length) return;
+
+    targetRows.forEach(row => {
+      setGuardState(row, {
+        status: "checking",
+        summary: "Running CTI guard checks…",
+        provider_summary: "",
+        warn_before_block: false
+      });
+    });
+    render();
+
+    try {
+      const results = await postGuardCheck(targetRows);
+      targetRows.forEach((row, idx) => {
+        const result = results[idx] || {};
+        setGuardState(row, {
+          status: result.guard_status || "degraded",
+          summary: result.summary || GUARD_DEGRADED_SUMMARY,
+          provider_summary: result.provider_summary || "",
+          warn_before_block: !!result.warn_before_block,
+          checked_at: result.checked_at || new Date().toISOString(),
+          providers: result.providers || {},
+          provider_hits: Array.isArray(result.provider_hits) ? result.provider_hits : []
+        });
+      });
+    } catch (error) {
+      targetRows.forEach(row => {
+        setGuardState(row, {
+          status: "degraded",
+          summary: GUARD_DEGRADED_SUMMARY,
+          provider_summary: String(error && error.message ? error.message : error || ""),
+          warn_before_block: false,
+          checked_at: new Date().toISOString()
+        });
+      });
+      showToast(uiText("Guard service unavailable. Reputation safeguard disabled.", "Guard servisine ulaşılamıyor. İtibar koruması devre dışı."), "warn", 4500);
+    }
+
+    render();
+  }
+
+  async function ensureGuardForRow(row){
+    if(!row) return;
+    if(needsGuardCheck(row)){
+      await checkGuardsForRows([row]);
+    }
+  }
+
+  async function warnBeforeBlockingIfNeeded(row, previousAction){
+    if(!row || !isBlockingAction(row.Action)) return true;
+
+    await ensureGuardForRow(row);
+
+    if(!shouldWarnBeforeBlock(row)) return true;
+
+    const guard = ensureGuardShape(row);
+    const ok = confirm(
+      `HIGH-REPUTATION INDICATOR\n\n${guard.summary}\n\n${guard.provider_summary ? guard.provider_summary + "\n\n" : ""}Blocking widely-trusted infrastructure can break legitimate traffic across the tenant. Are you sure you want to keep the blocking action?`
+    );
+
+    if(ok) return true;
+
+    row.Action = previousAction;
+    showToast(uiText("Blocking action reverted after guard warning.", "Guard uyarısı nedeniyle engelleme eylemi geri alındı."), "warn", 4200);
+    render();
+    return false;
+  }
+
+  function scheduleInitialGuardChecks(){
+    const pending = list.filter(row => needsGuardCheck(row));
+    if(!pending.length) return;
+    checkGuardsForRows(pending);
+  }
+
+
+  function refreshPreview(){
+    const lines = input.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if(lines.length === 0){ setPreviewMessage("—"); return; }
+    const existing = new Set(list.map(r => makeDedupKey(r.IndicatorType, r.IndicatorValue)));
+    const seenInInput = new Set();
+    const maxShow = 50;
+    const showLines = lines.slice(0, maxShow);
+    const html = showLines.map(line => {
+      const d = detectType(line);
+      if(!d.ok){
+        return `<div class="previewLine previewBad"><span class="typeBadge badgeUnknown">${uiText("Unknown", "Bilinmiyor")}</span><span class="previewVal">${escapeHtml(line)}</span></div>`;
+      }
+      const key = makeDedupKey(d.type, line);
+      const isDup = existing.has(key) || seenInInput.has(key);
+      seenInInput.add(key);
+      const badgeClass = "badge-" + d.type;
+      if(isDup){
+        return `<div class="previewLine previewDup"><span class="typeBadge ${badgeClass}">${escapeHtml(d.type)}</span><span class="previewVal">${escapeHtml(line)} <span class="muted">${uiText("(duplicate)", "(tekrar)")}</span></span></div>`;
+      }
+      return `<div class="previewLine"><span class="typeBadge ${badgeClass}">${escapeHtml(d.type)}</span><span class="previewVal">${escapeHtml(line)}</span></div>`;
+    }).join("");
+    const more = lines.length > maxShow
+      ? `<div class="previewLine muted">… ${isTr() ? `${lines.length - maxShow} satır daha gösterilmiyor` : `${lines.length - maxShow} more line(s) not shown`}</div>`
+      : "";
+    previewBox.innerHTML = html + more;
+  }
+
+  function updateCaseSummary(){
+    const total = list.length;
+    const hash = list.filter(r => HASH_TYPES.has(r.IndicatorType)).length;
+    const net = total - hash;
+    const domains = new Set(list.filter(r => r.IndicatorType === "DomainName").map(r => (r.IndicatorValue || "").toLowerCase().trim())).size;
+    el("caseCount").textContent = String(total);
+    el("hashCount").textContent = String(hash);
+    el("netCount").textContent = String(net);
+    el("domainCount").textContent = String(domains);
+  }
+
+
+
+  function buildKql(){
+    const ips = [], urls = [], domains = [], md5s = [], sha1s = [], sha256s = [];
+    for(const r of list){
+      const v = (r.IndicatorValue || "").trim();
+      if(!v) continue;
+      if(r.IndicatorType === "IpAddress") ips.push(v);
+      else if(r.IndicatorType === "Url") urls.push(v);
+      else if(r.IndicatorType === "DomainName") domains.push(v);
+      else if(r.IndicatorType === "FileMd5") md5s.push(v);
+      else if(r.IndicatorType === "FileSha1") sha1s.push(v);
+      else if(r.IndicatorType === "FileSha256") sha256s.push(v);
+    }
+
+    const total = ips.length + urls.length + domains.length + md5s.length + sha1s.length + sha256s.length;
+    if(total === 0) return "";
+
+    const uniq = (arr) => Array.from(new Set(arr.map(x => (x || "").trim()).filter(Boolean)));
+    const quote = (s) => JSON.stringify(String(s));
+    const dyn = (arr) => `dynamic([${uniq(arr).map(x => quote(x)).join(", ")}])`;
+    const orJoin = (parts) => parts.filter(Boolean).join(" or ");
+    const containsAny = (field, arr) => uniq(arr).map(x => `${field} contains ${quote(x)}`).join(" or ");
+    const inClause = (field, varName, arr) => uniq(arr).length ? `${field} in~ (${varName})` : "";
+    const caseExpr = (pairs, fallback='""') => {
+      const flat = [];
+      for(const pair of (pairs || [])){
+        if(!pair || pair.length < 2) continue;
+        const cond = pair[0];
+        const value = pair[1];
+        if(cond && value) flat.push(cond, value);
+      }
+      return flat.length ? `case(${flat.join(", ")}, ${fallback})` : fallback;
+    };
+
+    const buildDomainFieldCondition = (field, opts={}) => {
+      if(!uniq(domains).length) return "";
+      const parts = [];
+      if(opts.exact) parts.push(`(${field} in~ (Domains))`);
+      if(opts.contains !== false) parts.push(`(${containsAny(field, domains)})`);
+      if(opts.subdomains) parts.push(`(${uniq(domains).map(x => `${field} endswith ${quote('.' + x)}`).join(' or ')})`);
+      if(opts.email) parts.push(`(${uniq(domains).map(x => `${field} endswith ${quote('@' + x)}`).join(' or ')})`);
+      return orJoin(parts);
+    };
+
+    const buildUrlFieldCondition = (field) => {
+      if(!uniq(urls).length) return "";
+      return orJoin([
+        inClause(field, "Urls", urls),
+        `(${containsAny(field, urls)})`
+      ]);
+    };
+
+    const buildIpJsonContains = (field) => {
+      if(!uniq(ips).length) return "";
+      return `(${containsAny(field, ips)})`;
+    };
+
+    const lines = [];
+    const blocks = [];
+    const lookback = "30d";
+
+    const uIps = uniq(ips);
+    const uUrls = uniq(urls);
+    const uDomains = uniq(domains);
+    const uMd5s = uniq(md5s);
+    const uSha1s = uniq(sha1s);
+    const uSha256s = uniq(sha256s);
+
+    if(uDomains.length) lines.push(`let Domains = ${dyn(uDomains)};`);
+    if(uUrls.length)    lines.push(`let Urls = ${dyn(uUrls)};`);
+    if(uIps.length)     lines.push(`let Ips = ${dyn(uIps)};`);
+    if(uSha256s.length) lines.push(`let Sha256s = ${dyn(uSha256s)};`);
+    if(uSha1s.length)   lines.push(`let Sha1s = ${dyn(uSha1s)};`);
+    if(uMd5s.length)    lines.push(`let Md5s = ${dyn(uMd5s)};`);
+    lines.push(`let Lookback = ${lookback};`);
+
+    const normalizedProject =
+      '| project Timestamp, SourceTable, MatchType, MatchedIndicator, MatchField, EntityId, DeviceName, Identity, RemoteIP, Url, Domain, FileName, FileHash, Context, ReportId';
+
+    const addBlock = (table, condition, normalizeLines) => {
+      if(!condition) return;
+      blocks.push([
+        "(",
+        table,
+        "| where Timestamp >= ago(Lookback)",
+        `| where ${condition}`,
+        ...normalizeLines,
+        normalizedProject,
+        ")"
+      ].join("\n"));
+    };
+
+    const fileHashCondition = orJoin([
+      uSha256s.length ? "SHA256 in~ (Sha256s)" : "",
+      uSha1s.length ? "SHA1 in~ (Sha1s)" : "",
+      uMd5s.length ? "MD5 in~ (Md5s)" : ""
+    ]);
+
+    const initiatingHashCondition = orJoin([
+      uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "",
+      uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "",
+      uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : ""
+    ]);
+
+    const deviceNetworkUrlCond = buildUrlFieldCondition("RemoteUrl");
+    const deviceNetworkDomainCond = buildDomainFieldCondition("RemoteUrl", { exact:true, contains:true, subdomains:true });
+
+    addBlock(
+      "DeviceNetworkEvents",
+      orJoin([
+        uIps.length ? "RemoteIP in (Ips)" : "",
+        uIps.length ? "LocalIP in (Ips)" : "",
+        deviceNetworkUrlCond,
+        deviceNetworkDomainCond,
+        initiatingHashCondition
+      ]),
+      [
+        '| extend SourceTable = "DeviceNetworkEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"IP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"IP"'],
+          [deviceNetworkUrlCond, '"URL"'],
+          [deviceNetworkDomainCond, '"Domain"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", 'RemoteIP'],
+          [uIps.length ? "LocalIP in (Ips)" : "", 'LocalIP'],
+          [deviceNetworkUrlCond, 'RemoteUrl'],
+          [deviceNetworkDomainCond, 'RemoteUrl'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"RemoteIP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"LocalIP"'],
+          [deviceNetworkUrlCond, '"RemoteUrl"'],
+          [deviceNetworkDomainCond, '"RemoteUrl"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend Url = iff(isnotempty(RemoteUrl), RemoteUrl, "")',
+        '| extend Domain = ""',
+        '| extend FileName = InitiatingProcessFileName',
+        '| extend FileHash = coalesce(InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; LocalIP=", tostring(LocalIP), "; RemotePort=", tostring(RemotePort), "; Cmd=", tostring(InitiatingProcessCommandLine))'
+      ]
+    );
+
+    const deviceEventsRemoteUrlCond = buildUrlFieldCondition("RemoteUrl");
+    const deviceEventsOriginUrlCond = buildUrlFieldCondition("FileOriginUrl");
+    const deviceEventsDomainCond = buildDomainFieldCondition("RemoteUrl", { exact:true, contains:true, subdomains:true });
+
+    addBlock(
+      "DeviceEvents",
+      orJoin([
+        uIps.length ? "RemoteIP in (Ips)" : "",
+        uIps.length ? "LocalIP in (Ips)" : "",
+        uIps.length ? "FileOriginIP in (Ips)" : "",
+        deviceEventsRemoteUrlCond,
+        deviceEventsOriginUrlCond,
+        deviceEventsDomainCond,
+        fileHashCondition,
+        initiatingHashCondition
+      ]),
+      [
+        '| extend SourceTable = "DeviceEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"IP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"IP"'],
+          [uIps.length ? "FileOriginIP in (Ips)" : "", '"IP"'],
+          [deviceEventsRemoteUrlCond, '"URL"'],
+          [deviceEventsOriginUrlCond, '"URL"'],
+          [deviceEventsDomainCond, '"Domain"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"Hash"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", 'RemoteIP'],
+          [uIps.length ? "LocalIP in (Ips)" : "", 'LocalIP'],
+          [uIps.length ? "FileOriginIP in (Ips)" : "", 'FileOriginIP'],
+          [deviceEventsRemoteUrlCond, 'RemoteUrl'],
+          [deviceEventsOriginUrlCond, 'FileOriginUrl'],
+          [deviceEventsDomainCond, 'RemoteUrl'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", 'SHA1'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", 'MD5'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"RemoteIP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"LocalIP"'],
+          [uIps.length ? "FileOriginIP in (Ips)" : "", '"FileOriginIP"'],
+          [deviceEventsRemoteUrlCond, '"RemoteUrl"'],
+          [deviceEventsOriginUrlCond, '"FileOriginUrl"'],
+          [deviceEventsDomainCond, '"RemoteUrl"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"SHA1"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"MD5"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend RemoteIP = coalesce(RemoteIP, FileOriginIP, LocalIP, "")',
+        '| extend Url = coalesce(RemoteUrl, FileOriginUrl, "")',
+        '| extend Domain = ""',
+        '| extend FileHash = coalesce(SHA256, SHA1, MD5, InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; File=", tostring(FileName), "; Folder=", tostring(FolderPath), "; Cmd=", tostring(InitiatingProcessCommandLine))'
+      ]
+    );
+
+    const deviceFileUrlCond = buildUrlFieldCondition("FileOriginUrl");
+    const deviceFileReferrerCond = buildUrlFieldCondition("FileOriginReferrerUrl");
+
+    addBlock(
+      "DeviceFileEvents",
+      orJoin([
+        uIps.length ? "FileOriginIP in (Ips)" : "",
+        deviceFileUrlCond,
+        deviceFileReferrerCond,
+        fileHashCondition,
+        initiatingHashCondition
+      ]),
+      [
+        '| extend SourceTable = "DeviceFileEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "FileOriginIP in (Ips)" : "", '"IP"'],
+          [deviceFileUrlCond, '"URL"'],
+          [deviceFileReferrerCond, '"URL"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"Hash"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "FileOriginIP in (Ips)" : "", 'FileOriginIP'],
+          [deviceFileUrlCond, 'FileOriginUrl'],
+          [deviceFileReferrerCond, 'FileOriginReferrerUrl'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", 'SHA1'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", 'MD5'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "FileOriginIP in (Ips)" : "", '"FileOriginIP"'],
+          [deviceFileUrlCond, '"FileOriginUrl"'],
+          [deviceFileReferrerCond, '"FileOriginReferrerUrl"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"SHA1"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"MD5"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend DeviceName = DeviceName',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend RemoteIP = coalesce(FileOriginIP, "")',
+        '| extend Url = coalesce(FileOriginUrl, FileOriginReferrerUrl, "")',
+        '| extend Domain = ""',
+        '| extend FileHash = coalesce(SHA256, SHA1, MD5, InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; File=", tostring(FileName), "; Folder=", tostring(FolderPath), "; Referrer=", tostring(FileOriginReferrerUrl))'
+      ]
+    );
+
+    addBlock(
+      "DeviceProcessEvents",
+      orJoin([ fileHashCondition, initiatingHashCondition ]),
+      [
+        '| extend SourceTable = "DeviceProcessEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"Hash"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Hash"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", 'SHA1'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", 'MD5'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"SHA1"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"MD5"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = FileName',
+        '| extend FileHash = coalesce(SHA256, SHA1, MD5, InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; File=", tostring(FileName), "; Folder=", tostring(FolderPath), "; ProcCmd=", tostring(ProcessCommandLine), "; InitCmd=", tostring(InitiatingProcessCommandLine))'
+      ]
+    );
+
+    addBlock(
+      "DeviceImageLoadEvents",
+      orJoin([
+        fileHashCondition,
+        initiatingHashCondition,
+        uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : ""
+      ]),
+      [
+        '| extend SourceTable = "DeviceImageLoadEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", '"IP"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"Hash"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", 'InitiatingProcessRemoteSessionIP'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", 'SHA1'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", 'MD5'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", '"InitiatingProcessRemoteSessionIP"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"SHA1"'],
+          [uMd5s.length ? "MD5 in~ (Md5s)" : "", '"MD5"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend RemoteIP = coalesce(InitiatingProcessRemoteSessionIP, "")',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = FileName',
+        '| extend FileHash = coalesce(SHA256, SHA1, MD5, InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; File=", tostring(FileName), "; Folder=", tostring(FolderPath), "; InitCmd=", tostring(InitiatingProcessCommandLine))'
+      ]
+    );
+
+    addBlock(
+      "DeviceRegistryEvents",
+      initiatingHashCondition,
+      [
+        '| extend SourceTable = "DeviceRegistryEvents"',
+        '| extend MatchType = "Hash"',
+        `| extend MatchedIndicator = ${caseExpr([
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend DeviceName = DeviceName',
+        '| extend Identity = InitiatingProcessAccountName',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = InitiatingProcessFileName',
+        '| extend FileHash = coalesce(InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; Key=", tostring(RegistryKey), "; ValueName=", tostring(RegistryValueName), "; ValueData=", tostring(RegistryValueData))'
+      ]
+    );
+
+    addBlock(
+      "DeviceLogonEvents",
+      orJoin([
+        uIps.length ? "RemoteIP in (Ips)" : "",
+        uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "",
+        initiatingHashCondition
+      ]),
+      [
+        '| extend SourceTable = "DeviceLogonEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"IP"'],
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", '"IP"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", 'RemoteIP'],
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", 'InitiatingProcessRemoteSessionIP'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", 'InitiatingProcessSHA256'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", 'InitiatingProcessSHA1'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", 'InitiatingProcessMD5']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"RemoteIP"'],
+          [uIps.length ? "InitiatingProcessRemoteSessionIP in (Ips)" : "", '"InitiatingProcessRemoteSessionIP"'],
+          [uSha256s.length ? "InitiatingProcessSHA256 in~ (Sha256s)" : "", '"InitiatingProcessSHA256"'],
+          [uSha1s.length ? "InitiatingProcessSHA1 in~ (Sha1s)" : "", '"InitiatingProcessSHA1"'],
+          [uMd5s.length ? "InitiatingProcessMD5 in~ (Md5s)" : "", '"InitiatingProcessMD5"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = iff(isnotempty(AccountName), strcat(AccountDomain, "\\\\", AccountName), InitiatingProcessAccountName)',
+        '| extend RemoteIP = coalesce(RemoteIP, InitiatingProcessRemoteSessionIP, "")',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = InitiatingProcessFileName',
+        '| extend FileHash = coalesce(InitiatingProcessSHA256, InitiatingProcessSHA1, InitiatingProcessMD5, "")',
+        '| extend Context = strcat("LogonType=", tostring(LogonType), "; RemoteDevice=", tostring(RemoteDeviceName), "; AccountSid=", tostring(AccountSid), "; InitCmd=", tostring(InitiatingProcessCommandLine))'
+      ]
+    );
+
+    addBlock(
+      "DeviceFileCertificateInfo",
+      uSha1s.length ? "SHA1 in~ (Sha1s)" : "",
+      [
+        '| extend SourceTable = "DeviceFileCertificateInfo"',
+        '| extend MatchType = "Hash"',
+        '| extend MatchedIndicator = SHA1',
+        '| extend MatchField = "SHA1"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = ""',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = SHA1',
+        '| extend Context = strcat("Signer=", tostring(Signer), "; Issuer=", tostring(Issuer), "; IsSigned=", tostring(IsSigned), "; IsTrusted=", tostring(IsTrusted), "; Serial=", tostring(CertificateSerialNumber))'
+      ]
+    );
+
+    addBlock(
+      "DeviceInfo",
+      uIps.length ? "PublicIP in (Ips)" : "",
+      [
+        '| extend SourceTable = "DeviceInfo"',
+        '| extend MatchType = "IP"',
+        '| extend MatchedIndicator = PublicIP',
+        '| extend MatchField = "PublicIP"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = ""',
+        '| extend RemoteIP = PublicIP',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("OS=", tostring(OSPlatform), "; Onboarding=", tostring(OnboardingStatus), "; SensorHealth=", tostring(SensorHealthState))'
+      ]
+    );
+
+    addBlock(
+      "DeviceNetworkInfo",
+      orJoin([
+        uIps.length ? "IPv4Dhcp in (Ips)" : "",
+        uIps.length ? "IPv6Dhcp in (Ips)" : "",
+        buildIpJsonContains("IPAddresses"),
+        buildIpJsonContains("DefaultGateways"),
+        buildIpJsonContains("DnsAddresses")
+      ]),
+      [
+        '| extend SourceTable = "DeviceNetworkInfo"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "IPv4Dhcp in (Ips)" : "", '"IP"'],
+          [uIps.length ? "IPv6Dhcp in (Ips)" : "", '"IP"'],
+          [buildIpJsonContains("IPAddresses"), '"IP"'],
+          [buildIpJsonContains("DefaultGateways"), '"IP"'],
+          [buildIpJsonContains("DnsAddresses"), '"IP"']
+        ], '"IP"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "IPv4Dhcp in (Ips)" : "", 'IPv4Dhcp'],
+          [uIps.length ? "IPv6Dhcp in (Ips)" : "", 'IPv6Dhcp'],
+          [buildIpJsonContains("IPAddresses"), 'tostring(IPAddresses)'],
+          [buildIpJsonContains("DefaultGateways"), 'tostring(DefaultGateways)'],
+          [buildIpJsonContains("DnsAddresses"), 'tostring(DnsAddresses)']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "IPv4Dhcp in (Ips)" : "", '"IPv4Dhcp"'],
+          [uIps.length ? "IPv6Dhcp in (Ips)" : "", '"IPv6Dhcp"'],
+          [buildIpJsonContains("IPAddresses"), '"IPAddresses"'],
+          [buildIpJsonContains("DefaultGateways"), '"DefaultGateways"'],
+          [buildIpJsonContains("DnsAddresses"), '"DnsAddresses"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = ""',
+        '| extend RemoteIP = case(isnotempty(IPv4Dhcp), IPv4Dhcp, isnotempty(IPv6Dhcp), IPv6Dhcp, "")',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Adapter=", tostring(NetworkAdapterName), "; MAC=", tostring(MacAddress), "; Gateways=", tostring(DefaultGateways), "; DNS=", tostring(DnsAddresses), "; IPs=", tostring(IPAddresses))'
+      ]
+    );
+
+    addBlock(
+      "IdentityLogonEvents",
+      orJoin([
+        uIps.length ? "IPAddress in (Ips)" : "",
+        uIps.length ? "DestinationIPAddress in (Ips)" : ""
+      ]),
+      [
+        '| extend SourceTable = "IdentityLogonEvents"',
+        '| extend MatchType = "IP"',
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", 'IPAddress'],
+          [uIps.length ? "DestinationIPAddress in (Ips)" : "", 'DestinationIPAddress']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", '"IPAddress"'],
+          [uIps.length ? "DestinationIPAddress in (Ips)" : "", '"DestinationIPAddress"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = coalesce(AccountUpn, AccountName, "")',
+        '| extend RemoteIP = coalesce(IPAddress, DestinationIPAddress, "")',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("App=", tostring(Application), "; LogonType=", tostring(LogonType), "; DestinationDevice=", tostring(DestinationDeviceName), "; Location=", tostring(Location), "; ISP=", tostring(Isp))'
+      ]
+    );
+
+    addBlock(
+      "IdentityQueryEvents",
+      orJoin([
+        uIps.length ? "IPAddress in (Ips)" : "",
+        uIps.length ? "DestinationIPAddress in (Ips)" : ""
+      ]),
+      [
+        '| extend SourceTable = "IdentityQueryEvents"',
+        '| extend MatchType = "IP"',
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", 'IPAddress'],
+          [uIps.length ? "DestinationIPAddress in (Ips)" : "", 'DestinationIPAddress']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", '"IPAddress"'],
+          [uIps.length ? "DestinationIPAddress in (Ips)" : "", '"DestinationIPAddress"']
+        ])}`,
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = coalesce(AccountUpn, AccountName, "")',
+        '| extend RemoteIP = coalesce(IPAddress, DestinationIPAddress, "")',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("App=", tostring(Application), "; QueryType=", tostring(QueryType), "; QueryTarget=", tostring(QueryTarget), "; Query=", tostring(Query), "; DestinationDevice=", tostring(DestinationDeviceName))'
+      ]
+    );
+
+    addBlock(
+      "IdentityEvents",
+      uIps.length ? "IPAddress in (Ips)" : "",
+      [
+        '| extend SourceTable = "IdentityEvents"',
+        '| extend MatchType = "IP"',
+        '| extend MatchedIndicator = IPAddress',
+        '| extend MatchField = "IPAddress"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend DeviceName = ""',
+        '| extend Identity = coalesce(AccountUpn, AccountDisplayName, "")',
+        '| extend RemoteIP = IPAddress',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("ActionType=", tostring(ActionType), "; ActionResult=", tostring(ActionResult), "; UserAgent=", tostring(UserAgent), "; Targets=", tostring(TargetObjects))'
+      ]
+    );
+
+    addBlock(
+      "CloudAppEvents",
+      uIps.length ? "IPAddress in (Ips)" : "",
+      [
+        '| extend SourceTable = "CloudAppEvents"',
+        '| extend MatchType = "IP"',
+        '| extend MatchedIndicator = IPAddress',
+        '| extend MatchField = "IPAddress"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend DeviceName = ""',
+        '| extend Identity = coalesce(AccountDisplayName, AccountId, "")',
+        '| extend RemoteIP = IPAddress',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("App=", tostring(Application), "; ActivityType=", tostring(ActivityType), "; Object=", tostring(ObjectType), "/", tostring(ObjectName), "; UserAgent=", tostring(UserAgent), "; ISP=", tostring(Isp), "; Country=", tostring(CountryCode))'
+      ]
+    );
+
+    addBlock(
+      "EntraIdSignInEvents",
+      uIps.length ? "IPAddress in (Ips)" : "",
+      [
+        '| extend SourceTable = "EntraIdSignInEvents"',
+        '| extend MatchType = "IP"',
+        '| extend MatchedIndicator = IPAddress',
+        '| extend MatchField = "IPAddress"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend Identity = coalesce(AccountUpn, AccountDisplayName, "")',
+        '| extend RemoteIP = IPAddress',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("App=", tostring(Application), "; LogonType=", tostring(LogonType), "; Device=", tostring(DeviceName), "; Location=", tostring(City), ",", tostring(State), ",", tostring(Country), "; CA=", tostring(ConditionalAccessStatus), "; Risk=", tostring(RiskLevelAggregated))'
+      ]
+    );
+
+    addBlock(
+      "EntraIdSpnSignInEvents",
+      uIps.length ? "IPAddress in (Ips)" : "",
+      [
+        '| extend SourceTable = "EntraIdSpnSignInEvents"',
+        '| extend MatchType = "IP"',
+        '| extend MatchedIndicator = IPAddress',
+        '| extend MatchField = "IPAddress"',
+        '| extend EntityId = tostring(ReportId)',
+        '| extend DeviceName = ""',
+        '| extend Identity = coalesce(ServicePrincipalName, ServicePrincipalId, "")',
+        '| extend RemoteIP = IPAddress',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("App=", tostring(Application), "; Resource=", tostring(ResourceDisplayName), "; Location=", tostring(City), ",", tostring(State), ",", tostring(Country))'
+      ]
+    );
+
+    const emailSenderMailFromDomainCond = buildDomainFieldCondition("SenderMailFromDomain", { exact:true, contains:true, subdomains:true });
+    const emailSenderFromDomainCond = buildDomainFieldCondition("SenderFromDomain", { exact:true, contains:true, subdomains:true });
+    const emailSenderMailFromAddressCond = buildDomainFieldCondition("SenderMailFromAddress", { contains:true, email:true });
+    const emailSenderFromAddressCond = buildDomainFieldCondition("SenderFromAddress", { contains:true, email:true });
+
+    addBlock(
+      "EmailEvents",
+      orJoin([
+        uIps.length ? "SenderIPv4 in (Ips)" : "",
+        uIps.length ? "SenderIPv6 in (Ips)" : "",
+        emailSenderMailFromDomainCond,
+        emailSenderFromDomainCond,
+        emailSenderMailFromAddressCond,
+        emailSenderFromAddressCond
+      ]),
+      [
+        '| extend SourceTable = "EmailEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "SenderIPv4 in (Ips)" : "", '"IP"'],
+          [uIps.length ? "SenderIPv6 in (Ips)" : "", '"IP"'],
+          [emailSenderMailFromDomainCond, '"Domain"'],
+          [emailSenderFromDomainCond, '"Domain"'],
+          [emailSenderMailFromAddressCond, '"Domain"'],
+          [emailSenderFromAddressCond, '"Domain"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "SenderIPv4 in (Ips)" : "", 'SenderIPv4'],
+          [uIps.length ? "SenderIPv6 in (Ips)" : "", 'SenderIPv6'],
+          [emailSenderMailFromDomainCond, 'SenderMailFromDomain'],
+          [emailSenderFromDomainCond, 'SenderFromDomain'],
+          [emailSenderMailFromAddressCond, 'SenderMailFromAddress'],
+          [emailSenderFromAddressCond, 'SenderFromAddress']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "SenderIPv4 in (Ips)" : "", '"SenderIPv4"'],
+          [uIps.length ? "SenderIPv6 in (Ips)" : "", '"SenderIPv6"'],
+          [emailSenderMailFromDomainCond, '"SenderMailFromDomain"'],
+          [emailSenderFromDomainCond, '"SenderFromDomain"'],
+          [emailSenderMailFromAddressCond, '"SenderMailFromAddress"'],
+          [emailSenderFromAddressCond, '"SenderFromAddress"']
+        ])}`,
+        '| extend EntityId = NetworkMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = RecipientEmailAddress',
+        '| extend RemoteIP = coalesce(SenderIPv4, SenderIPv6, "")',
+        '| extend Url = ""',
+        '| extend Domain = coalesce(SenderFromDomain, SenderMailFromDomain, tostring(split(coalesce(SenderFromAddress, SenderMailFromAddress), "@")[1]), "")',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Subject=", tostring(Subject), "; Sender=", tostring(coalesce(SenderFromAddress, SenderMailFromAddress)), "; Direction=", tostring(EmailDirection), "; Delivery=", tostring(DeliveryAction), "/", tostring(DeliveryLocation), "; Threats=", tostring(ThreatTypes), "; Detections=", tostring(DetectionMethods))'
+      ]
+    );
+
+    const emailAttachmentSenderCond = buildDomainFieldCondition("SenderFromAddress", { contains:true, email:true });
+
+    addBlock(
+      "EmailAttachmentInfo",
+      orJoin([
+        uSha256s.length ? "SHA256 in~ (Sha256s)" : "",
+        emailAttachmentSenderCond
+      ]),
+      [
+        '| extend SourceTable = "EmailAttachmentInfo"',
+        `| extend MatchType = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"'],
+          [emailAttachmentSenderCond, '"Domain"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256'],
+          [emailAttachmentSenderCond, 'SenderFromAddress']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"'],
+          [emailAttachmentSenderCond, '"SenderFromAddress"']
+        ])}`,
+        '| extend EntityId = NetworkMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = RecipientEmailAddress',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = tostring(split(SenderFromAddress, "@")[1])',
+        '| extend FileHash = coalesce(SHA256, "")',
+        '| extend Context = strcat("Sender=", tostring(SenderFromAddress), "; FileType=", tostring(FileType), "; Threats=", tostring(ThreatTypes), "; ThreatNames=", tostring(ThreatNames), "; Detections=", tostring(DetectionMethods))'
+      ]
+    );
+
+    const emailUrlUrlCond = buildUrlFieldCondition("Url");
+    const emailUrlDomainCond = buildDomainFieldCondition("UrlDomain", { exact:true, contains:true, subdomains:true });
+    const emailUrlUrlDomainContainsCond = buildDomainFieldCondition("Url", { contains:true });
+
+    addBlock(
+      "EmailUrlInfo",
+      orJoin([
+        emailUrlUrlCond,
+        emailUrlDomainCond,
+        emailUrlUrlDomainContainsCond
+      ]),
+      [
+        '| extend SourceTable = "EmailUrlInfo"',
+        `| extend MatchType = ${caseExpr([
+          [emailUrlUrlCond, '"URL"'],
+          [emailUrlDomainCond, '"Domain"'],
+          [emailUrlUrlDomainContainsCond, '"Domain"']
+        ], '"URL/Domain"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [emailUrlUrlCond, 'Url'],
+          [emailUrlDomainCond, 'UrlDomain'],
+          [emailUrlUrlDomainContainsCond, 'Url']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [emailUrlUrlCond, '"Url"'],
+          [emailUrlDomainCond, '"UrlDomain"'],
+          [emailUrlUrlDomainContainsCond, '"Url"']
+        ])}`,
+        '| extend EntityId = NetworkMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = ""',
+        '| extend RemoteIP = ""',
+        '| extend Domain = coalesce(UrlDomain, "")',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("UrlLocation=", tostring(UrlLocation), "; NetworkMessageId=", tostring(NetworkMessageId))'
+      ]
+    );
+
+    const emailPostRecipientCond = buildDomainFieldCondition("RecipientEmailAddress", { contains:true, email:true });
+
+    addBlock(
+      "EmailPostDeliveryEvents",
+      emailPostRecipientCond,
+      [
+        '| extend SourceTable = "EmailPostDeliveryEvents"',
+        '| extend MatchType = "Domain"',
+        '| extend MatchedIndicator = RecipientEmailAddress',
+        '| extend MatchField = "RecipientEmailAddress"',
+        '| extend EntityId = NetworkMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = RecipientEmailAddress',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = tostring(split(RecipientEmailAddress, "@")[1])',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("InternetMessageId=", tostring(InternetMessageId), "; Action=", tostring(Action), "; ActionType=", tostring(ActionType), "; Trigger=", tostring(ActionTrigger), "; Result=", tostring(ActionResult))'
+      ]
+    );
+
+    const urlClickUrlCond = buildUrlFieldCondition("Url");
+    const urlClickChainUrlCond = uUrls.length ? `(${containsAny("UrlChain", uUrls)})` : "";
+    const urlClickDomainCond = buildDomainFieldCondition("Url", { contains:true });
+    const urlClickChainDomainCond = uDomains.length ? `(${containsAny("UrlChain", uDomains)})` : "";
+
+    addBlock(
+      "UrlClickEvents",
+      orJoin([
+        urlClickUrlCond,
+        urlClickChainUrlCond,
+        urlClickDomainCond,
+        urlClickChainDomainCond,
+        uIps.length ? "IPAddress in (Ips)" : ""
+      ]),
+      [
+        '| extend SourceTable = "UrlClickEvents"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", '"IP"'],
+          [urlClickUrlCond, '"URL"'],
+          [urlClickChainUrlCond, '"URL"'],
+          [urlClickDomainCond, '"Domain"'],
+          [urlClickChainDomainCond, '"Domain"']
+        ], '"URL/Domain"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", 'IPAddress'],
+          [urlClickUrlCond, 'Url'],
+          [urlClickChainUrlCond, 'UrlChain'],
+          [urlClickDomainCond, 'Url'],
+          [urlClickChainDomainCond, 'UrlChain']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "IPAddress in (Ips)" : "", '"IPAddress"'],
+          [urlClickUrlCond, '"Url"'],
+          [urlClickChainUrlCond, '"UrlChain"'],
+          [urlClickDomainCond, '"Url"'],
+          [urlClickChainDomainCond, '"UrlChain"']
+        ])}`,
+        '| extend EntityId = NetworkMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = AccountUpn',
+        '| extend RemoteIP = coalesce(IPAddress, "")',
+        '| extend Domain = ""',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Workload=", tostring(Workload), "; ActionType=", tostring(ActionType), "; IsClickedThrough=", tostring(IsClickedThrough), "; Threats=", tostring(ThreatTypes), "; Detections=", tostring(DetectionMethods), "; UrlChain=", tostring(UrlChain))'
+      ]
+    );
+
+    const messageSenderCond = buildDomainFieldCondition("SenderEmailAddress", { contains:true, email:true });
+
+    addBlock(
+      "MessageEvents",
+      messageSenderCond,
+      [
+        '| extend SourceTable = "MessageEvents"',
+        '| extend MatchType = "Domain"',
+        '| extend MatchedIndicator = SenderEmailAddress',
+        '| extend MatchField = "SenderEmailAddress"',
+        '| extend EntityId = TeamsMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = coalesce(SenderEmailAddress, SenderDisplayName, "")',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = tostring(split(SenderEmailAddress, "@")[1])',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Subject=", tostring(MessageSubject), "; Group=", tostring(GroupName), "; ThreadId=", tostring(ThreadId), "; Delivery=", tostring(DeliveryAction), "/", tostring(DeliveryLocation), "; Threats=", tostring(ThreatTypes))'
+      ]
+    );
+
+    addBlock(
+      "MessagePostDeliveryEvents",
+      messageSenderCond,
+      [
+        '| extend SourceTable = "MessagePostDeliveryEvents"',
+        '| extend MatchType = "Domain"',
+        '| extend MatchedIndicator = SenderEmailAddress',
+        '| extend MatchField = "SenderEmailAddress"',
+        '| extend EntityId = TeamsMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = SenderEmailAddress',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = tostring(split(SenderEmailAddress, "@")[1])',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Action=", tostring(Action), "; ActionType=", tostring(ActionType), "; Trigger=", tostring(ActionTrigger), "; Result=", tostring(ActionResult), "; LatestDeliveryLocation=", tostring(LatestDeliveryLocation), "; Threats=", tostring(ThreatTypes))'
+      ]
+    );
+
+    const messageUrlUrlCond = buildUrlFieldCondition("Url");
+    const messageUrlDomainCond = buildDomainFieldCondition("UrlDomain", { exact:true, contains:true, subdomains:true });
+    const messageUrlContainsCond = buildDomainFieldCondition("Url", { contains:true });
+
+    addBlock(
+      "MessageUrlInfo",
+      orJoin([
+        messageUrlUrlCond,
+        messageUrlDomainCond,
+        messageUrlContainsCond
+      ]),
+      [
+        '| extend SourceTable = "MessageUrlInfo"',
+        `| extend MatchType = ${caseExpr([
+          [messageUrlUrlCond, '"URL"'],
+          [messageUrlDomainCond, '"Domain"'],
+          [messageUrlContainsCond, '"Domain"']
+        ], '"URL/Domain"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [messageUrlUrlCond, 'Url'],
+          [messageUrlDomainCond, 'UrlDomain'],
+          [messageUrlContainsCond, 'Url']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [messageUrlUrlCond, '"Url"'],
+          [messageUrlDomainCond, '"UrlDomain"'],
+          [messageUrlContainsCond, '"Url"']
+        ])}`,
+        '| extend EntityId = TeamsMessageId',
+        '| extend DeviceName = ""',
+        '| extend Identity = ""',
+        '| extend RemoteIP = ""',
+        '| extend Domain = coalesce(UrlDomain, "")',
+        '| extend FileName = ""',
+        '| extend FileHash = ""',
+        '| extend Context = strcat("Threats=", tostring(ThreatTypes), "; TeamsMessageId=", tostring(TeamsMessageId))'
+      ]
+    );
+
+    addBlock(
+      "FileMaliciousContentInfo",
+      uSha256s.length ? "SHA256 in~ (Sha256s)" : "",
+      [
+        '| extend SourceTable = "FileMaliciousContentInfo"',
+        '| extend MatchType = "Hash"',
+        '| extend MatchedIndicator = SHA256',
+        '| extend MatchField = "SHA256"',
+        '| extend EntityId = coalesce(DocumentId, tostring(ReportId))',
+        '| extend DeviceName = ""',
+        '| extend Identity = coalesce(FileOwnerUpn, FileOwnerDisplayName, LastModifyingAccountUpn, "")',
+        '| extend RemoteIP = ""',
+        '| extend Url = ""',
+        '| extend Domain = ""',
+        '| extend FileHash = SHA256',
+        '| extend Context = strcat("Workload=", tostring(Workload), "; File=", tostring(FileName), "; Folder=", tostring(FolderPath), "; Threats=", tostring(ThreatTypes), "; ThreatNames=", tostring(ThreatNames), "; Detections=", tostring(DetectionMethods))'
+      ]
+    );
+
+    const alertRemoteUrlCond = buildUrlFieldCondition("RemoteUrl");
+    const alertRemoteDomainCond = buildDomainFieldCondition("RemoteUrl", { exact:true, contains:true, subdomains:true });
+
+    addBlock(
+      "AlertEvidence",
+      orJoin([
+        uIps.length ? "RemoteIP in (Ips)" : "",
+        uIps.length ? "LocalIP in (Ips)" : "",
+        alertRemoteUrlCond,
+        alertRemoteDomainCond,
+        uSha1s.length ? "SHA1 in~ (Sha1s)" : "",
+        uSha256s.length ? "SHA256 in~ (Sha256s)" : ""
+      ]),
+      [
+        '| extend SourceTable = "AlertEvidence"',
+        `| extend MatchType = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"IP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"IP"'],
+          [alertRemoteUrlCond, '"URL"'],
+          [alertRemoteDomainCond, '"Domain"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"Hash"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"Hash"']
+        ], '"Match"')}`,
+        `| extend MatchedIndicator = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", 'RemoteIP'],
+          [uIps.length ? "LocalIP in (Ips)" : "", 'LocalIP'],
+          [alertRemoteUrlCond, 'RemoteUrl'],
+          [alertRemoteDomainCond, 'RemoteUrl'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", 'SHA1'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", 'SHA256']
+        ])}`,
+        `| extend MatchField = ${caseExpr([
+          [uIps.length ? "RemoteIP in (Ips)" : "", '"RemoteIP"'],
+          [uIps.length ? "LocalIP in (Ips)" : "", '"LocalIP"'],
+          [alertRemoteUrlCond, '"RemoteUrl"'],
+          [alertRemoteDomainCond, '"RemoteUrl"'],
+          [uSha1s.length ? "SHA1 in~ (Sha1s)" : "", '"SHA1"'],
+          [uSha256s.length ? "SHA256 in~ (Sha256s)" : "", '"SHA256"']
+        ])}`,
+        '| extend EntityId = coalesce(AlertId, NetworkMessageId, tostring(ReportId))',
+        '| extend Identity = coalesce(AccountUpn, AccountName, "")',
+        '| extend RemoteIP = coalesce(RemoteIP, LocalIP, "")',
+        '| extend Url = coalesce(RemoteUrl, "")',
+        '| extend Domain = ""',
+        '| extend FileHash = coalesce(SHA256, SHA1, "")',
+        '| extend Context = strcat("AlertTitle=", tostring(Title), "; Service=", tostring(ServiceSource), "; Detection=", tostring(DetectionSource), "; EntityType=", tostring(EntityType), "; Role=", tostring(EvidenceRole), "; Direction=", tostring(EvidenceDirection), "; ThreatFamily=", tostring(ThreatFamily))'
+      ]
+    );
+
+    if(blocks.length === 0) return "";
+
+    lines.push("// Auto-generated by Indicator Composer");
+    lines.push("// Normalized output schema to keep results compact and analyst-friendly.");
+    lines.push("// Columns: Timestamp, SourceTable, MatchType, MatchedIndicator, MatchField, EntityId, DeviceName, Identity, RemoteIP, Url, Domain, FileName, FileHash, Context, ReportId");
+    lines.push("union isfuzzy=true");
+    lines.push(blocks.join(",\n"));
+    lines.push("| where isnotempty(MatchedIndicator)");
+    lines.push("| order by Timestamp desc");
+    return lines.join("\n");
+  }
+
+  function updateKql(){
+    const q = buildKql();
+    kqlBox.value = q || "";
+    kqlStats.textContent = isTr() ? `${list.length} i̇ndikatör` : `${list.length} indicators`;
+    copyKqlBtn.disabled = !q;
+  }
+
+  // ─── CTI Results panel ──────────────────────────────────────
+  const PROVIDER_LABELS = {
+    virustotal:    "VirusTotal",
+    abuseipdb:     "AbuseIPDB",
+    ipinfo:        "IPInfo",
+    otx:           "AlienVault OTX",
+    shodandb:      "Shodan InternetDB",
+    malwarebazaar: "MalwareBazaar",
+    urlhaus:       "URLhaus"
+  };
+  const PROVIDER_ORDER = ["virustotal","abuseipdb","ipinfo","otx","shodandb","malwarebazaar","urlhaus"];
+
+  const PROVIDER_SITE_LABEL = {
+    virustotal:"VirusTotal", abuseipdb:"AbuseIPDB", ipinfo:"IPInfo",
+    otx:"OTX", shodandb:"Shodan", malwarebazaar:"MalwareBazaar",
+    urlhaus:"URLhaus"
+  };
+
+  function anyrunLookupUrl(value){
+    const payload = JSON.stringify({ query: String(value), dateRange: 1 });
+    return `https://intelligence.any.run/analysis/lookup#${payload.replace(/"/g, "%22")}`;
+  }
+
+  function normalizeProviderIndicatorType(type){
+    const t = String(type || "").trim().toLowerCase();
+    if(t === "ipaddress" || t === "ip") return "ip";
+    if(t === "domainname" || t === "domain") return "domain";
+    if(t === "url") return "url";
+    if(t === "filemd5" || t === "filesha1" || t === "filesha256" || t === "hash") return "hash";
+    return t;
+  }
+
+  function providerExtUrl(key, type, value, p){
+    type = normalizeProviderIndicatorType(type);
+    const enc = encodeURIComponent(value);
+    switch(key){
+      case "virustotal":    return p && p.link ? p.link : null;
+      case "abuseipdb":     return type === "ip" ? `https://www.abuseipdb.com/check/${enc}` : null;
+      case "ipinfo":        return type === "ip" ? `https://ipinfo.io/${enc}` : null;
+      case "otx": {
+        const seg = type === "ip" ? "IPv4" : type === "domain" ? "domain" : type === "url" ? "url" : type === "hash" ? "file" : null;
+        return seg ? `https://otx.alienvault.com/indicator/${seg}/${enc}` : null;
+      }
+      case "shodandb":      return type === "ip" ? `https://www.shodan.io/host/${enc}` : null;
+      case "malwarebazaar": return type === "hash" ? `https://bazaar.abuse.ch/sample/${enc}/` : null;
+      case "urlhaus": {
+        if(type === "url") return `https://urlhaus.abuse.ch/browse.php?search=${enc}`;
+        if(type === "domain" || type === "ip") return `https://urlhaus.abuse.ch/host/${enc}/`;
+        return null;
+      }
+      default: return null;
+    }
+  }
+
+  function provStatusClass(status){
+    const s = String(status || "").toLowerCase();
+    if(s === "ok") return "ok";
+    if(s === "disabled") return "disabled";
+    if(s === "unsupported") return "unsupported";
+    return "error";
+  }
+
+  function kvRow(k, v){
+    return `<div class="prov-row"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(String(v))}</span></div>`;
+  }
+
+  function chips(items, cls){
+    if(!items || !items.length) return "";
+    const c = cls ? ` ${cls}` : "";
+    return `<div class="prov-chips">${items.map(t => `<span class="prov-chip${c}">${escapeHtml(String(t))}</span>`).join("")}</div>`;
+  }
+
+  function renderVirusTotal(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    const mal = Number(p.maliciousScore  || 0);
+    const sus = Number(p.suspiciousScore || 0);
+    const harm = Number(p.harmlessScore  || 0);
+    const und = Number(p.undetectedScore || 0);
+    const total = mal + sus + harm + und || 1;
+    const bar = (n, cls) => n > 0 ? `<div class="vt-bar ${cls}" style="flex-grow:${n / total}"></div>` : "";
+    return `
+      <div class="prov-body">
+        <div class="vt-bars">${bar(mal,"mal")}${bar(sus,"sus")}${bar(harm,"harm")}${bar(und,"und")}</div>
+        <div class="vt-legend">
+          <span><b>${mal}</b> mal</span>
+          <span><b>${sus}</b> sus</span>
+          <span><b>${harm}</b> harm</span>
+          <span><b>${und}</b> und</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAbuseIPDB(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    const score = Number(p.abuseConfidenceScore || 0);
+    const cls = score >= 75 ? "high" : score >= 25 ? "mid" : "low";
+    const chipCls = score >= 75 ? "danger" : score >= 25 ? "warn" : "ok";
+    const out = [];
+    out.push(`<div class="prov-row"><span class="k">Confidence</span><span class="v"><span class="prov-chip ${chipCls}">${score}/100</span></span></div>`);
+    out.push(kvRow("Reports", p.totalReports ?? 0));
+    if(p.usageType) out.push(kvRow("Usage", p.usageType));
+    if(p.isWhitelisted) out.push(`<div class="prov-row"><span class="k">Whitelisted</span><span class="v"><span class="prov-chip trust">yes</span></span></div>`);
+    return `
+      <div class="prov-body">
+        ${out.join("")}
+        <div class="abuse-bar"><div class="abuse-bar-fill ${cls}" style="width:${score}%"></div></div>
+      </div>
+    `;
+  }
+
+  function renderIPInfo(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    const out = [];
+    if(p.asn) out.push(kvRow("ASN", `AS${p.asn}`));
+    if(p.orgName) out.push(kvRow("Org", p.orgName));
+    if(p.country) out.push(kvRow("Country", p.country));
+    if(p.trusted){
+      out.push(`<div class="prov-row"><span class="k">Trust</span><span class="v"><span class="prov-chip trust">trusted ASN</span></span></div>`);
+    }
+    return `<div class="prov-body">${out.join("") || escapeHtml(p.summary || "")}</div>`;
+  }
+
+  function renderOTX(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    const pulses = Number(p.pulseCount || 0);
+    const rep = Number(p.reputation || 0);
+    const pulseChip = pulses > 0 ? "danger" : "ok";
+    const out = [];
+    out.push(`<div class="prov-row"><span class="k">Pulses</span><span class="v"><span class="prov-chip ${pulseChip}">${pulses}</span></span></div>`);
+    out.push(kvRow("Reputation", rep));
+    if(p.malwareFamilies && p.malwareFamilies.length){
+      out.push(`<div class="prov-row"><span class="k">Malware</span><span class="v"></span></div>`);
+      out.push(chips(p.malwareFamilies, "danger"));
+    }
+    return `<div class="prov-body">${out.join("")}</div>`;
+  }
+
+  function renderShodanDB(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    if(!p.known){
+      return `<div class="prov-body">Not indexed by Shodan.</div>`;
+    }
+    const out = [];
+    out.push(kvRow("Open ports", (p.ports || []).length));
+    if(p.hostnames && p.hostnames.length) out.push(kvRow("Hostname", p.hostnames[0]));
+    if(p.vulns && p.vulns.length){
+      out.push(`<div class="prov-row"><span class="k">CVEs</span><span class="v">${p.vulns.length} found</span></div>`);
+      out.push(chips(p.vulns.slice(0, 8), "danger"));
+    }
+    if(p.tags && p.tags.length){
+      out.push(`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>`);
+      out.push(chips(p.tags));
+    }
+    return `<div class="prov-body">${out.join("")}</div>`;
+  }
+
+  function renderMalwareBazaar(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    if(!p.found){
+      return `<div class="prov-body">Not found in MalwareBazaar.</div>`;
+    }
+    const out = [];
+    out.push(`<div class="prov-row"><span class="k">Status</span><span class="v"><span class="prov-chip danger">KNOWN SAMPLE</span></span></div>`);
+    if(p.signature) out.push(kvRow("Family", p.signature));
+    if(p.fileType) out.push(kvRow("Type", p.fileType));
+    if(p.deliveryMethod) out.push(kvRow("Delivery", p.deliveryMethod));
+    if(p.tags && p.tags.length){
+      out.push(`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>`);
+      out.push(chips(p.tags.slice(0, 8), "warn"));
+    }
+    return `<div class="prov-body">${out.join("")}</div>`;
+  }
+
+  function renderURLhaus(p){
+    if(p.status !== "ok"){
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    if(!p.found){
+      return `<div class="prov-body">Not found in URLhaus.</div>`;
+    }
+    const out = [];
+    out.push(`<div class="prov-row"><span class="k">Status</span><span class="v"><span class="prov-chip danger">LISTED</span></span></div>`);
+    if(p.threat) out.push(kvRow("Threat", p.threat));
+    if(p.urlCount > 1) out.push(kvRow("URLs", p.urlCount));
+    if(p.tags && p.tags.length){
+      out.push(`<div class="prov-row"><span class="k">Tags</span><span class="v"></span></div>`);
+      out.push(chips(p.tags.slice(0, 8), "warn"));
+    }
+    return `<div class="prov-body">${out.join("")}</div>`;
+  }
+
+  const PROVIDER_RENDERERS = {
+    virustotal:    renderVirusTotal,
+    abuseipdb:     renderAbuseIPDB,
+    ipinfo:        renderIPInfo,
+    otx:           renderOTX,
+    shodandb:      renderShodanDB,
+    malwarebazaar: renderMalwareBazaar,
+    urlhaus:       renderURLhaus
+  };
+
+  function relativeTime(iso){
+    if(!iso) return "";
+    const t = new Date(iso).getTime();
+    if(!t) return "";
+    const diff = Math.max(0, Date.now() - t);
+    const s = Math.round(diff / 1000);
+    if(s < 60)  return `${s}s ago`;
+    const m = Math.round(s / 60);
+    if(m < 60)  return `${m}m ago`;
+    const h = Math.round(m / 60);
+    if(h < 24)  return `${h}h ago`;
+    return new Date(iso).toISOString().slice(0,16).replace("T"," ");
+  }
+
+  function renderCtiRow(row, idx, openKey){
+    const guard = ensureGuardShape(row);
+    const ui = mapGuardStatus(guard.status);
+    const providers = guard.providers || {};
+    const activeKeys = PROVIDER_ORDER.filter(k => providers[k]);
+    const key = makeDedupKey(row.IndicatorType, row.IndicatorValue);
+    const isOpen = openKey === key;
+
+    const anyrunCard = normalizeProviderIndicatorType(row.IndicatorType) === "url"
+      ? `<div class="prov-card">
+          <div class="prov-head">
+            <span class="prov-name">ANY.RUN TI Lookup</span>
+            <span class="prov-status ok">lookup</span>
+          </div>
+          <div class="prov-body">External lookup available for this URL.</div>
+          <div class="prov-footer"><a class="prov-link" href="${escapeHtml(anyrunLookupUrl(row.IndicatorValue))}" target="_blank" rel="noopener">Open in ANY.RUN →</a></div>
+        </div>`
+      : "";
+
+    const providerHtml = activeKeys.length
+      ? activeKeys.map(k => {
+          const p = providers[k] || {};
+          const renderer = PROVIDER_RENDERERS[k];
+          const extUrl = providerExtUrl(k, row.IndicatorType, row.IndicatorValue, p);
+          const extLink = extUrl
+            ? `<div class="prov-footer"><a class="prov-link" href="${escapeHtml(extUrl)}" target="_blank" rel="noopener">Open in ${escapeHtml(PROVIDER_SITE_LABEL[k] || k)} →</a></div>`
+            : "";
+          return `
+            <div class="prov-card">
+              <div class="prov-head">
+                <span class="prov-name">${escapeHtml(PROVIDER_LABELS[k] || k)}</span>
+                <span class="prov-status ${provStatusClass(p.status)}">${escapeHtml(p.status || "—")}</span>
+              </div>
+              ${renderer ? renderer(p) : `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`}
+              ${extLink}
+            </div>
+          `;
+        }).join("")
+      : anyrunCard ? "" : `<div class="prov-card"><div class="prov-body" style="color:var(--muted);">No provider responses yet.</div></div>`;
+
+    const hits = Array.isArray(guard.provider_hits) ? guard.provider_hits.length : 0;
+    return `
+      <div class="cti-row ${isOpen ? "open" : ""}" data-idx="${idx}" data-key="${escapeHtml(key)}">
+        <div class="cti-row-head" data-toggle="1">
+          <span class="cti-row-type">${escapeHtml(row.IndicatorType)}</span>
+          <span class="cti-row-value">${escapeHtml(row.IndicatorValue)}</span>
+          <span class="guardBadge ${ui.className}" title="${escapeHtml(guard.summary || ui.label)}" aria-label="${escapeHtml(ui.label)}">${ui.icon}</span>
+          <span class="cti-row-hits">${hits}/${PROVIDER_ORDER.length} hits</span>
+          <span class="cti-row-time">${escapeHtml(relativeTime(guard.checked_at))}</span>
+        </div>
+        <div class="cti-row-body">
+          <div class="cti-summary">${escapeHtml(guard.summary || "—")}</div>
+          <div class="cti-providers">${providerHtml}${anyrunCard}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let ctiOpenKey = null;
+
+  function renderCti(){
+    if(!ctiList) return;
+    ctiStats.textContent = isTr() ? `${list.length} i̇ndikatör` : `${list.length} indicator${list.length === 1 ? "" : "s"}`;
+    ctiRefreshBtn.disabled = list.length === 0;
+
+    if(list.length === 0){
+      ctiList.innerHTML = `<div class="cti-empty">${uiText("// No indicators yet. Add some above to see CTI results.", "// Henüz i̇ndikatör yok. Tehdit istihbaratı sonuçlarını görmek için yukarıdan i̇ndikatör ekleyin.")}</div>`;
+      return;
+    }
+
+    ctiList.innerHTML = list.map((r, i) => renderCtiRow(r, i, ctiOpenKey)).join("");
+  }
+
+  function revealCtiRow(row){
+    if(!row) return;
+    const key = makeDedupKey(row.IndicatorType, row.IndicatorValue);
+    ctiOpenKey = key;
+    renderCti();
+    const target = ctiList.querySelector(`[data-key="${CSS.escape(key)}"]`);
+    if(target){
+      target.classList.add("highlight");
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => target.classList.remove("highlight"), 1400);
+    }
+  }
+
+  if(ctiList){
+    ctiList.addEventListener("click", (e)=>{
+      const head = e.target.closest("[data-toggle]");
+      if(!head) return;
+      const rowEl = head.closest(".cti-row");
+      if(!rowEl) return;
+      const key = rowEl.getAttribute("data-key");
+      ctiOpenKey = (ctiOpenKey === key) ? null : key;
+      renderCti();
+    });
+  }
+
+  if(ctiRefreshBtn){
+    ctiRefreshBtn.addEventListener("click", ()=>{
+      if(list.length === 0) return;
+      checkGuardsForRows(list.slice());
+    });
+  }
+
+  async function copyTextToClipboard(text){
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch{
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try{ ok = document.execCommand("copy"); }catch{ ok = false; }
+      ta.remove();
+      return ok;
+    }
+  }
+
+  function showToast(message, kind="ok", ms=2800){
+    const c = toastContainer;
+    if(!c) return;
+    const t = document.createElement("div");
+    t.className = `toast ${kind}`;
+    t.style.setProperty("--ttl", `${ms}ms`);
+    const top = document.createElement("div");
+    top.className = "toastTop";
+    const msg = document.createElement("div");
+    msg.className = "toastMsg";
+    msg.textContent = message || "";
+    const close = document.createElement("button");
+    close.className = "toastClose";
+    close.type = "button";
+    close.setAttribute("aria-label", "Dismiss notification");
+    close.textContent = "×";
+    top.appendChild(msg);
+    top.appendChild(close);
+    const bar = document.createElement("div");
+    bar.className = "toastBar";
+    bar.innerHTML = "<i></i>";
+    t.appendChild(top);
+    t.appendChild(bar);
+    c.appendChild(t);
+    requestAnimationFrame(()=> t.classList.add("show"));
+    let hideTimer = null;
+    let clearTimer = null;
+    const dismiss = ()=>{
+      if(hideTimer) clearTimeout(hideTimer);
+      if(clearTimer) clearTimeout(clearTimer);
+      t.classList.add("hide");
+      t.classList.remove("show");
+      clearTimer = setTimeout(()=> t.remove(), 260);
+    };
+    close.addEventListener("click", dismiss);
+    hideTimer = setTimeout(dismiss, ms);
+  }
+
+  function toggleRowSelection(idx, isSelected){
+    list[idx].selected = isSelected;
+    render();
+  }
+
+  function render(){
+    saveToLocal(); // Auto-save on render/change
+    tbody.innerHTML = "";
+    count.textContent = String(list.length);
+    exportBtn.disabled = list.length === 0;
+
+    // Check header box logic
+    const allSelected = list.length > 0 && list.every(r => r.selected);
+    checkAll.checked = allSelected;
+    checkAll.indeterminate = !allSelected && list.some(r => r.selected);
+
+    // Bulk Panel Logic
+    const selectedCount = list.filter(r => r.selected).length;
+    if(selectedCount > 0){
+       bulkPanel.classList.add("active");
+       bulkCount.textContent = String(selectedCount);
+    } else {
+       bulkPanel.classList.remove("active");
+    }
+
+    for(let i=0;i<list.length;i++){
+      const r = list[i];
+      const allowed = allowedActionsForType(r.IndicatorType);
+
+      const tr = document.createElement("tr");
+      if(r.selected) tr.classList.add("selected-row");
+
+      // Checkbox TD
+      const tdChk = document.createElement("td");
+      tdChk.className = "col-check";
+      const divWrap = document.createElement("div");
+      divWrap.className = "chk-wrap";
+      
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "chk";
+      chk.checked = !!r.selected;
+      chk.addEventListener("change", (e)=> toggleRowSelection(i, e.target.checked));
+      
+      divWrap.appendChild(chk);
+      tdChk.appendChild(divWrap);
+      tr.appendChild(tdChk);
+
+      const tdType = document.createElement("td");
+      const badgeClass = "badge-" + r.IndicatorType;
+      tdType.innerHTML = `<span class="typeBadge ${badgeClass}">${r.IndicatorType}</span>`;
+      tr.appendChild(tdType);
+
+      const tdVal = document.createElement("td");
+      tdVal.className = "col-val";
+      tdVal.innerHTML = `<span class="mono">${escapeHtml(r.IndicatorValue)}</span>`;
+      tr.appendChild(tdVal);
+
+      const tdGuard = document.createElement("td");
+      tdGuard.className = "col-guard guardCell";
+      tdGuard.innerHTML = guardBadgeHtml(r);
+      tdGuard.style.cursor = "pointer";
+      tdGuard.title = uiText("Click to view CTI details", "CTI ayrıntılarını görüntülemek için tıklayın");
+      tdGuard.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        revealCtiRow(r);
+      });
+      tr.appendChild(tdGuard);
+
+      const tdAction = document.createElement("td");
+      const sel = document.createElement("select");
+      for(const a of allowed){
+        const opt = document.createElement("option");
+        opt.value = a;
+        opt.textContent = a;
+        if(a === r.Action) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener("change", async ()=>{
+        const previousAction = r.Action;
+        r.Action = sel.value;
+        render();
+        await warnBeforeBlockingIfNeeded(r, previousAction);
+      });
+      tdAction.appendChild(sel);
+      tr.appendChild(tdAction);
+
+      const tdSev = document.createElement("td");
+      const sevSel = document.createElement("select");
+      ["Informational","Low","Medium","High"].forEach(s=>{
+        const o=document.createElement("option");
+        o.value=s; o.textContent=s;
+        if(s===r.Severity) o.selected=true;
+        sevSel.appendChild(o);
+      });
+      sevSel.addEventListener("change", ()=> { r.Severity = sevSel.value; render(); });
+      tdSev.appendChild(sevSel);
+      tr.appendChild(tdSev);
+
+      const tdAlert = document.createElement("td");
+      const alertSel = document.createElement("select");
+      ["False","True"].forEach(v=>{
+        const o=document.createElement("option");
+        o.value=v; o.textContent=v;
+        if(v===String(r.GenerateAlert)) o.selected=true;
+        alertSel.appendChild(o);
+      });
+      alertSel.addEventListener("change", ()=> { r.GenerateAlert = alertSel.value; render(); });
+      tdAlert.appendChild(alertSel);
+      tr.appendChild(tdAlert);
+
+      const tdExp = document.createElement("td");
+      const expIn = document.createElement("input");
+      expIn.type = "datetime-local";
+      expIn.step = "60";
+      expIn.title = uiText("Expiration time", "Geçerlilik bitiş zamanı");
+      expIn.value = expirationToInputValue(r.ExpirationTime);
+      expIn.addEventListener("input", ()=> { r.ExpirationTime = expIn.value.trim(); saveToLocal(); });
+      tdExp.appendChild(expIn);
+      tr.appendChild(tdExp);
+
+      const tdRemove = document.createElement("td");
+      tdRemove.className = "td-remove";
+      
+      const rm = document.createElement("button");
+      rm.innerHTML = '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+      rm.className = "btn-icon danger-hover";
+      rm.title = uiText("Remove Indicator", "İndikatöryi kaldır");
+
+      rm.addEventListener("click", ()=>{
+        list.splice(i,1);
+        render();
+        refreshPreview();
+        showToast(uiText("Indicator removed.", "İndikatör kaldırıldı."), "ok", 2600);
+      });
+      tdRemove.appendChild(rm);
+      tr.appendChild(tdRemove);
+
+      tbody.appendChild(tr);
+    }
+
+    updateCaseSummary();
+    updateKql();
+    renderCti();
+  }
+
+  function applyBulkChange(field, value){
+    if(!value) return;
+    let count = 0;
+    list.forEach(r => {
+      if(r.selected){
+         // SMART LOGIC
+         if(field === "Action" && value === "BlockAndRemediate"){
+             if(HASH_TYPES.has(r.IndicatorType)){
+                 r.Action = "BlockAndRemediate";
+                 count++;
+             } else {
+                 const allowed = allowedActionsForType(r.IndicatorType);
+                 if(allowed.includes("Block")){
+                    r.Action = "Block";
+                    count++;
+                 }
+             }
+         } else if(field === "Action"){
+             const allowed = allowedActionsForType(r.IndicatorType);
+             if(allowed.includes(value)){
+                 r[field] = value;
+                 count++;
+             }
+         } else {
+             r[field] = value;
+             count++;
+         }
+      }
+    });
+    render();
+    if(count > 0) {
+      if(field === "Action" && isBlockingAction(value)){
+        const riskySelected = list.filter(r => r.selected && shouldWarnBeforeBlock(r)).length;
+        if(riskySelected > 0){
+          showToast(isTr()
+            ? `${riskySelected} seçili i̇ndikatör engellenmeden önce incelenmeli.`
+            : `${riskySelected} selected indicator(s) should be reviewed before blocking.`, "warn", 4500);
+        } else {
+          showToast(isTr() ? `${count} öğe güncellendi.` : `Updated ${count} items.`, "ok");
+        }
+      } else {
+        showToast(isTr() ? `${count} öğe güncellendi.` : `Updated ${count} items.`, "ok");
+      }
+    }
+    else showToast(uiText("No items could be updated with this selection.", "Bu seçimle güncellenebilecek öğe yok."), "warn");
+  }
+
+  bulkActionSelect.addEventListener("change", (e)=>{
+     applyBulkChange("Action", e.target.value);
+     e.target.value = "";
+  });
+  bulkSeveritySelect.addEventListener("change", (e)=>{
+     applyBulkChange("Severity", e.target.value);
+     e.target.value = "";
+  });
+  bulkAlertSelect.addEventListener("change", (e)=>{
+     applyBulkChange("GenerateAlert", e.target.value);
+     e.target.value = "";
+  });
+  bulkDeleteBtn.addEventListener("click", ()=>{
+    if(confirm(uiText("Delete selected items?", "Seçili öğeler silinsin mi?"))){
+       list = list.filter(r => !r.selected);
+       render();
+       refreshPreview();
+       showToast(uiText("Selected items deleted.", "Seçili öğeler silindi."), "ok");
+    }
+  });
+
+  // ---------------------------
+  // Wire-up: Input + Buttons
+  // ---------------------------
+
+  function normalizeValue(type, raw){
+    // Minimal, low-risk normalization (avoid breaking existing behavior)
+    let v = (raw ?? "").trim();
+    if(type === "DomainName" && v.endsWith(".")) v = v.slice(0, -1);
+    if(type === "IpAddress") v = v.toLowerCase(); // helps IPv6
+    if(HASH_TYPES.has(type)) v = v.toLowerCase();
+    return v;
+  }
+
+  function buildRow(indicatorType, indicatorValue){
+    const exp = (defaults.expire?.value || "").trim();
+    const sev = (defaults.severity?.value || "Medium").trim() || "Medium";
+    const alertVal = (defaults.alert?.value || "False").trim() || "False";
+
+    return {
+      IndicatorType: indicatorType,
+      IndicatorValue: indicatorValue,
+
+      ExpirationTime: exp || "",
+      Action: defaultActionForType(indicatorType),
+      Severity: sev,
+
+      Title: (defaults.title?.value || "").trim(),
+      Description: (defaults.desc?.value || "").trim(),
+      RecommendedActions: (defaults.rec?.value || "").trim(),
+      RbacGroups: (defaults.rbac?.value || "").trim(),
+      Category: (defaults.cat?.value || "").trim(),
+      MitreTechniques: (defaults.mitre?.value || "").trim(),
+
+      GenerateAlert: alertVal, // "True"/"False" string
+      selected: false,
+      _guard: getDefaultGuardState()
+    };
+  }
+
+
+function splitCsvLine(line){
+  const out = [];
+  let cur = "";
+  let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch === '"'){
+      if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if(ch === "," && !inQuotes){
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map(x => x.trim());
+}
+
+function parseIndicatorsFromText(text, ext){
+  const raw = String(text || "").replace(/^\uFEFF/, "");
+  const lines = raw.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if(!lines.length) return [];
+  const lowerExt = String(ext || "").toLowerCase();
+
+  if(lowerExt === "csv"){
+    const first = lines[0];
+    const cols = splitCsvLine(first).map(x => x.toLowerCase());
+    const typeIdx = cols.indexOf("indicatortype");
+    const valueIdx = cols.indexOf("indicatorvalue");
+    if(typeIdx !== -1 && valueIdx !== -1){
+      return lines.slice(1).map(line => {
+        const parts = splitCsvLine(line);
+        return {
+          type: (parts[typeIdx] || "").trim(),
+          value: (parts[valueIdx] || "").trim()
+        };
+      }).filter(x => x.value);
+    }
+  }
+
+  return lines.map(value => ({ value }));
+}
+
+async function importIndicatorsFromFile(file){
+  if(!file) return;
+  const name = String(file.name || "");
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  if(!["txt","csv","ioc"].includes(ext)){
+    showToast(uiText("Unsupported file type. Use .txt, .csv, or .ioc.", "Desteklenmeyen dosya türü. .txt, .csv veya .ioc kullanın."), "warn", 4200);
+    return;
+  }
+
+  const text = await file.text();
+  const parsed = parseIndicatorsFromText(text, ext);
+  if(!parsed.length){
+    showToast(uiText("No indicators found in file.", "Dosyada i̇ndikatör bulunamadı."), "warn", 3600);
+    return;
+  }
+
+  const existing = new Set(list.map(r => makeDedupKey(r.IndicatorType, r.IndicatorValue)));
+  const seenInBatch = new Set();
+  let added = 0, invalid = 0, dup = 0;
+  const addedRows = [];
+
+  for(const item of parsed){
+    let type = (item.type || "").trim();
+    let value = (item.value || "").trim();
+    if(!value){ invalid++; continue; }
+
+    if(!type){
+      const d = detectType(value);
+      if(!d.ok){ invalid++; continue; }
+      type = d.type;
+    }
+
+    value = normalizeValue(type, value);
+    const key = makeDedupKey(type, value);
+    if(existing.has(key) || seenInBatch.has(key)){ dup++; continue; }
+
+    seenInBatch.add(key);
+    const row = buildRow(type, value);
+    setGuardState(row, {
+      status: "checking",
+      summary: "Running CTI guard checks…",
+      provider_summary: "",
+      warn_before_block: false
+    });
+    list.push(row);
+    addedRows.push(row);
+    added++;
+  }
+
+  render();
+  refreshPreview();
+
+  if(added > 0){
+    showToast(isTr() ? `${name} dosyasından ${added} i̇ndikatör içe aktarıldı.` : `Imported ${added} indicator(s) from ${name}.`, "ok", 3200);
+    checkGuardsForRows(addedRows);
+  }
+  if(invalid > 0) showToast(isTr() ? `${invalid} geçersiz satır atlandı.` : `Skipped ${invalid} invalid line(s).`, "warn", 4200);
+  if(dup > 0) showToast(isTr() ? `${dup} tekrar eden kayıt atlandı.` : `Skipped ${dup} duplicate(s).`, "warn", 4200);
+}
+
+  function addFromInput(){
+    const rawLines = input.value.split(/\r?\n/).map(x => x.trim())
+      .filter(Boolean);
+
+    if(rawLines.length === 0){
+      showToast(uiText("No input lines to add.", "Eklenecek giriş satırı yok."), "warn");
+      return;
+    }
+
+    const existing = new Set(list.map(r => makeDedupKey(r.IndicatorType, r.IndicatorValue)));
+    const seenInBatch = new Set();
+
+    let added = 0, invalid = 0, dup = 0;
+    const addedRows = [];
+
+    for(const line of rawLines){
+      const d = detectType(line);
+      if(!d.ok){ invalid++; continue; }
+
+      const normalized = normalizeValue(d.type, line);
+      const key = makeDedupKey(d.type, normalized);
+
+      if(existing.has(key) || seenInBatch.has(key)){
+        dup++;
+        continue;
+      }
+
+      seenInBatch.add(key);
+      const row = buildRow(d.type, normalized);
+      setGuardState(row, {
+        status: "checking",
+        summary: "Running CTI guard checks…",
+        provider_summary: "",
+        warn_before_block: false
+      });
+      list.push(row);
+      addedRows.push(row);
+      added++;
+    }
+
+    render();
+    refreshPreview();
+
+    if(added > 0) {
+      showToast(isTr() ? `${added} i̇ndikatör eklendi.` : `Added ${added} indicator(s).`, "ok");
+      checkGuardsForRows(addedRows);
+      if(window.parent !== window){
+        const q = buildKql();
+        if(q){
+          window.parent.postMessage({
+            type:'arsenal_query',
+            tool:'hunt',
+            preview: q.slice(0,140),
+            query: q,
+            count: list.length,
+            ts: Date.now(),
+            indicatorList: JSON.stringify(list)
+          }, '*');
+        }
+      }
+    }
+    if(invalid > 0) showToast(isTr() ? `${invalid} geçersiz satır atlandı.` : `Skipped ${invalid} invalid line(s).`, "warn", 4200);
+    if(dup > 0) showToast(isTr() ? `${dup} tekrar eden kayıt atlandı.` : `Skipped ${dup} duplicate(s).`, "warn", 4200);
+  }
+
+  // Live preview update
+  input.addEventListener("input", refreshPreview);
+
+  // Ctrl+Enter quick add (hint shown in UI)
+  input.addEventListener("keydown", (e)=>{
+    if(e.ctrlKey && e.key === "Enter"){
+      e.preventDefault();
+      addFromInput();
+    }
+  });
+
+  addBtn.addEventListener("click", addFromInput);
+
+
+if(dropZone && bulkFileInput){
+  dropZone.addEventListener("click", ()=> bulkFileInput.click());
+  dropZone.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      bulkFileInput.click();
+    }
+  });
+  bulkFileInput.addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(file) await importIndicatorsFromFile(file);
+    bulkFileInput.value = "";
+  });
+
+  ["dragenter","dragover"].forEach(evt => {
+    dropZone.addEventListener(evt, (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add("dragover");
+    });
+  });
+
+  ["dragleave","dragend","drop"].forEach(evt => {
+    dropZone.addEventListener(evt, (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      if(evt !== "drop") dropZone.classList.remove("dragover");
+    });
+  });
+
+  dropZone.addEventListener("drop", async (e)=>{
+    dropZone.classList.remove("dragover");
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) await importIndicatorsFromFile(file);
+  });
+}
+
+  clearBtn.addEventListener("click", ()=>{
+    if(list.length === 0){
+      showToast(uiText("Workspace already empty.", "Çalışma alanı zaten boş."), "warn");
+      input.value = "";
+      refreshPreview();
+      return;
+    }
+    if(confirm(uiText("Clear workspace? This will remove all indicators.", "Çalışma alanı temizlensin mi? Bu işlem tüm i̇ndikatörleri kaldırır."))){
+      list = [];
+      input.value = "";
+      saveToLocal();
+      render();
+      refreshPreview();
+      showToast(uiText("Workspace cleared.", "Çalışma alanı temizlendi."), "ok");
+    }
+  });
+
+  exportBtn.addEventListener("click", ()=>{
+    if(list.length === 0){
+      showToast(uiText("Nothing to export.", "Dışa aktarılacak veri yok."), "warn");
+      return;
+    }
+
+    const risky = list.filter(r => isBlockingAction(r.Action) && shouldWarnBeforeBlock(r));
+    if(risky.length){
+      const ok = confirm(isTr()
+        ? `${risky.length} engelleme göstergesi guard katmanı tarafından manuel inceleme gerektiriyor. Yine de dışa aktarılsın mı?`
+        : `${risky.length} blocking indicator(s) are marked for manual review by the guard layer. Continue exporting anyway?`);
+      if(!ok){
+        showToast(uiText("Export cancelled after guard warning.", "Guard uyarısı sonrası dışa aktarma iptal edildi."), "warn", 3600);
+        return;
+      }
+    }
+
+    const csv = toCsv(list);
+    const ts = localTimestampForFilename();
+    download(`defender-ti-indicators-${ts}.csv`, csv, "text/csv;charset=utf-8");
+    showToast(uiText("CSV exported.", "CSV dışa aktarıldı."), "ok");
+  });
+
+  copyKqlBtn.addEventListener("click", async ()=>{
+    const q = (kqlBox.value || "").trim();
+    if(!q){
+      showToast(uiText("No KQL to copy.", "Kopyalanacak KQL yok."), "warn");
+      return;
+    }
+    const ok = await copyTextToClipboard(q);
+    showToast(ok ? uiText("KQL copied.", "KQL kopyalandı.") : uiText("Copy failed.", "Kopyalama başarısız."), ok ? "ok" : "warn");
+  });
+
+  checkAll.addEventListener("change", (e)=>{
+    const val = !!e.target.checked;
+    for(const r of list) r.selected = val;
+    render();
+  });
+
+  // ---------------------------
+  // Keyboard shortcuts (table context)
+  // ---------------------------
+
+  function setAllSelection(val){
+    for(const r of list) r.selected = !!val;
+    render();
+  }
+
+  function clearSelection(){
+    for(const r of list) r.selected = false;
+    render();
+  }
+
+  const tableWrap = document.querySelector(".table-wrap");
+
+  // Make table area focusable so keyboard shortcuts can reliably scope to it.
+  // Without this, if the user clicks a non-focusable area (e.g., table cell text),
+  // document.activeElement can become <body>, causing Ctrl+A to stop working.
+  if(tableWrap){
+    if(!tableWrap.hasAttribute("tabindex")) tableWrap.setAttribute("tabindex","0");
+    tableWrap.addEventListener("pointerdown", (e)=>{
+      // Do not steal focus when the user is interacting with a control inside the table.
+      const t = e.target;
+      const isControl = t && t.closest && t.closest("input,select,textarea,button");
+      if(!isControl) tableWrap.focus({preventScroll:true});
+    });
+  }
+
+  function isTypingContext(el){
+    if(!el || !el.tagName) return false;
+    const tag = el.tagName.toUpperCase();
+    if(tag === "TEXTAREA") return true;
+    if(tag === "INPUT"){
+      const t = (el.getAttribute("type") || "text").toLowerCase();
+      // treat common text-entry inputs as typing contexts
+      return ["text","search","url","email","tel","password"].includes(t);
+    }
+    return el.isContentEditable === true;
+  }
+
+  // ---------------------------
+  // Ctrl+A scope: "Staged Indicators" last interaction
+  // ---------------------------
+  const stagedCard = document.querySelector(".table-card"); // Staged Indicators card
+  let stagedHotkeysArmed = false;
+
+  // Any click/tap inside Staged Indicators arms Ctrl+A (including checkbox/select/button)
+  document.addEventListener("pointerdown", (e)=>{
+    stagedHotkeysArmed = !!(stagedCard && e.target && e.target.closest && e.target.closest(".table-card"));
+  }, true);
+
+  // If user focuses something outside staged area via keyboard (Tab), disarm
+  document.addEventListener("focusin", (e)=>{
+    if(!stagedCard) return;
+    const inside = !!(e.target && e.target.closest && e.target.closest(".table-card"));
+    if(!inside) stagedHotkeysArmed = false;
+  }, true);
+
+  document.addEventListener("keydown", (e)=>{
+    // Ctrl+A / Ctrl+Shift+A
+    // If user last interacted with Staged Indicators, ALWAYS apply (no focus dependency).
+    if(e.ctrlKey && (e.key === "a" || e.key === "A")){
+      if(stagedHotkeysArmed){
+        e.preventDefault();
+        if(e.shiftKey) clearSelection();
+        else setAllSelection(true);
+        return;
+      }
+
+      // Otherwise: keep native Ctrl+A when typing in text fields
+      const ae = document.activeElement;
+      if(isTypingContext(ae)) return;
+
+      // Optional fallback: if focus is already inside the table, apply too
+      const tableActive = !!(ae && ae.closest && ae.closest(".table-wrap"));
+      if(tableActive){
+        e.preventDefault();
+        if(e.shiftKey) clearSelection();
+        else setAllSelection(true);
+        return;
+      }
+    }
+
+    // Esc closes bulk (clear selection)
+    if(e.key === "Escape" && bulkPanel.classList.contains("active")){
+      e.preventDefault();
+      clearSelection();
+      input.focus();
+    }
+  });
+
+  window.onload = resetInactivityTimer;
+  document.onmousemove = resetInactivityTimer;
+  document.onkeydown = resetInactivityTimer;
+  document.onclick = resetInactivityTimer;
+
+  // ─── KQL dock pin state ───────────────────────
+  const KQL_PIN_KEY = "defender_ti_kql_pinned_v1";
+  function setKqlPinned(pinned){
+    if(pinned){
+      kqlDock.classList.add("pinned");
+      kqlPinBtn.classList.add("active");
+      kqlPinBtn.setAttribute("aria-pressed", "true");
+      document.body.classList.add("kql-pinned");
+    } else {
+      kqlDock.classList.remove("pinned");
+      kqlPinBtn.classList.remove("active");
+      kqlPinBtn.setAttribute("aria-pressed", "false");
+      document.body.classList.remove("kql-pinned");
+    }
+    try { localStorage.setItem(KQL_PIN_KEY, pinned ? "1" : "0"); } catch {}
+  }
+  if(kqlPinBtn){
+    kqlPinBtn.addEventListener("click", ()=>{
+      setKqlPinned(!kqlDock.classList.contains("pinned"));
+    });
+    try {
+      if(localStorage.getItem(KQL_PIN_KEY) === "1") setKqlPinned(true);
+    } catch {}
+  }
+
+  loadFromLocal();
+  refreshPreview();
+  render();
+  scheduleInitialGuardChecks();
+
+  // Expose bridge for Arsenal parent
+  window._arsenalBridge_hunt = {
+    loadList: function(jsonStr){
+      try {
+        const newList = JSON.parse(jsonStr);
+        if(Array.isArray(newList)){
+          list = newList;
+          saveToLocal();
+          render();
+          updateKql();
+          // flash KQL dock
+          const dock = document.getElementById('kqlDock');
+          if(dock){ dock.classList.add('flash-loaded'); setTimeout(()=>dock.classList.remove('flash-loaded'),1300); }
+        }
+      } catch(e2){ console.warn('Arsenal load error', e2); }
+    }
+  };
+})();
+
+// ── Arsenal lang + load bridge ──────────────────
+(function(){
+  const TR = {
+    // KQL dock
+    'Advanced Hunting KQL': "KQL Sorgusu",
+    'Pin': 'Sabitle',
+    'Copy KQL': "KQL'yi Kopyala",
+    // Headers
+    'Indicator Composer': 'İndikatör Yardımcısı',
+    'Staged Indicators': 'Hazırlanan İndikatörler',
+    'CTI Results': 'Tehdit İstihbaratı Sonuçları',
+    'Re-check all': 'Tümünü Yeniden Kontrol Et',
+    'DEFAULT SETTINGS (FOR NEW ENTRIES)': 'YENİ KAYITLAR İÇİN VARSAYILAN AYARLAR',
+    // Labels
+    'Input Indicators (One per line)': 'İndikatörler (Satır Başına Bir Tane)',
+    'Indicators Preview': 'İndikatör Önizlemesi',
+    'Severity': 'Önem Derecesi',
+    'Generate Alert': 'Uyarı Üret',
+    'Expiration (ISO)': 'Geçerlilik Bitişi',
+    'Expiration': 'Geçerlilik',
+    'RBAC Groups': 'RBAC Grupları',
+    'Title': 'Başlık',
+    'Description': 'Açıklama',
+    'Action': 'Eylem',
+    'Category': 'Kategori',
+    'MITRE Techniques': 'MITRE Teknikleri',
+    'Total IOCs': 'Toplam IOC',
+    'Hash (File)': "Dosya Hash'i",
+    'Network': 'Ağ',
+    'Unique Domains': 'Tekil Alan Adları',
+    'Type': 'Tür',
+    'Value': 'Değer',
+    'Alert': 'Uyarı',
+    // Buttons
+    'Add to List': 'Listeye Ekle',
+    'Clear': 'Temizle',
+    'Export CSV': "CSV'yi Dışa Aktar",
+    'Delete': 'Sil',
+    'Selected': 'Seçili',
+    'Modify selected items:': 'Seçili öğeleri düzenle:',
+    'Set Action...': 'Eylem Seç...',
+    'Set Severity...': 'Önem Derecesi Seç...',
+    'Set Alert...': 'Uyarı Ayarla...',
+    'Clear workspace': 'Çalışma Alanını Temizle',
+    'Drop file here': 'Dosyayı buraya bırakın',
+    'or click to import': 'veya içe aktarmak için tıklayın',
+    'Waiting for input...': 'Girdi bekleniyor...',
+    'Count:': 'Adet:',
+    'Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.': 'Not: Toplu güncellemede "BlockAndRemediate", ağ i̇ndikatörleri için otomatik olarak "Block" değerine düşer.',
+    'Hover to peek · Pin to keep open · Blank lines and blocks are auto-cleaned.': 'Önizlemek için üzerine gel · Açık tutmak için sabitle · Boş satırlar ve bloklar otomatik temizlenir.',
+  };
+  const EN = Object.fromEntries(Object.entries(TR).map(([k,v])=>[v,k]));
+
+  function applyLang(lang){
+    document.documentElement.lang = lang === 'tr' ? 'tr' : 'en';
+    const map = lang === 'tr' ? TR : EN;
+    // Page title h1
+    const h1 = document.querySelector('h1');
+    if(h1){
+      const titleMap = lang === 'tr'
+        ? {'TI Indicator CSV Builder': 'TI İndikatör CSV Oluşturucu', 'Indicator Composer': 'İndikatör Yardımcısı'}
+        : {'TI İndikatör CSV Oluşturucu': 'TI Indicator CSV Builder', 'İndikatör Yardımcısı': 'Indicator Composer'};
+      Object.entries(titleMap).forEach(([from, to]) => {
+        if(h1.textContent.includes(from)) h1.innerHTML = h1.innerHTML.replace(from, to);
+      });
+    }
+    // Walk all text nodes
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const t = node.textContent.trim();
+      if(map[t]) node.textContent = node.textContent.replace(t, map[t]);
+    });
+    const sub = document.querySelector('.sub');
+    if(sub){
+      sub.textContent = lang === 'tr'
+        ? "Microsoft Defender XDR için i̇ndikatörleri doğrulayan, biçimlendiren ve yayına hazırlayan analist odaklı araç."
+        : "An analyst-focused tool for validating, formatting, and staging indicators for Microsoft Defender XDR. ";
+    }
+    const input = document.getElementById('input');
+    if(input){
+      input.placeholder = lang === 'tr'
+        ? 'Örnekler:\n1.2.3.4\nzararli.example.com\nhttps://zararli-site.com/giris\n44d88612fea8a8f36de82e1278abb02f'
+        : 'Examples:\n1.2.3.4\nevil.example.com\nhttps://malicious-site.com/login\n44d88612fea8a8f36de82e1278abb02f';
+    }
+    const placeholders = lang === 'tr'
+      ? {
+          defExpire: 'örn. 2026-01-31T23:59:59Z',
+          defRbac: 'İsteğe bağlı: GrupAdı',
+          defTitle: 'Kötü amaçlı',
+          defDesc: 'Kötü amaçlı',
+          defRec: 'örn. Engelle ve incele',
+          defCat: 'örn. SuspiciousActivity',
+          defMitre: 'örn. T1046, T1059.001',
+          kqlBox: '// Henüz veri yok. Sorgu üretmek için yukarıya i̇ndikatör ekleyin.'
+        }
+      : {
+          defExpire: 'e.g. 2026-01-31T23:59:59Z',
+          defRbac: 'Optional: GroupName',
+          defTitle: 'Malicious',
+          defDesc: 'Malicious',
+          defRec: 'e.g. Block and investigate',
+          defCat: 'e.g. SuspiciousActivity',
+          defMitre: 'e.g. T1046, T1059.001',
+          kqlBox: '// No data yet. Add indicators above to generate query.'
+        };
+    Object.entries(placeholders).forEach(([id, text]) => {
+      const field = document.getElementById(id);
+      if(field) field.placeholder = text;
+    });
+    const dropZone = document.getElementById('dropZone');
+    if(dropZone) dropZone.setAttribute('aria-label', lang === 'tr' ? 'İndikatör dosyasını içe aktar' : 'Import indicators file');
+    const pin = document.getElementById('kqlPinBtn');
+    if(pin) pin.title = lang === 'tr' ? 'Açık tutmak için sabitle' : 'Pin open';
+    const dock = document.getElementById('kqlDock');
+    if(dock) dock.setAttribute('aria-label', lang === 'tr' ? 'KQL sorgu paneli' : 'KQL query panel');
+    const guardHead = document.querySelector('.guardHead');
+    if(guardHead){
+      const txt = lang === 'tr' ? 'Guard durumu' : 'Guard status';
+      guardHead.title = txt;
+      guardHead.setAttribute('aria-label', txt);
+    }
+    // KQL dock title (contains child elements)
+    const dockTitle = document.querySelector('.kql-dock-title');
+    if(dockTitle){
+      const txt = lang === 'tr' ? "KQL Sorgusu" : 'Advanced Hunting KQL';
+      const glow = dockTitle.querySelector('.glow');
+      dockTitle.textContent = txt;
+      if(glow) dockTitle.prepend(glow);
+    }
+  }
+
+  window.addEventListener('message', e => {
+    if(!e.data) return;
+    if(e.data.type === 'arsenal_lang') applyLang(e.data.lang);
+    if(e.data.type === 'arsenal_load_query'){
+      if(e.data.indicatorList && window._arsenalBridge_hunt){
+        window._arsenalBridge_hunt.loadList(e.data.indicatorList);
+      }
+    }
+  });
+})();
+</script>
+<script>
+/* Arsenal theme sync bridge */
+(function(){
+  /* Premium palette set — matches Arsenal.html.
+     3-stop dual-tone gradients (primary → mid → secondary) with
+     per-palette angle for character. */
+  const PALETTES = {
+    obsidian:   { angle:145, dark:{p:'#e4e4e7',m:'#a1a1aa',s:'#52525b',on:'#0a0a0a',solid:'#d4d4d8'}, light:{p:'#0f172a',m:'#334155',s:'#1e293b',on:'#fafafa',solid:'#18181b'} },
+    havana:     { angle:120, dark:{p:'#fbbf77',m:'#e89a5c',s:'#c26846',on:'#1a0e06',solid:'#e89a5c'}, light:{p:'#659999',m:'#c87b2a',s:'#f4791f',on:'#ffffff',solid:'#d06a1e'} },
+    meridian:   { angle:115, dark:{p:'#67e8f9',m:'#60a5fa',s:'#a78bfa',on:'#050b1f',solid:'#60a5fa'}, light:{p:'#614385',m:'#4a4a8f',s:'#516395',on:'#ffffff',solid:'#5a4a8f'} },
+    watermelon: { angle:135, dark:{p:'#fb7185',m:'#f472b6',s:'#86efac',on:'#1a0509',solid:'#f472b6'}, light:{p:'#dd3e54',m:'#e07050',s:'#6be585',on:'#ffffff',solid:'#dd3e54'} },
+    aurora:     { angle:150, dark:{p:'#86efac',m:'#60a5fa',s:'#c084fc',on:'#03150e',solid:'#60a5fa'}, light:{p:'#1f4037',m:'#3d8b74',s:'#99f2c8',on:'#ffffff',solid:'#2d6a5a'} },
+    shifter:    { angle:125, dark:{p:'#f0abfc',m:'#e879f9',s:'#fb7185',on:'#1a0514',solid:'#e879f9'}, light:{p:'#bc4e9c',m:'#d93880',s:'#f80759',on:'#ffffff',solid:'#c93a8a'} },
+  };
+  const LEGACY = {
+    vesper:'shifter',
+    champagne:'havana', emerald:'aurora', sapphire:'meridian',
+    rosegold:'watermelon', copper:'shifter', platinum:'obsidian',
+    amber:'havana', cyan:'meridian', matrix:'aurora',
+    crimson:'watermelon', amethyst:'meridian',
+    hunt01:'havana', hunt02:'meridian', hunt03:'meridian',
+    hunt04:'meridian', hunt05:'watermelon', hunt06:'aurora',
+    hunt07:'meridian',
+    mono:'obsidian', amoled:'obsidian', ink:'obsidian',
+    violet:'meridian', ocean:'meridian', black:'obsidian',
+    graphite:'obsidian', arctic:'meridian', ion:'aurora',
+    ember:'shifter', pulse:'watermelon',
+  };
+  function hexRgb(h){ const v=h.replace('#',''); const n=parseInt(v.length===3?v.split('').map(c=>c+c).join(''):v,16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+  function rgba(h,a){ const [r,g,b]=hexRgb(h); return `rgba(${r},${g},${b},${a})`; }
+  const THEMES = {
+    light:{'--bg':'#eef2f7','--surface':'#ffffff','--elevated':'#f8fafc','--border':'rgba(15,23,42,0.12)','--border-mid':'rgba(15,23,42,0.20)','--border-bright':'rgba(15,23,42,0.28)','--text':'#334155','--text-bright':'#0f172a','--muted':'#64748b','--input-bg':'#f8fafc','--input-border':'rgba(15,23,42,0.13)','--card-bg':'rgba(255,255,255,0.98)','--card-border':'rgba(15,23,42,0.12)'},
+    amoledDark:{'--bg':'#000000','--surface':'#0a0a0a','--elevated':'#141414','--border':'rgba(255,255,255,0.08)','--border-mid':'rgba(255,255,255,0.15)','--border-bright':'rgba(255,255,255,0.22)','--text':'#a3a3a3','--text-bright':'#fafafa','--muted':'#525252','--input-bg':'rgba(255,255,255,0.03)','--input-border':'rgba(255,255,255,0.08)','--card-bg':'rgba(10,10,10,0.9)','--card-border':'rgba(255,255,255,0.06)'},
+  };
+  function apply(msg){
+    const r = document.documentElement.style;
+    const isLight = msg.theme === 'light';
+    const key = (PALETTES[msg.accent] ? msg.accent : (LEGACY[msg.accent] || 'obsidian'));
+    const p = PALETTES[key] || PALETTES.obsidian;
+    const v = isLight ? p.light : p.dark;
+    const angle = p.angle || 135;
+    const solid = v.solid || (isLight ? v.m : v.p);
+    const themeKey = isLight ? 'light' : 'amoledDark';
+    Object.entries(THEMES[themeKey]).forEach(([k,val]) => r.setProperty(k, val));
+    r.setProperty('--primary',       solid);
+    r.setProperty('--primary-hover', v.s);
+    r.setProperty('--primary-mid',   v.m);
+    r.setProperty('--primary-glow',  rgba(solid, 0.22));
+    r.setProperty('--primary-soft',  rgba(solid, isLight ? 0.10 : 0.08));
+    r.setProperty('--primary-grad',  `linear-gradient(${angle}deg, ${v.p} 0%, ${v.m} 52%, ${v.s} 100%)`);
+    r.setProperty('--primary-angle', angle + 'deg');
+    r.setProperty('--on-primary',    v.on);
+    document.documentElement.setAttribute('data-arsenal-theme', isLight ? 'light' : 'dark');
+  }
+  window.addEventListener('message', e => {
+    if(e.data?.type === 'arsenal:theme') apply(e.data);
+    if(e.data?.type === 'arsenal:scanlines') {
+      document.documentElement.setAttribute('data-scanlines', e.data.enabled === false ? 'off' : 'on');
+    }
+  });
+  try { window.parent.postMessage({type:'arsenal:ready'}, '*'); } catch(e){}
+})();
+</script>
+</body>
+</html>
