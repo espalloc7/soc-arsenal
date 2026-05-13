@@ -1,6 +1,6 @@
 # Defender XDR Arsenal
 
-**Version:** 2.0
+<img width="1512" height="930" alt="image" src="https://github.com/user-attachments/assets/af85bba0-b116-47f9-a048-5dfb0eabf827" />
 
 Defender XDR Arsenal is a local, browser-based CTI workspace for building and reviewing hunting queries.
 It combines two focused tools:
@@ -58,15 +58,6 @@ The broker reads provider keys from `.env`:
 - `WHOIS_API_KEY`
 
 Some providers work without a key, while others use the key only if you configure it.
-
-## Git hygiene
-
-The repository intentionally ignores local-only and sensitive files:
-
-- `.env` for API keys
-- `node_modules/` for installed packages
-- `graphify-out/`, `.claude/`, `CLAUDE.md`, `prompt.txt`, and `prompts/` for local workflow artifacts
-- generated screenshots such as `*.png`
 
 ## Notes
 
