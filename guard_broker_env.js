@@ -729,6 +729,57 @@ function parseRdapWhois(data, domain) {
   };
 }
 
+function parseVtWhois(attr, domain) {
+  function toIso(value) {
+    if (value == null || value === "") return null;
+    if (typeof value === "number" && Number.isFinite(value)) {
+      const date = new Date(value * 1000);
+      return Number.isNaN(date.getTime()) ? null : date.toISOString();
+    }
+    const date = new Date(String(value));
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+
+  const createdDate = toIso(attr.creation_date);
+  const updatedDate = toIso(attr.last_update_date ?? attr.last_modification_date);
+  const expiresDate = toIso(attr.expiration_date);
+  const ageDays = createdDate
+    ? Math.floor((Date.now() - new Date(createdDate).getTime()) / 86400000)
+    : null;
+
+  const records = Array.isArray(attr.last_dns_records) ? attr.last_dns_records : [];
+  const valuesByType = type => records
+    .filter(r => String(r.type || "").toUpperCase() === type)
+    .map(r => String(r.value || ""))
+    .filter(Boolean);
+  const nameservers = valuesByType("NS").map(v => v.replace(/\.$/, "").toLowerCase());
+  const aRecords = valuesByType("A");
+  const mxRecords = valuesByType("MX").map(v => v.replace(/^\d+\s+/, "").replace(/\.$/, "").toLowerCase());
+
+  const rawWhois = String(attr.whois || attr.raw_whois || "");
+  const registrar = attr.registrar || rawWhois.match(/Registrar:\s*([^\r\n]+)/i)?.[1]?.trim() || null;
+  const registrantCountry = rawWhois.match(/Registrant Country:\s*([A-Za-z]{2,})/i)?.[1] || null;
+  const statuses = [...rawWhois.matchAll(/Domain Status:\s*([^\r\n]+)/gi)]
+    .map(match => match[1] && match[1].trim())
+    .filter(Boolean);
+
+  return {
+    status: "ok",
+    found: true,
+    domain,
+    createdDate, updatedDate, expiresDate,
+    ageDays,
+    registrar,
+    nameservers,
+    statuses,
+    registrantCountry,
+    aRecords,
+    mxRecords,
+    summary: `age=${ageDays != null ? ageDays + "d" : "?"}, registrar=${registrar || "?"}`,
+    source: "virustotal",
+  };
+}
+
 async function getIanaRdapBase(tld) {
   const ttlMs = 60 * 60 * 1000;
   if (!ianaRdapCache.byTld || Date.now() - ianaRdapCache.ts > ttlMs) {
@@ -775,6 +826,30 @@ async function queryWhois(type, value) {
 
   let hostname = hostnameFromValue(type, value);
   const domain = getRootDomain(hostname);
+
+  // VirusTotal override (only when key is configured)
+  if (VT_API_KEY) {
+    const res = await safeFetchJson(`https://www.virustotal.com/api/v3/domains/${encodeURIComponent(domain)}`, {
+      headers: { "x-apikey": VT_API_KEY, accept: "application/json" },
+      timeoutMs: 4000,
+    });
+    if (res.status === 404) {
+      return {
+        status: "ok",
+        found: false,
+        summary: "No WHOIS data (VT: domain not found)",
+        source: "virustotal",
+      };
+    }
+    if (!res.ok || !res.json?.data?.attributes) {
+      return {
+        status: "error",
+        summary: `Lookup failed (${res.status || "network error"})`,
+        source: "virustotal",
+      };
+    }
+    return parseVtWhois(res.json.data.attributes, domain);
+  }
 
   const primary = await safeFetchJson(`https://rdap.org/domain/${encodeURIComponent(domain)}`, { timeoutMs: 1500 });
   if (primary.ok && primary.json) return parseRdapWhois(primary.json, domain);
