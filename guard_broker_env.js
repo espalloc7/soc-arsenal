@@ -31,6 +31,7 @@ const ABUSEIPDB_API_KEY   = process.env.ABUSEIPDB_API_KEY   || "";
 const IPINFO_API_KEY      = process.env.IPINFO_API_KEY      || "";   // ipinfo.io – 50k/ay ücretsiz, key opsiyonel
 const OTX_API_KEY         = process.env.OTX_API_KEY         || "";   // otx.alienvault.com – free
 const URLHAUS_API_KEY     = process.env.URLHAUS_API_KEY     || "";   // urlhaus.abuse.ch – free (register required)
+const WHOIS_API_KEY       = process.env.WHOIS_API_KEY       || "";   // whoisxmlapi.com – opsiyonel fallback (RDAP ücretsiz, key gereksiz)
 
 // Shodan InternetDB, MalwareBazaar → API key gerektirmez
 // URLhaus → artık Auth-Key header gerekiyor (urlhaus.abuse.ch → Register)
@@ -38,6 +39,8 @@ const URLHAUS_API_KEY     = process.env.URLHAUS_API_KEY     || "";   // urlhaus.
 const FETCH_TIMEOUT_MS = 12000;
 const CACHE_TTL_MS     = 60 * 60 * 1000;
 const cache            = new Map();
+const MB_API_KEY       = process.env.MB_API_KEY || "";
+let ianaRdapCache      = { ts: 0, byTld: null };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,9 +66,10 @@ function withTimeout(ms = FETCH_TIMEOUT_MS) {
 }
 
 async function safeFetchJson(url, options = {}) {
-  const { signal, done } = withTimeout();
+  const { timeoutMs = FETCH_TIMEOUT_MS, ...fetchOptions } = options;
+  const { signal, done } = withTimeout(timeoutMs);
   try {
-    const res  = await fetch(url, { ...options, signal });
+    const res  = await fetch(url, { ...fetchOptions, signal });
     const text = await res.text();
     let json = null;
     try { json = text ? JSON.parse(text) : null; } catch { json = null; }
@@ -101,6 +105,7 @@ function summarizeProviders(providers) {
   if (providers.shodandb?.summary)      parts.push(`ShodanDB: ${providers.shodandb.summary}`);
   if (providers.malwarebazaar?.summary) parts.push(`MalwareBazaar: ${providers.malwarebazaar.summary}`);
   if (providers.urlhaus?.summary)       parts.push(`URLhaus: ${providers.urlhaus.summary}`);
+  if (providers.whois?.summary)         parts.push(`WHOIS: ${providers.whois.summary}`);
   return parts.join(" | ");
 }
 
@@ -350,6 +355,9 @@ async function queryVirusTotal(type, value) {
     headers: { "x-apikey": VT_API_KEY, accept: "application/json" },
   });
 
+  if (res.status === 404) {
+    return { status: "ok", found: false, summary: "Not found in VirusTotal" };
+  }
   if (!res.ok || !res.json?.data?.attributes) {
     return { status: "error", summary: `Lookup failed${res.status ? ` (${res.status})` : ""}` };
   }
@@ -456,9 +464,9 @@ async function queryOTX(type, value) {
   else if (type === "url")    indicatorType = "url";
   else if (type === "hash") {
     const len = value.replace(/\s/g, "").length;
-    if      (len === 32) indicatorType = "FileHash-MD5";
-    else if (len === 40) indicatorType = "FileHash-SHA1";
-    else if (len === 64) indicatorType = "FileHash-SHA256";
+    if      (len === 32) indicatorType = "file";
+    else if (len === 40) indicatorType = "file";
+    else if (len === 64) indicatorType = "file";
     else return { status: "unsupported", summary: "Unknown hash length" };
   } else return { status: "unsupported", summary: "Type not supported" };
 
@@ -467,18 +475,32 @@ async function queryOTX(type, value) {
     headers: { "X-OTX-API-KEY": OTX_API_KEY, Accept: "application/json" },
   });
 
+  if (res.status === 404) {
+    return { status: "ok", found: false, summary: "Not found in OTX" };
+  }
+  if (res.status === 401 || res.status === 403) {
+    return { status: "error", summary: "Invalid OTX API key" };
+  }
   if (!res.ok || !res.json) {
     return { status: "error", summary: `Lookup failed${res.status ? ` (${res.status})` : ""}` };
   }
 
-  const pulseCount  = Number(res.json.pulse_info?.count   || 0);
+  const pulseInfo   = res.json.pulse_info || res.json.general?.pulse_info || {};
+  const pulses      = Array.isArray(pulseInfo.pulses) ? pulseInfo.pulses : [];
+  const pulseCount  = Number(pulseInfo.count || pulses.length || 0);
   const reputation  = Number(res.json.reputation          || 0);
   const malwareList = (res.json.malware_families || []).map(m => m.display_name || m.id).slice(0, 3);
+  const basePresent = Boolean(res.json.base_indicator);
+  const found       = pulseCount > 0;
 
   return {
-    status: "ok", pulseCount, reputation,
+    status: "ok", found, basePresent, pulseCount, reputation,
     malwareFamilies: malwareList,
-    summary: `pulses=${pulseCount}, reputation=${reputation}${malwareList.length ? `, malware=${malwareList.join(",")}` : ""}`,
+    summary: found
+      ? `pulses=${pulseCount}, reputation=${reputation}${malwareList.length ? `, malware=${malwareList.join(",")}` : ""}`
+      : basePresent
+        ? `Known to OTX, no pulses, reputation=${reputation}`
+        : "Not found in OTX",
   };
 }
 
@@ -514,11 +536,17 @@ async function queryShodanInternetDB(type, value) {
 
 async function queryMalwareBazaar(type, value) {
   if (type !== "hash") return { status: "unsupported", summary: "Only file hashes" };
+  if (!MB_API_KEY) {
+    return { status: "disabled", summary: "API key missing (bazaar.abuse.ch -> Register)" };
+  }
 
   const body = `query=get_info&hash=${encodeURIComponent(value)}`;
   const res  = await safeFetchJson("https://mb-api.abuse.ch/api/v1/", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Auth-Key": MB_API_KEY,
+    },
     body,
   });
 
@@ -526,8 +554,19 @@ async function queryMalwareBazaar(type, value) {
     return { status: "error", summary: `Lookup failed${res.status ? ` (${res.status})` : ""}` };
   }
 
-  if (res.json.query_status === "hash_not_found") {
+  const qs = res.json.query_status || "";
+
+  if (qs === "hash_not_found" || qs === "no_results") {
     return { status: "ok", found: false, summary: "Not found in MalwareBazaar" };
+  }
+  if (qs === "illegal_hash" || qs === "no_hash_provided") {
+    return { status: "error", summary: "Invalid hash input" };
+  }
+  if (qs === "unauthorized" || qs === "unknown_auth_key") {
+    return { status: "error", summary: "Invalid MalwareBazaar API key" };
+  }
+  if (qs !== "ok") {
+    return { status: "error", summary: `MalwareBazaar query_status=${qs}` };
   }
 
   const data        = (res.json.data || [])[0] || {};
@@ -544,26 +583,26 @@ async function queryMalwareBazaar(type, value) {
 }
 
 // ─── Provider: URLhaus ────────────────────────────────────────────────────────
-// API key gerektirmez. https://urlhaus.abuse.ch
+// https://urlhaus.abuse.ch
 
-async function queryURLhaus(type, value) {
-  if (!["url", "domain", "ip"].includes(type)) {
-    return { status: "unsupported", summary: "Only URL / domain / IP" };
-  }
-  if (!URLHAUS_API_KEY) {
-    return { status: "disabled", summary: "API key missing (urlhaus.abuse.ch → Register)" };
-  }
+function urlhausHost(type, value) {
+  let h = hostnameFromValue(type, value);
+  h = String(h || "").trim();
+  h = h.replace(/^https?:\/\//i, "");
+  h = h.split("/")[0];
+  h = h.split("?")[0].split("#")[0];
+  h = h.replace(/:\d+$/, "");
+  h = h.replace(/^www\./i, "");
+  return h.toLowerCase();
+}
 
-  let endpoint, body;
-
-  if (type === "url") {
-    endpoint = "https://urlhaus-api.abuse.ch/v1/url/";
-    body     = `url=${encodeURIComponent(value)}`;
-  } else {
-    // domain or ip → host lookup
-    endpoint = "https://urlhaus-api.abuse.ch/v1/host/";
-    body     = `host=${encodeURIComponent(value)}`;
-  }
+async function urlhausLookup(scope, payload) {
+  const endpoint = scope === "url"
+    ? "https://urlhaus-api.abuse.ch/v1/url/"
+    : "https://urlhaus-api.abuse.ch/v1/host/";
+  const body = scope === "url"
+    ? `url=${encodeURIComponent(payload)}`
+    : `host=${encodeURIComponent(payload)}`;
 
   const res = await safeFetchJson(endpoint, {
     method: "POST",
@@ -580,23 +619,198 @@ async function queryURLhaus(type, value) {
 
   const qs = res.json.query_status || "";
 
-  if (qs === "unknown_auth_key") {
+  if (qs === "unknown_auth_key" || qs === "unauthorized") {
     return { status: "error", summary: "Invalid URLhaus API key" };
   }
 
-  if (qs === "no_results" || qs === "invalid_url" || qs === "invalid_host") {
+  // invalid_url / invalid_host = input rejected by URLhaus, not "not found"
+  if (qs === "invalid_url" || qs === "invalid_host") {
+    return {
+      status: "error",
+      summary: `URLhaus rejected ${scope} input (${qs}) — value: ${String(payload).slice(0, 80)}`,
+    };
+  }
+
+  if (qs === "no_results") {
     return { status: "ok", found: false, summary: "Not found in URLhaus" };
   }
 
-  const urlCount  = type === "url" ? 1 : Number(res.json.urls_count || 0);
-  const threat    = res.json.threat    || res.json.url_status || "";
-  const tags      = res.json.tags      || [];
+  if (qs !== "ok") {
+    return { status: "error", summary: `URLhaus query_status=${qs}` };
+  }
+
+  const urlCount = scope === "url" ? 1 : Number(res.json.urls_count || 0);
+  const threat   = res.json.threat || res.json.url_status || "";
+  const tags     = res.json.tags   || [];
 
   return {
     status: "ok", found: true,
-    urlCount, threat, tags,
+    scope, urlCount, threat, tags,
     summary: `FOUND in URLhaus${threat ? `: ${threat}` : ""}${urlCount > 1 ? `, urls=${urlCount}` : ""}${tags.length ? `, tags=${tags.slice(0,3).join(",")}` : ""}`,
   };
+}
+
+async function queryURLhaus(type, value) {
+  if (!["url", "domain", "ip"].includes(type)) {
+    return { status: "unsupported", summary: "Only URL / domain / IP" };
+  }
+  if (!URLHAUS_API_KEY) {
+    return { status: "disabled", summary: "API key missing (urlhaus.abuse.ch → Register)" };
+  }
+
+  // URL type: try exact-URL first, fall through to host on miss
+  if (type === "url") {
+    const urlRes = await urlhausLookup("url", value);
+    if (urlRes && urlRes.status === "ok" && urlRes.found) return urlRes;
+  }
+
+  // Host-scope lookup (domain / ip / URL fallback)
+  const host = urlhausHost(type, value);
+  if (!host) {
+    return { status: "error", summary: "Could not derive host for URLhaus lookup" };
+  }
+  const hostRes = await urlhausLookup("host", host);
+
+  // www. variant as last resort when apex returned no_results
+  if (hostRes && hostRes.status === "ok" && hostRes.found === false && !host.startsWith("www.")) {
+    const alt = await urlhausLookup("host", "www." + host);
+    if (alt && alt.status === "ok" && alt.found) return alt;
+  }
+
+  return hostRes;
+}
+
+// ─── Provider: WHOIS / RDAP ───────────────────────────────────────────────────
+// RDAP: ücretsiz, key yok. 404 = TLD desteklenmiyor veya domain tescilsiz — hata değil.
+
+function parseRdapWhois(data, domain) {
+  const events = Array.isArray(data.events) ? data.events : [];
+  const createdDate  = events.find(e => e.eventAction === "registration")?.eventDate  || null;
+  const updatedDate  = events.find(e => e.eventAction === "last changed")?.eventDate  || null;
+  const expiresDate  = events.find(e => e.eventAction === "expiration")?.eventDate    || null;
+
+  const entities = Array.isArray(data.entities) ? data.entities : [];
+  let registrar = null;
+  let registrantCountry = null;
+
+  for (const ent of entities) {
+    const roles = Array.isArray(ent.roles) ? ent.roles : [];
+    const vcard = Array.isArray(ent.vcardArray) ? ent.vcardArray[1] || [] : [];
+
+    if (roles.includes("registrar") && !registrar) {
+      const fn = vcard.find(f => f[0] === "fn");
+      if (fn) registrar = fn[3] || null;
+    }
+    if (roles.includes("registrant") && !registrantCountry) {
+      const adr = vcard.find(f => f[0] === "adr");
+      if (adr && Array.isArray(adr[3])) registrantCountry = adr[3][6] || null;
+    }
+  }
+
+  const nameservers = Array.isArray(data.nameservers)
+    ? data.nameservers.map(n => String(n.ldhName || "").toLowerCase()).filter(Boolean)
+    : [];
+  const statuses = Array.isArray(data.status) ? data.status : [];
+  const ageDays = createdDate
+    ? Math.floor((Date.now() - new Date(createdDate).getTime()) / 86400000)
+    : null;
+
+  return {
+    status: "ok",
+    found: true,
+    domain,
+    createdDate, updatedDate, expiresDate,
+    ageDays,
+    registrar,
+    nameservers,
+    statuses,
+    registrantCountry,
+    summary: `age=${ageDays != null ? ageDays + "d" : "?"}, registrar=${registrar || "?"}`,
+  };
+}
+
+async function getIanaRdapBase(tld) {
+  const ttlMs = 60 * 60 * 1000;
+  if (!ianaRdapCache.byTld || Date.now() - ianaRdapCache.ts > ttlMs) {
+    const res = await safeFetchJson("https://data.iana.org/rdap/dns.json", { timeoutMs: 1500 });
+    if (!res.ok || !res.json || !Array.isArray(res.json.services)) return null;
+    const byTld = new Map();
+    for (const service of res.json.services) {
+      const tlds = Array.isArray(service[0]) ? service[0] : [];
+      const urls = Array.isArray(service[1]) ? service[1] : [];
+      const base = urls.find(u => /^https:\/\//i.test(String(u || "")));
+      if (!base) continue;
+      tlds.forEach(x => byTld.set(String(x).toLowerCase(), base));
+    }
+    ianaRdapCache = { ts: Date.now(), byTld };
+  }
+  return ianaRdapCache.byTld.get(String(tld || "").toLowerCase()) || null;
+}
+
+async function queryDnsFallback(domain) {
+  const recordTypes = ["NS", "A", "MX"];
+  const lookups = await Promise.all(recordTypes.map(async type => {
+    const res = await safeFetchJson(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${type}`, {
+      headers: { Accept: "application/dns-json" },
+      timeoutMs: 1500,
+    });
+    return [type, res.ok && res.json ? res.json : null];
+  }));
+
+  const out = { nameservers: [], aRecords: [], mxRecords: [] };
+  for (const [type, json] of lookups) {
+    const answers = Array.isArray(json?.Answer) ? json.Answer : [];
+    const values = answers.map(a => String(a.data || "").replace(/\.$/, "")).filter(Boolean);
+    if (type === "NS") out.nameservers = values.map(v => v.toLowerCase());
+    if (type === "A") out.aRecords = values;
+    if (type === "MX") out.mxRecords = values.map(v => v.replace(/^\d+\s+/, "").replace(/\.$/, "").toLowerCase());
+  }
+  return out;
+}
+
+async function queryWhois(type, value) {
+  if (!["domain", "url"].includes(type)) {
+    return { status: "unsupported", summary: "Only domain / URL" };
+  }
+
+  let hostname = hostnameFromValue(type, value);
+  const domain = getRootDomain(hostname);
+
+  const primary = await safeFetchJson(`https://rdap.org/domain/${encodeURIComponent(domain)}`, { timeoutMs: 1500 });
+  if (primary.ok && primary.json) return parseRdapWhois(primary.json, domain);
+  if (primary.status && primary.status !== 404) {
+    return { status: "error", summary: `Lookup failed (${primary.status || "network error"})` };
+  }
+
+  const tld = domain.split(".").pop();
+  const ianaBase = await getIanaRdapBase(tld);
+  if (ianaBase) {
+    const url = `${String(ianaBase).replace(/\/+$/, "")}/domain/${encodeURIComponent(domain)}`;
+    const iana = await safeFetchJson(url, { timeoutMs: 1500 });
+    if (iana.ok && iana.json) return parseRdapWhois(iana.json, domain);
+  }
+
+  const mirror = await safeFetchJson(`https://www.rdap.net/domain/${encodeURIComponent(domain)}`, { timeoutMs: 1500 });
+  if (mirror.ok && mirror.json) return parseRdapWhois(mirror.json, domain);
+
+  const dns = await queryDnsFallback(domain);
+  if (dns.nameservers.length || dns.aRecords.length || dns.mxRecords.length) {
+    return {
+      status: "ok",
+      found: true,
+      partial: true,
+      domain,
+      nameservers: dns.nameservers,
+      aRecords: dns.aRecords,
+      mxRecords: dns.mxRecords,
+      summary: "Partial (DNS-only)",
+    };
+  }
+
+  return { status: "ok", found: false, summary: "No WHOIS data (TLD unsupported or domain unregistered)" };
+
+
+
 }
 
 // ─── Enrichment ───────────────────────────────────────────────────────────────
@@ -643,6 +857,11 @@ async function enrichOne(indicator) {
     tasks.push(queryURLhaus(type, value).then(r => { providers.urlhaus = r; }));
   }
 
+  // domain + URL → WHOIS / RDAP
+  if (["domain", "url"].includes(type)) {
+    tasks.push(queryWhois(type, value).then(r => { providers.whois = r; }));
+  }
+
   // OTX – all types (if key present)
   if (OTX_API_KEY) {
     tasks.push(queryOTX(type, value).then(r => { providers.otx = r; }));
@@ -673,19 +892,28 @@ async function enrichOne(indicator) {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 app.get("/health", (_req, res) => {
+  const providers = {
+    virustotal:    VT_API_KEY ? "ok" : "disabled",
+    abuseipdb:     ABUSEIPDB_API_KEY ? "ok" : "disabled",
+    ipinfo:        "ok",
+    otx:           OTX_API_KEY ? "ok" : "disabled",
+    shodandb:      "ok",
+    malwarebazaar: MB_API_KEY ? "ok" : "disabled",
+    urlhaus:       URLHAUS_API_KEY ? "ok" : "disabled",
+    whois:         "ok",
+  };
+  const status = Object.values(providers).some(v => v === "error")
+    ? "down"
+    : Object.values(providers).some(v => v === "disabled")
+      ? "degraded"
+      : "ok";
   res.json({
     ok: true,
+    status,
     service: "guard-broker",
+    ts: nowIso(),
     time: nowIso(),
-    providers: {
-      virustotal:    Boolean(VT_API_KEY),
-      abuseipdb:     Boolean(ABUSEIPDB_API_KEY),
-      ipinfo:        true,   // key-free up to 50k/mo; set IPINFO_API_KEY for higher limits
-      otx:           Boolean(OTX_API_KEY),
-      shodandb:      true,                    // key-free
-      malwarebazaar: true,                    // key-free
-      urlhaus:       Boolean(URLHAUS_API_KEY),
-    },
+    providers,
   });
 });
 
@@ -707,5 +935,5 @@ app.post("/api/guard/check", async (req, res) => {
 
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`[guard-broker] listening on http://127.0.0.1:${PORT}`);
-  console.log(`[guard-broker] providers: VT=${Boolean(VT_API_KEY)} | AbuseIPDB=${Boolean(ABUSEIPDB_API_KEY)} | IPInfo=true | OTX=${Boolean(OTX_API_KEY)} | ShodanDB=true | MalwareBazaar=true | URLhaus=${Boolean(URLHAUS_API_KEY)}`);
+  console.log(`[guard-broker] providers: VT=${Boolean(VT_API_KEY)} | AbuseIPDB=${Boolean(ABUSEIPDB_API_KEY)} | IPInfo=true | OTX=${Boolean(OTX_API_KEY)} | ShodanDB=true | MalwareBazaar=${Boolean(MB_API_KEY)} | URLhaus=${Boolean(URLHAUS_API_KEY)}`);
 });

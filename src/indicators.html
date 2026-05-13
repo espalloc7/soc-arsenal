@@ -1,1841 +1,623 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Defender XDR – TI Indicator CSV Builder</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-  <style>
-    /* =============================================================
-       DEFENDER XDR – CTI TOOLKIT  |  Design System v2
-       Theme : Cyber Ops / Refined Dark + Cyan Accent
-       Font  : Outfit (UI) + JetBrains Mono (code)
-    ============================================================= */
-
-    :root {
-      /* Backgrounds */
-      --bg:            #03040a;
-      --surface:       #070b14;
-      --elevated:      #0d1220;
-
-      /* Borders */
-      --border:        rgba(255,255,255,0.07);
-      --border-mid:    rgba(255,255,255,0.13);
-      --border-bright: rgba(255,255,255,0.20);
-
-      /* Accent – Electric Cyan */
-      --primary:       #22d3ee;
-      --primary-hover: #06b6d4;
-      --primary-glow:  rgba(34,211,238,0.20);
-      --primary-soft:  rgba(34,211,238,0.08);
-
-      /* Semantic */
-      --danger:        #f43f5e;
-      --success:       #10b981;
-      --warning:       #f59e0b;
-
-      /* Text */
-      --text:          #94a3b8;
-      --text-bright:   #e2e8f0;
-      --muted:         #475569;
-
-      /* Form inputs */
-      --input-bg:      rgba(0,0,0,0.25);
-      --input-border:  rgba(255,255,255,0.08);
-
-      /* Cards */
-      --card-bg:       rgba(7,11,20,0.85);
-      --card-border:   rgba(255,255,255,0.07);
-      --card-blur:     18px;
-
-      --radius:        10px;
-      --font-main:    'Outfit', system-ui, sans-serif;
-      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
-    }
-
-    /* ── Reset ─────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; }
-
-    /* Accessibility: keyboard focus ring */
-    :focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-    /* Remove mouse-click outlines without nuking keyboard nav */
-    :focus:not(:focus-visible) { outline: none; box-shadow: none; }
-
-    button::-moz-focus-inner, input::-moz-focus-inner { border: 0; }
-    * { -webkit-tap-highlight-color: transparent; }
-
-    html { overflow-y: scroll; scroll-behavior: smooth; scrollbar-gutter: stable; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      background-image: radial-gradient(ellipse at 60% 0%,
-        rgba(15,28,64,0.9) 0%, rgba(5,8,20,0.95) 50%, var(--bg) 100%);
-      background-attachment: fixed;
-      color: var(--text);
-      font-family: var(--font-main);
-      min-height: 100vh;
-      line-height: 1.5;
-      font-size: 14px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* ── Scrollbars ────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
-
-    /* ── Layout ────────────────────────────────────────────── */
-    .wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 36px 24px 80px;
-    }
-
-    /* ── Header ────────────────────────────────────────────── */
-    header {
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-      animation: fadeUp 0.45s ease-out both;
-    }
-
-    h1 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin: 0 0 6px 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-bright);
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #22d3ee 0%, #818cf8 55%, #c084fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .pill-ver {
-      font-size: 10px;
-      background: var(--primary-soft);
-      color: var(--primary);
-      padding: 2px 9px;
-      border-radius: 99px;
-      font-weight: 600;
-      border: 1px solid rgba(34,211,238,0.2);
-      font-family: var(--font-mono);
-      -webkit-text-fill-color: var(--primary);
-      letter-spacing: 0.03em;
-    }
-
-    .sub {
-      color: var(--muted);
-      font-size: 13px;
-      max-width: 580px;
-      margin: 0;
-      font-weight: 400;
-      line-height: 1.65;
-    }
-
-    /* ── Grid ──────────────────────────────────────────────── */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 4fr 5fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
-
-    /* ── Cards ─────────────────────────────────────────────── */
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(var(--card-blur));
-      -webkit-backdrop-filter: blur(var(--card-blur));
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.45), 0 8px 28px rgba(0,0,0,0.22);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      transition: border-color 0.2s;
-    }
-    .card:hover { border-color: rgba(255,255,255,0.11); }
-
-    /* ── Forms ─────────────────────────────────────────────── */
-    label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 7px;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-    }
-
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-    .kbd {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.11);
-      padding: 1px 5px;
-      border-radius: 4px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    textarea, input, select {
-      width: 100%;
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      color: var(--text-bright);
-      border-radius: 7px;
-      padding: 10px 13px;
-      font-size: 13px;
-      font-family: var(--font-main);
-      font-weight: 500;
-      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-    }
-
-    textarea:hover, input:hover, select:hover {
-      border-color: rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.025);
-    }
-
-    textarea:focus, input:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
-      background: rgba(0,0,0,0.35);
-      outline: none;
-    }
-
-    textarea {
-      min-height: 220px;
-      resize: vertical;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      line-height: 1.65;
-    }
-
-    .input-group { margin-bottom: 14px; }
-    .input-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    .input-header label { margin: 0; }
-
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-
-    /* ── Buttons ───────────────────────────────────────────── */
-    button {
-      border: 0;
-      border-radius: 7px;
-      padding: 10px 18px;
-      font-family: var(--font-main);
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.18s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-
-    #addBtn {
-      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-hover) 100%);
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 2px 10px rgba(34,211,238,0.22),
-                  inset 0 1px 0 rgba(255,255,255,0.14);
-      color: #03040a;
-      font-weight: 700;
-      width: 100%;
-    }
-    #addBtn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 18px rgba(34,211,238,0.32),
-                  inset 0 1px 0 rgba(255,255,255,0.14);
-    }
-    #addBtn:active { transform: translateY(0); }
-
-    button.secondary {
-      background: rgba(255,255,255,0.03);
-      color: #94a3b8;
-      border: 1px solid var(--border);
-    }
-    button.secondary:hover:not(:disabled) {
-      background: rgba(255,255,255,0.07);
-      color: var(--text-bright);
-      border-color: var(--border-mid);
-    }
-    button.secondary:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    button.danger {
-      background: rgba(244,63,94,0.06);
-      color: var(--danger);
-      border: 1px solid rgba(244,63,94,0.16);
-    }
-    button.danger:hover {
-      background: rgba(244,63,94,0.14);
-      border-color: rgba(244,63,94,0.3);
-    }
-
-    .btn-icon {
-      width: 30px; height: 30px; padding: 0;
-      background: transparent; border: 1px solid transparent;
-      color: var(--muted); border-radius: 6px;
-      display: inline-flex; align-items: center; justify-content: center;
-    }
-    .btn-icon:hover { background: rgba(255,255,255,0.08); color: var(--text-bright); }
-    .btn-icon.danger-hover:hover { background: rgba(244,63,94,0.12); color: var(--danger); }
-
-    button.xs { padding: 3px 10px; font-size: 11px; min-height: 26px; }
-
-    /* ── Button row ────────────────────────────────────────── */
-    .btnRow { margin-top: auto; padding-top: 16px; display: flex; gap: 10px; }
-    .btnLeft { flex: 1; }
-    .btnRight { display: flex; gap: 8px; }
-
-    /* ── Drop zone ─────────────────────────────────────────── */
-    .dropZone {
-      margin-top: 12px;
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 14px;
-      border-radius: 8px;
-      border: 1px dashed rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.02);
-      color: #94a3b8;
-      cursor: pointer;
-      transition: border-color 0.18s, background 0.18s, transform 0.18s;
-      user-select: none;
-    }
-    .dropZone:hover {
-      border-color: rgba(34,211,238,0.38);
-      background: rgba(34,211,238,0.05);
-    }
-    .dropZone.dragover {
-      border-color: rgba(34,211,238,0.65);
-      background: rgba(34,211,238,0.10);
-      transform: translateY(-1px);
-    }
-    .dropZoneIcon {
-      width: 32px; height: 32px; border-radius: 8px;
-      display: inline-flex; align-items: center; justify-content: center;
-      background: var(--primary-soft);
-      color: var(--primary);
-      border: 1px solid rgba(34,211,238,0.18);
-      flex-shrink: 0;
-    }
-    .dropZoneIcon svg {
-      width: 16px; height: 16px; display: block;
-      stroke: currentColor; fill: none;
-      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    }
-    .dropZoneText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .dropZoneText strong { font-size: 12px; font-weight: 600; color: var(--text-bright); }
-    .dropZoneText span   { font-size: 11px; color: var(--muted); }
-
-    /* ── Preview box ───────────────────────────────────────── */
-    .previewBox {
-      background: rgba(0,0,0,0.25);
-      border: 1px solid var(--input-border);
-      border-radius: 7px;
-      padding: 4px 0;
-      height: 160px;
-      overflow-y: auto;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      margin-top: 5px;
-      margin-bottom: 0;
-      flex-grow: 1;
-    }
-    .previewLine {
-      padding: 6px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      display: flex; align-items: center; gap: 10px;
-    }
-    .previewLine:last-child { border-bottom: none; }
-    .previewLine:hover { background: rgba(255,255,255,0.03); }
-
-    .previewVal { color: #cbd5e1; word-break: break-all; flex: 1; min-width: 0; }
-    .previewBad .previewVal { color: var(--danger); text-decoration: line-through; opacity: 0.65; }
-    .previewDup .previewVal { color: var(--warning); }
-
-    .typeBadge {
-      font-size: 9px; font-weight: 700; padding: 2px 7px;
-      border-radius: 4px; min-width: 56px; text-align: center;
-      letter-spacing: 0.04em; flex-shrink: 0;
-    }
-
-    /* ── Type badges ───────────────────────────────────────── */
-    .badge-IpAddress  { background: rgba(6,182,212,0.10); color: #22d3ee; border: 1px solid rgba(6,182,212,0.2); }
-    .badge-DomainName { background: rgba(234,179,8,0.10); color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
-    .badge-Url        { background: rgba(249,115,22,0.10); color: #fb923c; border: 1px solid rgba(249,115,22,0.2); }
-    .badge-FileMd5    { background: rgba(139,92,246,0.10); color: #c084fc; border: 1px solid rgba(139,92,246,0.2); }
-    .badge-FileSha1   { background: rgba(236,72,153,0.10); color: #f472b6; border: 1px solid rgba(236,72,153,0.2); }
-    .badge-FileSha256 { background: rgba(16,185,129,0.10); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
-    .badgeUnknown     { background: rgba(244,63,94,0.10);  color: var(--danger); border: 1px solid rgba(244,63,94,0.2); }
-
-    /* ── Stats panel — boşluğu sayıları büyüterek kapatır ─── */
-    .stats-grid {
-      flex: 1;               /* kalan dikey alanı doldur */
-      min-height: 90px;
-      margin-top: 14px;
-      display: flex;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      background: rgba(0,0,0,0.20);
-    }
-
-    .stat-card {
-      flex: 1;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 6px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-      transition: background 0.18s;
-      position: relative;
-      padding: 12px 6px;
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-    .stat-card:last-child { border-right: none; }
-    .stat-card:hover { background: rgba(255,255,255,0.03); }
-
-    .stat-card:nth-child(1)::before { background: var(--primary); }
-    .stat-card:nth-child(2)::before { background: #c084fc; }
-    .stat-card:nth-child(3)::before { background: #fb923c; }
-    .stat-card:nth-child(4)::before { background: #fbbf24; }
-
-    .stat-card:nth-child(1) .stat-value { color: var(--primary); }
-    .stat-card:nth-child(2) .stat-value { color: #c084fc; }
-    .stat-card:nth-child(3) .stat-value { color: #fb923c; }
-    .stat-card:nth-child(4) .stat-value { color: #fbbf24; }
-
-    .stat-label {
-      font-size: 9px; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--muted);
-      font-weight: 700; white-space: nowrap;
-    }
-    .stat-value {
-      font-family: var(--font-mono);
-      font-size: 38px; font-weight: 700;
-      line-height: 1;
-    }
-
-    @media (max-width: 768px) {
-      .stats-grid { flex-wrap: wrap; min-height: 120px; }
-      .stat-card { flex: 1 1 50%; border-bottom: 1px solid var(--border); }
-    }
-
-    /* ── Table card ────────────────────────────────────────── */
-    .table-card { margin-top: 18px; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
-
-    .table-header-wrap {
-      position: relative;
-      padding: 0 20px; height: 54px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.01);
-    }
-
-    .header-default {
-      display: flex; gap: 12px; align-items: center;
-      transition: opacity 0.2s; width: 100%;
-    }
-
-    /* ── Bulk panel ────────────────────────────────────────── */
-    .bulk-panel {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(7,11,20,0.97);
-      backdrop-filter: blur(14px);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px;
-      z-index: 10;
-      border-bottom: 1px solid var(--primary);
-      opacity: 0; pointer-events: none; transform: translateY(-4px);
-      transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
-    }
-    .bulk-panel.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
-
-    .bulk-left { display: flex; align-items: center; gap: 10px; }
-    .bulk-actions { display: flex; gap: 7px; align-items: center; }
-
-    .bulk-count-badge {
-      background: var(--primary); color: #03040a;
-      font-weight: 700; font-size: 11px;
-      padding: 3px 9px; border-radius: 99px;
-      box-shadow: 0 0 14px var(--primary-glow);
-    }
-
-    .bulk-select {
-      width: auto; padding: 0 10px; height: 30px; font-size: 11px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border-mid); color: var(--text-bright);
-      border-radius: 6px; font-family: var(--font-main);
-    }
-    .bulk-select:hover { border-color: var(--text); background: rgba(255,255,255,0.09); }
-    .bulk-select:focus { border-color: var(--primary); background: #0a0a14; outline: none; }
-
-    .pill-badge {
-      display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
-      padding: 2px 9px; border-radius: 99px;
-      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-      color: var(--muted); font-weight: 500;
-    }
-    .pill-badge b { color: var(--text-bright); font-weight: 700; }
-
-    /* ── Checkbox ──────────────────────────────────────────── */
-    .col-check { width: 40px; padding: 0; text-align: center; vertical-align: middle; }
-    .chk-wrap {
-      display: flex; align-items: center; justify-content: center;
-      width: 100%; height: 100%; min-height: 40px;
-    }
-
-    .chk {
-      -webkit-appearance: none; -moz-appearance: none; appearance: none;
-      width: 15px !important; height: 15px !important;
-      min-width: 15px !important; min-height: 15px !important;
-      max-width: 15px !important; max-height: 15px !important;
-      background-color: rgba(255,255,255,0.04);
-      border: 1.5px solid rgba(255,255,255,0.28);
-      border-radius: 4px;
-      margin: 0; padding: 0; cursor: pointer;
-      position: relative; display: inline-block; flex-shrink: 0;
-      transition: all 0.15s ease;
-    }
-    .chk:hover { border-color: var(--primary); background-color: var(--primary-soft); }
-    .chk:checked {
-      background-color: var(--primary); border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
-    }
-    .chk:checked::after {
-      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2303040a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-      background-size: 9px 9px; background-position: center; background-repeat: no-repeat;
-    }
-    .chk:indeterminate {
-      background-color: var(--primary); border-color: var(--primary);
-    }
-    .chk:indeterminate::after {
-      content: ''; position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      width: 7px; height: 2px; background: #03040a; border-radius: 1px;
-    }
-
-    /* ── Table ─────────────────────────────────────────────── */
-    .table-wrap {
-      width: 100%; max-height: 520px; overflow: auto;
-    }
-
-    thead th {
-      position: sticky; top: 0; z-index: 2;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    th.col-check, td.col-check {
-      position: sticky; left: 0; z-index: 3;
-      background: rgba(7,11,20,0.92);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
-    thead { background: rgba(0,0,0,0.2); }
-    th, td { padding: 11px 18px; vertical-align: middle; border-bottom: 1px solid var(--border); }
-    th {
-      color: var(--muted); font-weight: 700; font-size: 10px;
-      text-transform: uppercase; text-align: left;
-      letter-spacing: 0.08em; height: 40px;
-    }
-
-    .col-action { width: 210px; }
-    .col-sev    { width: 170px; }
-    .col-alert  { width: 120px; }
-    .col-exp    { width: 150px; }
-    .col-guard  { width: 60px; text-align: center; }
-    .col-val    { max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
-
-    .guardHead { text-align: center; padding-left: 8px; padding-right: 8px; }
-    .guardHeadIcon {
-      width: 16px; height: 16px; margin: 0 auto;
-      display: inline-flex; align-items: center; justify-content: center;
-      color: var(--muted); opacity: 0.9;
-    }
-    .guardHeadIcon svg {
-      width: 14px; height: 14px; display: block;
-      stroke: currentColor; fill: none; stroke-width: 2;
-      stroke-linecap: round; stroke-linejoin: round;
-    }
-    .guardCell { text-align: center; vertical-align: middle; }
-    .guardBadge {
-      width: 24px; height: 24px; border-radius: 99px;
-      display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.02);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-      transition: transform 0.15s ease, border-color 0.15s ease;
-      cursor: help;
-    }
-    .guardBadge:hover { transform: translateY(-1px); border-color: var(--border-mid); }
-    .guardBadge svg {
-      width: 12px; height: 12px; display: block;
-      stroke: currentColor; fill: none; stroke-width: 2;
-      stroke-linecap: round; stroke-linejoin: round;
-    }
-
-    .guard-malicious    { color: #f87171; background: rgba(244,63,94,0.11); border-color: rgba(244,63,94,0.22); }
-    .guard-caution-safe { color: #22d3ee; background: rgba(34,211,238,0.11); border-color: rgba(34,211,238,0.22); }
-    .guard-review       { color: #fbbf24; background: rgba(251,191,36,0.11); border-color: rgba(251,191,36,0.22); }
-    .guard-checking     { color: #818cf8; background: rgba(129,140,248,0.11); border-color: rgba(129,140,248,0.22); }
-    .guard-error        { color: #c084fc; background: rgba(192,132,252,0.11); border-color: rgba(192,132,252,0.22); }
-    .guard-unknown      { color: #475569; background: rgba(71,85,105,0.10); border-color: rgba(71,85,105,0.20); }
-
-    tr:last-child td { border-bottom: 0; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-    tr.selected-row td { background: rgba(34,211,238,0.06); }
-    tbody tr:focus-visible td { background: rgba(34,211,238,0.07); outline: none; }
-    tbody tr.selected-row:focus-visible td { background: rgba(34,211,238,0.11); }
-
-    td select, td input {
-      height: 30px; padding: 0 10px; font-size: 12px;
-      background: transparent; border: 1px solid transparent;
-      border-radius: 5px; color: var(--text-bright);
-      font-family: var(--font-main);
-    }
-    td select:hover, td input:hover { border-color: var(--border-mid); background: rgba(0,0,0,0.22); }
-    td select:focus, td input:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); outline: none; }
-
-    .mono { font-family: var(--font-mono); color: #cbd5e1; font-size: 12px; }
-
-    /* ── KQL section ───────────────────────────────────────── */
-    .kql-section { margin-top: 18px; }
-    .kqlBox {
-      background: #02040b;
-      color: #67e8f9;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 14px;
-      resize: vertical;
-      min-height: 180px;
-      line-height: 1.65;
-    }
-    .kqlBox:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34,211,238,0.08); outline: none; }
-    .kqlTools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-
-    /* ── Toast system ──────────────────────────────────────── */
-    .toastContainer {
-      position: fixed; top: 20px; right: 20px; z-index: 9999;
-      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
-    }
-    .toast {
-      background: var(--elevated);
-      border: 1px solid var(--border); border-left: 3px solid var(--primary);
-      padding: 14px; border-radius: 8px; color: var(--text); font-size: 13px;
-      width: 316px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); pointer-events: auto;
-      transform: translateX(40px); opacity: 0;
-      transition: all 0.28s cubic-bezier(0.16,1,0.3,1);
-      display: flex; flex-direction: column; position: relative; overflow: hidden;
-    }
-    .toast.show { transform: translateX(0); opacity: 1; }
-    .toast.ok   { border-left-color: var(--success); }
-    .toast.err  { border-left-color: var(--danger); }
-    .toast.warn { border-left-color: var(--warning); }
-    .toastTop { display: flex; justify-content: space-between; align-items: flex-start; }
-    .toastMsg { flex: 1; line-height: 1.45; font-size: 13px; }
-    .toastClose {
-      background: none; border: none; color: var(--muted);
-      cursor: pointer; font-size: 16px; padding: 0; line-height: 1;
-      margin-top: -1px; font-family: inherit;
-    }
-    .toastClose:hover { color: var(--text-bright); }
-
-    /* ── Animations ────────────────────────────────────────── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-  </style>
-
-  <!-- ═══════════════════════════════════════════════
-       Design System v3 — Mono Terminal
-       Overrides v2 design with new aesthetic layer
-  ═══════════════════════════════════════════════ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <style id="ux-v3">
-    /* ── Token overrides ───────────────────────── */
-    :root {
-      --bg:            #060810;
-      --surface:       #0a0c18;
-      --elevated:      #0e1222;
-
-      --border:        rgba(255,255,255,0.07);
-      --border-mid:    rgba(255,255,255,0.13);
-      --border-bright: rgba(255,255,255,0.22);
-
-      --primary:       #a98b76;
-      --primary-hover: #bfa28c;
-      --primary-glow:  rgba(169,139,118,0.22);
-      --primary-soft:  rgba(169,139,118,0.09);
-      --primary-grad:  linear-gradient(135deg,#a98b76 0%,#bfa28c 36%,#f3e4c9 68%,#babf94 100%);
-      --on-primary:    #06070d;
-
-      --danger:        #ff2d55;
-      --success:       #00e878;
-      --warning:       #ff7a20;
-
-      --text:          #6a7c98;
-      --text-bright:   #aab8d0;
-      --muted:         #353f58;
-
-      --input-bg:      rgba(0,0,0,0.28);
-      --input-border:  rgba(255,255,255,0.08);
-
-      --card-bg:       rgba(8,10,20,0.97);
-      --card-border:   rgba(255,255,255,0.07);
-      --card-blur:     0px;
-
-      --radius:        0px;
-      --font-main:     'IBM Plex Mono', 'Courier New', monospace;
-      --font-mono:     'IBM Plex Mono', 'Courier New', monospace;
-    }
-
-    /* ── Body & background ─────────────────────── */
-    body {
-      font-family: var(--font-main);
-      font-size: 13px;
-      background: var(--bg);
-      background-image:
-        radial-gradient(ellipse at 88% 0%,   rgba(17,24,39,0.055) 0%, transparent 48%),
-        radial-gradient(ellipse at 12% 100%, rgba(0,50,100,0.09)    0%, transparent 48%);
-      background-attachment: fixed;
-    }
-
-    /* Very subtle CRT scanlines */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9998;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(0,0,0,0.042) 3px,
-        rgba(0,0,0,0.042) 4px
-      );
-    }
-
-    /* Left accent strip */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0; left: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(to bottom,
-        var(--primary) 0%,
-        rgba(17,24,39,0.28) 38%,
-        transparent 68%
-      );
-      z-index: 9997;
-      pointer-events: none;
-    }
-
-    /* ── Scrollbars ────────────────────────────── */
-    ::-webkit-scrollbar       { width: 3px; height: 3px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 0; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
-
-    /* ── Focus ring ────────────────────────────── */
-    :focus-visible {
-      outline: 1px solid var(--primary);
-      outline-offset: 2px;
-      border-radius: 0 !important;
-    }
-
-    /* ── Header ────────────────────────────────── */
-    header {
-      position: relative;
-      padding-bottom: 22px;
-      margin-bottom: 26px;
-    }
-    header::after {
-      content: '// SECURE OPS';
-      position: absolute;
-      top: 4px; right: 0;
-      font-size: 9px;
-      letter-spacing: 0.14em;
-      color: var(--muted);
-      opacity: 0.55;
-      font-family: var(--font-main);
-      pointer-events: none;
-    }
-
-    h1 {
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      color: var(--text-bright);
-      gap: 10px;
-    }
-
-    /* Brand mark — gradient across the palette's three stops */
-    .gradient-text {
-      background: var(--primary-grad) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      -webkit-text-fill-color: transparent !important;
-      color: transparent !important;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-    }
-
-    .pill-ver {
-      background: var(--primary-soft);
-      color: var(--primary);
-      border: 1px solid var(--primary);
-      border-radius: 0;
-      -webkit-text-fill-color: var(--primary);
-      font-family: var(--font-mono);
-      letter-spacing: 0.06em;
-      font-size: 9px;
-    }
-
-    .sub {
-      font-size: 12px;
-      letter-spacing: 0.01em;
-      color: var(--text);
-      font-family: var(--font-main);
-    }
-
-    /* ── Cards ─────────────────────────────────── */
-    .card {
-      background: rgba(8,10,20,0.97);
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      border: 1px solid var(--border);
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .card:hover {
-      border-color: rgba(255,255,255,0.10);
-      box-shadow: none;
-    }
-
-    /* ── Labels / Forms ────────────────────────── */
-    label {
-      font-family: var(--font-main);
-      letter-spacing: 0.10em;
-      color: var(--muted);
-      font-size: 9px;
-    }
-
-    .hint {
-      font-family: var(--font-main);
-      font-size: 10px;
-      letter-spacing: 0.01em;
-    }
-
-    .kbd {
-      border-radius: 0;
-      font-size: 9px;
-      font-family: var(--font-mono);
-      letter-spacing: 0;
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(255,255,255,0.10);
-    }
-
-    textarea, input, select {
-      font-family: var(--font-main);
-      font-size: 12px;
-      border-radius: 0 !important;
-      color: var(--text-bright);
-    }
-    textarea:focus, input:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-soft);
-    }
-
-    /* ── Buttons ───────────────────────────────── */
-    button {
-      font-family: var(--font-main);
-      border-radius: 0;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    #addBtn {
-      background: var(--primary-grad);
-      border: 1px solid var(--primary);
-      color: var(--on-primary);
-      font-weight: 700;
-      box-shadow: 0 0 18px var(--primary-glow);
-    }
-    #addBtn:hover {
-      background: var(--primary-grad);
-      border-color: var(--primary-hover);
-      box-shadow: 0 0 26px var(--primary-glow);
-      transform: none;
-    }
-    #addBtn:active { transform: translateY(1px); }
-
-    button.secondary {
-      background: transparent;
-      border: 1px solid var(--border-mid);
-      color: var(--text);
-    }
-    button.secondary:hover:not(:disabled) {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.20);
-      color: var(--text-bright);
-    }
-    button.secondary:disabled { opacity: 0.28; cursor: not-allowed; }
-
-    button.danger {
-      background: transparent;
-      color: var(--danger);
-      border: 1px solid rgba(255,45,85,0.22);
-    }
-    button.danger:hover {
-      background: rgba(255,45,85,0.08);
-      border-color: rgba(255,45,85,0.38);
-    }
-
-    .btn-icon {
-      border-radius: 0;
-      width: 28px; height: 28px;
-    }
-    .btn-icon.danger-hover:hover {
-      background: rgba(255,45,85,0.10);
-      color: var(--danger);
-    }
-
-    /* ── Drop zone ─────────────────────────────── */
-    .dropZone {
-      border-radius: 0;
-      border: 1px dashed rgba(255,255,255,0.09);
-    }
-    .dropZone:hover {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-    }
-    .dropZone.dragover {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      border-style: solid;
-    }
-    .dropZoneIcon {
-      border-radius: 0;
-      background: var(--primary-soft);
-      color: var(--primary);
-      border: 1px solid var(--primary);
-    }
-    .dropZoneText strong { color: var(--text-bright); font-family: var(--font-main); }
-    .dropZoneText span   { color: var(--muted); font-family: var(--font-main); }
-
-    /* ── Preview box ───────────────────────────── */
-    .previewBox {
-      border-radius: 0;
-      font-family: var(--font-mono);
-    }
-    .previewVal { color: var(--text-bright); font-family: var(--font-mono); }
-    .previewBad .previewVal { color: var(--danger); }
-    .previewDup .previewVal { color: var(--warning); }
-
-    /* ── Type badges ───────────────────────────── */
-    .typeBadge {
-      border-radius: 0;
-      font-family: var(--font-mono);
-      font-size: 8px;
-      letter-spacing: 0.07em;
-    }
-    .badge-IpAddress  { background: rgba(68,136,255,0.09);  color: #6699ff; border: 1px solid rgba(68,136,255,0.22); }
-    .badge-DomainName { background: rgba(232,168,32,0.09);  color: #e8a820; border: 1px solid rgba(232,168,32,0.24); }
-    .badge-Url        { background: rgba(255,140,32,0.09);  color: #ff8c20; border: 1px solid rgba(255,140,32,0.22); }
-    .badge-FileMd5    { background: rgba(160,102,255,0.09); color: #a068ff; border: 1px solid rgba(160,102,255,0.22); }
-    .badge-FileSha1   { background: rgba(255,68,180,0.09);  color: #ff44b4; border: 1px solid rgba(255,68,180,0.22); }
-    .badge-FileSha256 { background: rgba(0,232,120,0.09);   color: #00e878; border: 1px solid rgba(0,232,120,0.22); }
-    .badgeUnknown     { background: rgba(255,45,85,0.07);   color: var(--danger); border: 1px solid rgba(255,45,85,0.20); }
-
-    /* ── Stats grid ────────────────────────────── */
-    .stats-grid { border-radius: 0; }
-    .stat-card::before { height: 1px; top: unset; bottom: 0; }
-    .stat-card:nth-child(1)::before { background: var(--primary); }
-    .stat-card:nth-child(2)::before { background: #a068ff; }
-    .stat-card:nth-child(3)::before { background: #6699ff; }
-    .stat-card:nth-child(4)::before { background: #ff8c20; }
-    .stat-card:nth-child(1) .stat-value { color: var(--primary); }
-    .stat-card:nth-child(2) .stat-value { color: #a068ff; }
-    .stat-card:nth-child(3) .stat-value { color: #6699ff; }
-    .stat-card:nth-child(4) .stat-value { color: #ff8c20; }
-    .stat-value { font-family: var(--font-mono); letter-spacing: -0.04em; }
-    .stat-label { font-family: var(--font-main); letter-spacing: 0.10em; color: var(--muted); }
-
-    /* ── Table card ────────────────────────────── */
-    .table-card { border-radius: 0; }
-    .table-header-wrap { background: rgba(0,0,0,0.08); }
-    .header-default h3 {
-      font-family: var(--font-main) !important;
-      font-size: 11px !important;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: var(--text-bright) !important;
-    }
-    .pill-badge {
-      border-radius: 0;
-      font-family: var(--font-main);
-      font-size: 10px;
-      letter-spacing: 0.05em;
-    }
-
-    /* ── Bulk panel ────────────────────────────── */
-    .bulk-panel {
-      backdrop-filter: none;
-      background: rgba(6,8,16,0.98);
-      border-bottom: 1px solid var(--primary);
-    }
-    .bulk-count-badge {
-      border-radius: 0;
-      background: var(--primary);
-      color: var(--on-primary);
-      font-family: var(--font-main);
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      box-shadow: none;
-    }
-    .bulk-select {
-      border-radius: 0;
-      font-family: var(--font-main);
-      font-size: 10px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .bulk-select:focus { border-color: var(--primary); }
-
-    /* ── Checkbox ──────────────────────────────── */
-    .chk {
-      border-radius: 0 !important;
-      border-color: rgba(255,255,255,0.20);
-    }
-    .chk:hover      { border-color: var(--primary); background-color: var(--primary-soft); }
-    .chk:checked    { background-color: var(--primary); border-color: var(--primary); }
-    .chk:indeterminate { background-color: var(--primary); border-color: var(--primary); }
-    .chk:checked::after {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306070d' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    }
-
-    /* ── Table ─────────────────────────────────── */
-    table { font-family: var(--font-mono); font-size: 11px; }
-    th {
-      font-family: var(--font-main);
-      font-size: 9px;
-      letter-spacing: 0.10em;
-      color: var(--muted);
-    }
-    thead th {
-      background: rgba(0,0,0,0.45);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-    th.col-check, td.col-check {
-      background: rgba(6,8,18,0.97);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-    td select, td input {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      border-radius: 0;
-    }
-    td select:focus, td input:focus { border-color: var(--primary); }
-    tr:hover td { background: rgba(255,255,255,0.012); }
-    tr.selected-row td { background: var(--primary-soft); }
-    tbody tr:focus-visible td { background: var(--primary-soft); }
-    tbody tr.selected-row:focus-visible td { background: var(--primary-soft); }
-
-    /* ── Guard badges ──────────────────────────── */
-    .guardBadge { border-radius: 0; width: 22px; height: 22px; }
-    .guard-malicious    { color: var(--danger);  background: rgba(255,45,85,0.10);   border-color: rgba(255,45,85,0.25); }
-    .guard-caution-safe { color: var(--primary); background: var(--primary-soft);  border-color: var(--primary); }
-    .guard-review       { color: var(--warning); background: rgba(255,122,32,0.10);  border-color: rgba(255,122,32,0.25); }
-    .guard-checking     { color: #6699ff;        background: rgba(68,136,255,0.10);  border-color: rgba(68,136,255,0.25); }
-    .guard-error        { color: #a068ff;        background: rgba(160,102,255,0.10); border-color: rgba(160,102,255,0.25); }
-    .guard-unknown      { color: var(--muted);   background: rgba(53,63,88,0.10);    border-color: rgba(53,63,88,0.20); }
-
-    /* ── KQL box ───────────────────────────────── */
-    .kqlBox {
-      border-radius: 0;
-      background: rgba(0,0,0,0.32);
-      color: #88c8a0;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      line-height: 1.72;
-    }
-    .kqlBox:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-soft);
-    }
-
-    /* ── Toast ─────────────────────────────────── */
-    .toast {
-      border-radius: 0;
-      font-family: var(--font-main);
-      font-size: 11px;
-      background: rgba(8,10,20,0.98);
-      border: 1px solid var(--border);
-      border-left: 2px solid var(--primary);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.70);
-      letter-spacing: 0.01em;
-    }
-    .toastMsg { font-family: var(--font-main); }
-    .toast.ok   { border-left-color: var(--success); }
-    .toast.err  { border-left-color: var(--danger); }
-    .toast.warn { border-left-color: var(--warning); }
-    .toastClose { font-family: var(--font-main); }
-
-    /* ── Mono class ────────────────────────────── */
-    .mono { font-family: var(--font-mono); color: var(--text-bright); font-size: 11px; }
-
-    /* ── Animations (keep same names, just tweak) ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(5px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; } to { opacity: 1; }
-    }
-
-    /* ── CTI Results card ───────────────────────── */
-    body { padding-bottom: 56px; }
-    .cti-section { margin-top: 18px; }
-    .cti-head {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px;
-    }
-    .cti-head-meta {
-      display: flex; gap: 10px; align-items: center;
-      font-size: 11px; color: var(--muted);
-    }
-    .cti-empty {
-      padding: 32px 16px; text-align: center;
-      color: var(--muted); font-size: 11px;
-      border: 1px dashed var(--border); border-radius: 0;
-    }
-    .cti-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .cti-row {
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,0.22);
-      border-radius: 0;
-      overflow: hidden;
-      transition: border-color 0.15s ease;
-    }
-    .cti-row:hover { border-color: var(--border-mid); }
-    .cti-row.highlight {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-soft);
-    }
-    .cti-row-head {
-      display: grid;
-      grid-template-columns: 78px 1fr auto auto auto;
-      gap: 12px;
-      align-items: center;
-      padding: 10px 14px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .cti-row-head:hover { background: rgba(255,255,255,0.02); }
-    .cti-row-type {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-bright);
-      opacity: 0.7;
-    }
-    .cti-row-value {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--text-bright);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .cti-row-hits {
-      font-size: 10px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      letter-spacing: 0.05em;
-    }
-    .cti-row-time {
-      font-size: 10px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-    }
-    .cti-row-ext {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      color: var(--primary);
-      text-decoration: none;
-      padding: 2px 6px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      white-space: nowrap;
-    }
-    .cti-row-ext:hover {
-      color: var(--primary-hover);
-      border-color: var(--primary);
-    }
-    .cti-row-caret {
-      color: var(--muted);
-      font-size: 10px;
-      transition: transform 0.18s ease;
-    }
-    .cti-row.open .cti-row-caret { transform: rotate(90deg); }
-    .cti-row-body {
-      display: none;
-      padding: 4px 14px 14px 14px;
-      border-top: 1px solid var(--border);
-      background: rgba(0,0,0,0.18);
-    }
-    .cti-row.open .cti-row-body { display: block; }
-
-    .cti-summary {
-      font-size: 11px;
-      color: var(--text);
-      line-height: 1.6;
-      padding: 10px 0 12px 0;
-      border-bottom: 1px dashed var(--border);
-      margin-bottom: 12px;
-    }
-    .cti-providers {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 10px;
-    }
-
-    .prov-card {
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,0.28);
-      padding: 10px 12px;
-    }
-    .prov-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-bright);
-    }
-    .prov-name { font-weight: 600; }
-    .prov-status {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      padding: 1px 6px;
-      border: 1px solid var(--border);
-    }
-    .prov-status.ok       { color: var(--success);  border-color: rgba(0,232,120,0.35); }
-    .prov-status.disabled { color: var(--muted);    border-color: rgba(53,63,88,0.35); }
-    .prov-status.error    { color: #a068ff;         border-color: rgba(160,102,255,0.35); }
-    .prov-status.unsupported { color: var(--muted); border-color: rgba(53,63,88,0.35); }
-    .prov-body { font-size: 11px; color: var(--text); font-family: var(--font-mono); line-height: 1.6; }
-    .prov-row { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
-    .prov-row .k { color: var(--muted); }
-    .prov-row .v { color: var(--text-bright); text-align: right; word-break: break-all; }
-    .prov-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-    .prov-chip {
-      font-size: 9px;
-      padding: 1px 6px;
-      border: 1px solid var(--border);
-      color: var(--text-bright);
-      font-family: var(--font-mono);
-      letter-spacing: 0.04em;
-    }
-    .prov-chip.danger  { color: var(--danger);  border-color: rgba(255,45,85,0.35);  background: rgba(255,45,85,0.06); }
-    .prov-chip.warn    { color: var(--warning); border-color: rgba(255,122,32,0.35); background: rgba(255,122,32,0.06); }
-    .prov-chip.ok      { color: var(--success); border-color: rgba(0,232,120,0.35);  background: rgba(0,232,120,0.06); }
-    .prov-chip.trust   { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
-    .prov-link {
-      display: inline-block; margin-top: 4px;
-      font-size: 10px; color: var(--primary); text-decoration: none;
-      border-bottom: 1px dotted var(--primary);
-    }
-    .prov-link:hover { color: var(--primary-hover); }
-    .prov-footer { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
-
-    .vt-bars { display: flex; gap: 2px; margin-top: 4px; height: 6px; }
-    .vt-bar { flex: 0 0 auto; min-width: 4px; height: 100%; }
-    .vt-bar.mal   { background: var(--danger); }
-    .vt-bar.sus   { background: var(--warning); }
-    .vt-bar.harm  { background: var(--success); }
-    .vt-bar.und   { background: var(--muted); }
-    .vt-legend {
-      display: flex; gap: 10px; margin-top: 6px;
-      font-size: 9px; color: var(--muted); font-family: var(--font-mono);
-    }
-    .vt-legend span b { color: var(--text-bright); font-weight: 600; }
-
-    .abuse-bar { margin-top: 4px; height: 4px; background: rgba(255,255,255,0.05); position: relative; }
-    .abuse-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--danger); }
-    .abuse-bar-fill.low  { background: var(--success); }
-    .abuse-bar-fill.mid  { background: var(--warning); }
-    .abuse-bar-fill.high { background: var(--danger); }
-
-    /* ── KQL bottom dock ────────────────────────── */
-    .kql-dock {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      z-index: 900;
-      background: rgba(8,10,20,0.98);
-      border-top: 1px solid var(--border-mid);
-      box-shadow: 0 -8px 32px rgba(0,0,0,0.55);
-      backdrop-filter: blur(6px);
-      transform: translateY(calc(100% - 44px));
-      transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
-    }
-    .kql-dock:hover,
-    .kql-dock.pinned,
-    .kql-dock:focus-within {
-      transform: translateY(0);
-    }
-    .kql-dock-handle {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 11px 24px;
-      height: 44px; box-sizing: border-box;
-      cursor: default;
-      border-bottom: 1px solid transparent;
-      transition: border-color 0.2s ease;
-    }
-    .kql-dock:hover .kql-dock-handle,
-    .kql-dock.pinned .kql-dock-handle {
-      border-bottom-color: var(--border);
-    }
-    .kql-dock-title {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 11px;
-      color: var(--text-bright);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .kql-dock-title .glow {
-      width: 6px; height: 6px; background: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
-    }
-    .kql-dock-right {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .kql-dock-stats {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
-    .kql-dock-btn {
-      font-size: 10px; padding: 5px 10px;
-      font-family: var(--font-main);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-bright);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .kql-dock-btn:hover:not(:disabled) {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .kql-dock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .kql-dock-btn.pin-btn.active {
-      background: var(--primary-soft);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .kql-dock-body {
-      padding: 14px 24px 18px 24px;
-      max-height: 55vh;
-      overflow: auto;
-    }
-    .kql-dock-body .kqlBox {
-      width: 100%; box-sizing: border-box;
-      min-height: 220px;
-      resize: none;
-    }
-    .kql-dock-hint {
-      font-size: 10px; color: var(--muted);
-      margin-top: 8px; letter-spacing: 0.03em;
-    }
-
-    body.kql-pinned { padding-bottom: min(420px, 58vh); }
-
-    html[data-arsenal-theme="light"] body {
-      background-image: radial-gradient(ellipse at 60% 0%,
-        rgba(255,255,255,0.95) 0%, rgba(244,244,245,0.96) 48%, var(--bg) 100%);
-    }
-    html[data-arsenal-theme="light"] body::before { display: none; }
-    html[data-scanlines="off"] body::before { display: none; }
-    html[data-arsenal-theme="light"] body::after { opacity: 0.55; }
-    html[data-arsenal-theme="light"] .card,
-    html[data-arsenal-theme="light"] .table-card,
-    html[data-arsenal-theme="light"] .toast {
-      background: var(--card-bg);
-      border-color: var(--card-border);
-      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
-    }
-    html[data-arsenal-theme="light"] .card:hover { border-color: var(--border-mid); }
-    html[data-arsenal-theme="light"] textarea,
-    html[data-arsenal-theme="light"] input,
-    html[data-arsenal-theme="light"] select {
-      background: var(--input-bg);
-      border-color: var(--input-border);
-      color: var(--text-bright);
-    }
-    html[data-arsenal-theme="light"] textarea:hover,
-    html[data-arsenal-theme="light"] input:hover,
-    html[data-arsenal-theme="light"] select:hover {
-      background: rgba(0,0,0,0.045);
-      border-color: var(--border-mid);
-    }
-    html[data-arsenal-theme="light"] textarea:focus,
-    html[data-arsenal-theme="light"] input:focus,
-    html[data-arsenal-theme="light"] select:focus {
-      background: rgba(255,255,255,0.98);
-      box-shadow: 0 0 0 2px var(--primary-soft);
-    }
-    html[data-arsenal-theme="light"] textarea::placeholder,
-    html[data-arsenal-theme="light"] input::placeholder {
-      color: #52525b;
-      opacity: 0.78;
-    }
-    html[data-arsenal-theme="light"] .kbd,
-    html[data-arsenal-theme="light"] .dropZoneIcon {
-      background: rgba(0,0,0,0.04);
-      border-color: var(--border);
-    }
-    html[data-arsenal-theme="light"] button.secondary:hover:not(:disabled) {
-      background: rgba(0,0,0,0.045);
-      border-color: var(--border-mid);
-    }
-    html[data-arsenal-theme="light"] #addBtn {
-      color: var(--on-primary);
-    }
-    html[data-arsenal-theme="light"] .dropZone {
-      border-color: var(--border);
-      background: rgba(255,255,255,0.62);
-    }
-    html[data-arsenal-theme="light"] .dropZone:hover,
-    html[data-arsenal-theme="light"] .dropZone.dragover {
-      background: var(--primary-soft);
-      border-color: var(--primary);
-    }
-    html[data-arsenal-theme="light"] .previewBox,
-    html[data-arsenal-theme="light"] .stat-card,
-    html[data-arsenal-theme="light"] .bulk-panel,
-    html[data-arsenal-theme="light"] .cti-row,
-    html[data-arsenal-theme="light"] .prov-card {
-      background: rgba(255,255,255,0.74);
-    }
-    html[data-arsenal-theme="light"] thead th,
-    html[data-arsenal-theme="light"] th.col-check,
-    html[data-arsenal-theme="light"] td.col-check,
-    html[data-arsenal-theme="light"] .table-header-wrap {
-      background: rgba(255,255,255,0.92);
-    }
-    html[data-arsenal-theme="light"] .cti-row-head:hover,
-    html[data-arsenal-theme="light"] tr:hover td {
-      background: rgba(0,0,0,0.035);
-    }
-    html[data-arsenal-theme="light"] .cti-row-body {
-      background: rgba(0,0,0,0.025);
-    }
-    html[data-arsenal-theme="light"] .abuse-bar {
-      background: rgba(0,0,0,0.08);
-    }
-    html[data-arsenal-theme="light"] .kqlBox {
-      background: #f8fafc;
-      color: #166534;
-      border-color: var(--border);
-    }
-    html[data-arsenal-theme="light"] .kql-dock {
-      background: rgba(255,255,255,0.97);
-      border-top-color: var(--border-mid);
-      box-shadow: 0 -12px 28px rgba(15,23,42,0.12);
-    }
-    html[data-arsenal-theme="light"] .kql-dock-btn {
-      background: rgba(255,255,255,0.72);
-      border-color: var(--border);
-      color: var(--text-bright);
-    }
-    html[data-arsenal-theme="light"] .kql-dock-btn:hover:not(:disabled) {
-      background: var(--primary-soft);
-    }
-
-  </style>
-
-  <!-- Arsenal animation layer -->
-  <style id="arsenal-anim">
-    /* Entrance stagger */
-    .card { animation: fadeUp 0.38s ease-out both; }
-    .card:nth-child(1){ animation-delay:0.04s; }
-    .card:nth-child(2){ animation-delay:0.10s; }
-    .card:nth-child(3){ animation-delay:0.16s; }
-    .card:nth-child(4){ animation-delay:0.22s; }
-    .table-card       { animation-delay:0.18s; }
-
-    /* Accent strip pulse */
-    body::after {
-      animation: stripPulse 4s ease-in-out infinite;
-    }
-    @keyframes stripPulse {
-      0%,100%{ opacity:1; }
-      50%{ opacity:0.45; }
-    }
-
-    /* Smooth input transitions */
-    textarea, input, select {
-      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, color 0.2s !important;
-    }
-
-    /* Button shimmer */
-    #addBtn, .kql-dock-btn {
-      position: relative; overflow: hidden;
-    }
-    #addBtn::after {
-      content:'';
-      position:absolute; top:0; left:-100%;
-      width:60%; height:100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-      transition: left 0.5s;
-    }
-    #addBtn:hover::after { left:140%; }
-
-    /* Table row hover */
-    tbody tr {
-      transition: background 0.15s;
-    }
-    tbody tr:hover { background: var(--primary-soft); }
-
-    /* KQL dock glow */
-    .kql-dock-title .glow {
-      animation: glowPulse 2.5s ease-in-out infinite;
-    }
-    @keyframes glowPulse {
-      0%,100%{ box-shadow: 0 0 8px var(--primary); opacity:1; }
-      50%{ box-shadow: 0 0 18px var(--primary); opacity:0.7; }
-    }
-
-    /* History flash when loaded */
-    @keyframes flashLoad {
-      0%{ background: var(--primary-soft); }
-      100%{ background: transparent; }
-    }
-    .flash-loaded { animation: flashLoad 1.2s ease-out forwards; }
-
-    /* CTI row slide-in */
-    .cti-row {
-      animation: fadeUp 0.28s ease-out both;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Defender XDR — Indicator Composer</title>
+<link rel="stylesheet" href="./shared/kql-dock.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05060f;--surface:#090b1a;--elevated:#0d1028;
+  --border:rgba(255,255,255,0.07);--border-mid:rgba(255,255,255,0.13);--border-bright:rgba(255,255,255,0.22);
+  --primary:#c8956a;--primary-hover:#e4c28e;--primary-glow:rgba(200,149,106,0.22);
+  --primary-soft:rgba(200,149,106,0.09);--primary-grad:linear-gradient(135deg,#c8956a 0%,#e4c28e 60%,#c8956a 100%);
+  --on-primary:#06070d;--danger:#ff2d55;--success:#00e878;--warning:#ff8c00;
+  --text:#6a7c98;--text-bright:#aab8d0;--muted:#353f58;
+  --input-bg:rgba(0,0,0,0.28);--input-border:rgba(255,255,255,0.08);
+  --card-bg:rgba(8,10,20,0.97);--card-border:rgba(255,255,255,0.07);
+  --preview-fg:#c0cce0;--chk-bg:rgba(255,255,255,.04);--chk-border:rgba(255,255,255,.26);
+  --toast-bg:rgba(8,10,20,.98);--toast-border:var(--border);--toast-shadow:0 10px 38px rgba(0,0,0,.65);
+  /* Bulk panel tokens: migrated from .bulk-panel rgba(6,8,18,.98), .bulk-select rgba(255,255,255,.06), inline divider rgba(255,255,255,.14) */
+  --bulk-panel-bg:rgba(6,8,18,.98);--bulk-panel-border:var(--primary);--bulk-select-bg:rgba(255,255,255,.06);--bulk-divider:rgba(255,255,255,.14);
+  --font-ui:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","Cascadia Code","SF Mono","Fira Code",Consolas,"Courier New",monospace;
+  --r:4px;
+}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:2px}
+:focus:not(:focus-visible){outline:none;box-shadow:none}
+html{overflow-y:scroll;scroll-behavior:smooth;scrollbar-gutter:stable}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui);
+  min-height:100vh;line-height:1.5;font-size:13.5px;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse at 80% 0%,rgba(20,30,60,0.08) 0%,transparent 50%);
+  background-attachment:fixed;padding-bottom:58px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.038) 3px,rgba(0,0,0,0.038) 4px)}
+body::after{content:'';position:fixed;top:0;left:0;width:2px;height:100%;z-index:9997;pointer-events:none;
+  background:linear-gradient(to bottom,var(--primary) 0%,rgba(17,24,39,0.22) 38%,transparent 68%);
+  animation:stripPulse 4s ease-in-out infinite}
+@keyframes stripPulse{0%,100%{opacity:1}50%{opacity:.4}}
+html[data-scanlines="off"] body::before{display:none}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.14)}
+
+/* Guard banner */
+.guard-banner{display:flex;align-items:center;gap:12px;width:100%;
+  padding:8px 18px;font-size:11px;font-family:var(--font-ui);font-weight:600;letter-spacing:.04em;
+  border-bottom:1px solid;animation:fadeIn .28s ease}
+.guard-banner[hidden]{display:none}
+.guard-banner.trusted{background:rgba(255,140,0,0.12);color:var(--warning);border-color:rgba(255,140,0,0.3)}
+.guard-banner.malicious{background:rgba(255,45,85,0.12);color:var(--danger);border-color:rgba(255,45,85,0.3)}
+.guard-banner.ok{background:rgba(0,232,120,0.08);color:var(--success);border-color:rgba(0,232,120,0.25)}
+.guard-banner svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.guard-banner-close{margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;
+  font-size:16px;line-height:1;padding:0;opacity:.7}
+.guard-banner-close:hover{opacity:1}
+
+.wrap{max-width:1320px;margin:0 auto;padding:28px 20px 60px}
+header{margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);
+  animation:fadeUp .4s ease-out both;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px}
+h1{font-size:20px;font-weight:700;letter-spacing:-.03em;margin:0 0 5px;display:inline-flex;
+  align-items:center;gap:10px;color:var(--text-bright)}
+.gradient-text{background:var(--primary-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;font-weight:700;letter-spacing:.02em}
+.pill-ver{font-size:9px;background:var(--primary-soft);color:var(--primary);padding:2px 8px;
+  border-radius:0;font-weight:600;border:1px solid var(--primary);font-family:var(--font-mono);letter-spacing:.06em;
+  -webkit-text-fill-color:var(--primary)}
+.sub{color:var(--muted);font-size:11.5px;max-width:560px;margin:0;line-height:1.6}
+.header-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+.main-grid{display:grid;grid-template-columns:4fr 5fr;gap:16px;align-items:stretch}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r);
+  padding:18px;display:flex;flex-direction:column;height:100%;transition:border-color .2s}
+.card:hover{border-color:rgba(255,255,255,.11)}
+
+label{display:block;font-size:9.5px;font-weight:700;color:var(--muted);margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.09em;font-family:var(--font-ui)}
+.hint{font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.kbd{display:inline-flex;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  padding:1px 5px;border-radius:3px;color:var(--text);font-family:var(--font-mono);font-size:9px;line-height:1.5}
+textarea,input,select{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-bright);
+  border-radius:3px;padding:9px 12px;font-size:12px;font-family:var(--font-ui);font-weight:500;
+  transition:border-color .18s,background .18s,box-shadow .18s}
+textarea:hover,input:hover,select:hover{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.02)}
+textarea:focus,input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);
+  background:rgba(0,0,0,.32);outline:none}
+textarea{min-height:200px;resize:vertical;font-family:var(--font-mono);font-size:11.5px;line-height:1.65}
+.input-group{margin-bottom:13px}
+.input-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.input-header label{margin:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+
+button{border:0;border-radius:3px;padding:9px 16px;font-family:var(--font-ui);font-weight:600;
+  letter-spacing:.03em;font-size:12px;cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#addBtn{background:var(--primary-grad);border:1px solid var(--primary);color:var(--on-primary);
+  font-weight:700;width:100%;box-shadow:0 0 16px var(--primary-glow)}
+#addBtn:hover{box-shadow:0 0 24px var(--primary-glow)}
+#addBtn:active{transform:translateY(1px)}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--border-mid)}
+button.secondary:hover:not(:disabled){background:rgba(255,255,255,.04);color:var(--text-bright);border-color:rgba(255,255,255,.2)}
+button.secondary:disabled{opacity:.28;cursor:not-allowed}
+button.danger{background:transparent;color:var(--danger);border:1px solid rgba(255,45,85,.22)}
+button.danger:hover{background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.38)}
+.btn-icon{width:28px;height:28px;padding:0;background:transparent;border:1px solid transparent;
+  color:var(--muted);border-radius:3px;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon:hover{background:rgba(255,255,255,.08);color:var(--text-bright)}
+.btn-icon.danger-hover:hover{background:rgba(255,45,85,.1);color:var(--danger)}
+button.xs{padding:3px 10px;font-size:10px;min-height:26px}
+.btnRow{margin-top:auto;padding-top:14px;display:flex;gap:8px}
+.btnLeft{flex:1}.btnRight{display:flex;gap:7px}
+
+.dropZone{margin-top:10px;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:3px;border:1px dashed rgba(255,255,255,.09);background:rgba(255,255,255,.018);
+  color:var(--text);cursor:pointer;transition:all .18s;user-select:none}
+.dropZone:hover{border-color:var(--primary);background:var(--primary-soft)}
+.dropZone.dragover{border-color:var(--primary);background:var(--primary-soft);border-style:solid}
+.dropZoneIcon{width:30px;height:30px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--primary-soft);color:var(--primary);border:1px solid rgba(200,149,106,.25);flex-shrink:0}
+.dropZoneIcon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dropZoneText{display:flex;flex-direction:column;gap:1px;min-width:0;font-size:11px}
+.dropZoneText strong{font-size:11px;font-weight:600;color:var(--text-bright)}
+.dropZoneText span{font-size:10px;color:var(--muted)}
+
+.previewBox{background:rgba(0,0,0,.22);border:1px solid var(--input-border);border-radius:3px;
+  padding:3px 0;height:150px;overflow-y:auto;font-family:var(--font-mono);font-size:10.5px;
+  margin-top:5px;flex-grow:1}
+.previewLine{padding:5px 12px;border-bottom:1px solid rgba(255,255,255,.03);display:flex;align-items:center;gap:9px}
+.previewLine:last-child{border-bottom:none}
+.previewLine:hover{background:rgba(255,255,255,.025)}
+.previewVal{color:var(--preview-fg);word-break:break-all;flex:1;min-width:0}
+.previewBad .previewVal{color:var(--danger);text-decoration:line-through;opacity:.6}
+.previewDup .previewVal{color:var(--warning)}
+.muted{color:var(--muted)}
+
+/* type badges */
+.typeBadge{font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:54px;
+  text-align:center;letter-spacing:.04em;flex-shrink:0;font-family:var(--font-mono)}
+.badge-IpAddress{background:rgba(68,136,255,.09);color:#6699ff;border:1px solid rgba(68,136,255,.22)}
+.badge-DomainName{background:rgba(232,168,32,.09);color:#e8a820;border:1px solid rgba(232,168,32,.24)}
+.badge-Url{background:rgba(255,140,32,.09);color:#ff8c20;border:1px solid rgba(255,140,32,.22)}
+.badge-FileMd5{background:rgba(160,102,255,.09);color:#a068ff;border:1px solid rgba(160,102,255,.22)}
+.badge-FileSha1{background:rgba(255,68,180,.09);color:#ff44b4;border:1px solid rgba(255,68,180,.22)}
+.badge-FileSha256{background:rgba(0,232,120,.09);color:#00e878;border:1px solid rgba(0,232,120,.22)}
+.badgeUnknown{background:rgba(255,45,85,.07);color:var(--danger);border:1px solid rgba(255,45,85,.2)}
+
+/* stats */
+.stats-grid{flex:1;min-height:80px;margin-top:13px;display:flex;border:1px solid var(--border);border-radius:3px;overflow:hidden;background:rgba(0,0,0,.18)}
+.stat-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;text-align:center;border-right:1px solid var(--border);position:relative;padding:10px 4px}
+.stat-card:last-child{border-right:none}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px}
+.stat-card:nth-child(1)::after{background:var(--primary)}
+.stat-card:nth-child(2)::after{background:#a068ff}
+.stat-card:nth-child(3)::after{background:#6699ff}
+.stat-card:nth-child(4)::after{background:#ff8c20}
+.stat-card:nth-child(1) .stat-value{color:var(--primary)}
+.stat-card:nth-child(2) .stat-value{color:#a068ff}
+.stat-card:nth-child(3) .stat-value{color:#6699ff}
+.stat-card:nth-child(4) .stat-value{color:#ff8c20}
+.stat-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;white-space:nowrap}
+.stat-value{font-family:var(--font-mono);font-size:34px;font-weight:700;line-height:1;letter-spacing:-.04em}
+
+/* table card */
+.table-card{margin-top:16px;padding:0;overflow:hidden;display:flex;flex-direction:column;border-radius:var(--r)}
+.table-header-wrap{position:relative;padding:0 18px;height:50px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(0,0,0,.06)}
+.header-default{display:flex;gap:10px;align-items:center}
+.header-default h3{font-family:var(--font-ui)!important;font-size:11px!important;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--text-bright)!important;font-weight:700;margin:0}
+.pill-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 8px;
+  border-radius:99px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  color:var(--muted);font-weight:500;font-family:var(--font-mono)}
+.pill-badge b{color:var(--text-bright);font-weight:700}
+
+.bulk-panel{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bulk-panel-bg);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:10;
+  border-bottom:1px solid var(--bulk-panel-border);opacity:0;pointer-events:none;transform:translateY(-4px);
+  transition:all .2s cubic-bezier(.16,1,.3,1)}
+.bulk-panel.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+.bulk-left{display:flex;align-items:center;gap:9px}
+.bulk-actions{display:flex;gap:6px;align-items:center}
+.bulk-count-badge{background:var(--primary);color:var(--on-primary);font-weight:700;font-size:10px;
+  padding:2px 8px;border-radius:99px;font-family:var(--font-ui);letter-spacing:.05em}
+.bulk-select{width:auto;padding:0 9px;height:28px;font-size:10px;background:var(--bulk-select-bg);
+  border:1px solid var(--border-mid);color:var(--text-bright);border-radius:3px;font-family:var(--font-ui);
+  text-transform:uppercase;letter-spacing:.04em}
+.bulk-select:focus{border-color:var(--primary);outline:none}
+.bulk-divider{width:1px;height:18px;background:var(--bulk-divider);margin:0 3px}
+
+.col-check{width:38px;padding:0;text-align:center;vertical-align:middle}
+.chk-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-height:38px}
+.chk{-webkit-appearance:none;-moz-appearance:none;appearance:none;width:14px!important;height:14px!important;
+  min-width:14px!important;max-width:14px!important;background-color:var(--chk-bg);
+  border:1.5px solid var(--chk-border);border-radius:3px;margin:0;padding:0;cursor:pointer;
+  position:relative;display:inline-block;flex-shrink:0;transition:all .15s}
+.chk:hover{border-color:var(--primary);background-color:var(--primary-soft)}
+.chk:checked{background-color:var(--primary);border-color:var(--primary)}
+.chk:checked::after{content:'';position:absolute;top:0;left:0;width:100%;height:100%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2306070d' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size:9px 9px;background-position:center;background-repeat:no-repeat}
+.chk:indeterminate{background-color:var(--primary);border-color:var(--primary)}
+.chk:indeterminate::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:6px;height:2px;background:var(--on-primary);border-radius:1px}
+
+.table-wrap{width:100%;max-height:480px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11.5px;white-space:nowrap}
+thead{background:rgba(0,0,0,.3)}
+th,td{padding:9px 16px;vertical-align:middle;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:700;font-size:8.5px;text-transform:uppercase;text-align:left;
+  letter-spacing:.09em;height:36px;font-family:var(--font-ui);position:sticky;top:0;
+  background:rgba(5,6,15,.95);z-index:2}
+th.col-check,td.col-check{position:sticky;left:0;z-index:3;background:rgba(7,8,18,.97)}
+.col-action{width:200px}.col-sev{width:160px}.col-alert{width:110px}.col-exp{width:145px}
+.col-guard{width:52px;text-align:center}
+.col-val{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.td-remove{width:50px;text-align:center}
+.guardHead{text-align:center;padding-left:6px;padding-right:6px}
+.guardHeadIcon{width:15px;height:15px;margin:0 auto;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.guardHeadIcon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.guardCell{text-align:center;vertical-align:middle}
+.guardBadge{width:22px;height:22px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);background:rgba(255,255,255,.02);cursor:help;transition:transform .15s}
+.guardBadge:hover{transform:translateY(-1px)}
+.guardBadge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.guard-malicious{color:var(--danger);background:rgba(255,45,85,.1);border-color:rgba(255,45,85,.25)}
+.guard-caution-safe{color:var(--primary);background:var(--primary-soft);border-color:var(--primary)}
+.guard-review{color:var(--warning);background:rgba(255,140,0,.1);border-color:rgba(255,140,0,.25)}
+.guard-checking{color:#6699ff;background:rgba(68,136,255,.1);border-color:rgba(68,136,255,.25)}
+.guard-error{color:#a068ff;background:rgba(160,102,255,.1);border-color:rgba(160,102,255,.25)}
+.guard-unknown{color:var(--muted);background:rgba(53,63,88,.1);border-color:rgba(53,63,88,.2)}
+/* skeleton shimmer for checking rows */
+tr:has(.guard-checking) td{animation:shimmer 1.6s linear infinite}
+@keyframes shimmer{0%,100%{background:transparent}50%{background:rgba(68,136,255,.04)}}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:rgba(255,255,255,.018)}
+tr.selected-row td{background:var(--primary-soft)}
+tbody tr:focus-visible td{background:var(--primary-soft);outline:none}
+td select,td input{height:28px;padding:0 9px;font-size:11px;background:transparent;
+  border:1px solid transparent;border-radius:3px;color:var(--text-bright);font-family:var(--font-ui)}
+td select:hover,td input:hover{border-color:var(--border-mid);background:rgba(0,0,0,.2)}
+td select:focus,td input:focus{border-color:var(--primary);background:rgba(0,0,0,.45);outline:none}
+.mono{font-family:var(--font-mono);color:#c0cce0;font-size:11px}
+
+/* CTI section */
+.cti-section{margin-top:16px;border-radius:var(--r)}
+.cti-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cti-head-meta{display:flex;gap:9px;align-items:center;font-size:10.5px;color:var(--muted)}
+.cti-empty{padding:28px 14px;text-align:center;color:var(--muted);font-size:10.5px;
+  border:1px dashed var(--border);border-radius:3px;font-family:var(--font-mono)}
+.cti-list{display:flex;flex-direction:column;gap:7px}
+.cti-row{border:1px solid var(--border);background:rgba(0,0,0,.2);border-radius:3px;overflow:hidden;transition:border-color .15s}
+.cti-row:hover{border-color:var(--border-mid)}
+.cti-row.highlight{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.cti-row-head{display:grid;grid-template-columns:80px 1fr auto auto auto auto;gap:10px;
+  align-items:center;padding:9px 12px;cursor:pointer;user-select:none}
+.cti-row-head:hover{background:rgba(255,255,255,.02)}
+.cti-row-type{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-bright);opacity:.7}
+.cti-row-value{font-family:var(--font-mono);font-size:11px;color:var(--text-bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cti-row-hits{font-size:9.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:.05em}
+.cti-row-time{font-size:9.5px;color:var(--muted);font-family:var(--font-mono)}
+.cti-row-caret{color:var(--muted);font-size:10px;transition:transform .18s}
+.cti-row.open .cti-row-caret{transform:rotate(90deg)}
+.cti-row-body{display:none;padding:4px 12px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,.16)}
+.cti-row.open .cti-row-body{display:block}
+.cti-summary{font-size:10.5px;color:var(--text);line-height:1.6;padding:9px 0 11px;
+  border-bottom:1px dashed var(--border);margin-bottom:11px}
+.cti-providers{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px}
+
+/* intel cards */
+.prov-card{border:1px solid var(--border);background:rgba(0,0,0,.26);padding:9px 11px;border-radius:3px;
+  animation:fadeUp .22s ease-out both;transition:border-color .15s}
+.prov-card:hover{border-color:var(--border-mid)}
+.prov-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;
+  font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-bright)}
+.prov-name{font-weight:700}
+.prov-status{font-family:var(--font-mono);font-size:8.5px;padding:1px 6px;border:1px solid var(--border)}
+.prov-status.ok{color:var(--success);border-color:rgba(0,232,120,.35)}
+.prov-status.disabled{color:var(--muted);border-color:rgba(53,63,88,.35)}
+.prov-status.error{color:#a068ff;border-color:rgba(160,102,255,.35)}
+.prov-status.unsupported{color:var(--muted);border-color:rgba(53,63,88,.35)}
+.prov-body{font-size:10.5px;color:var(--text);font-family:var(--font-mono);line-height:1.6}
+.prov-row{display:flex;justify-content:space-between;gap:9px;padding:2px 0}
+.prov-row .k{color:var(--muted)}.prov-row .v{color:var(--text-bright);text-align:right;word-break:break-all}
+.prov-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.prov-chip{font-size:8.5px;padding:1px 6px;border:1px solid var(--border);color:var(--text-bright);
+  font-family:var(--font-mono);letter-spacing:.04em;border-radius:2px}
+.prov-chip.danger{color:var(--danger);border-color:rgba(255,45,85,.35);background:rgba(255,45,85,.06)}
+.prov-chip.warn{color:var(--warning);border-color:rgba(255,140,0,.35);background:rgba(255,140,0,.06)}
+.prov-chip.ok{color:var(--success);border-color:rgba(0,232,120,.35);background:rgba(0,232,120,.06)}
+.prov-chip.trust{color:var(--primary);border-color:var(--primary);background:var(--primary-soft)}
+.prov-footer{margin-top:7px;padding-top:5px;border-top:1px dashed var(--border)}
+.prov-link{display:inline-block;font-size:9.5px;color:var(--primary);text-decoration:none;
+  border-bottom:1px dotted var(--primary);transition:color .15s}
+.prov-link:hover{color:var(--primary-hover)}
+.whois-age-card{display:flex;align-items:baseline;gap:.5rem;padding:.55rem .75rem;margin-bottom:.55rem;
+  border-radius:5px;border:1px solid transparent}
+.whois-age-card .whois-age-num{font-size:1.5rem;font-weight:700}
+.whois-age-card.danger{background:rgba(255,45,85,.1);color:var(--danger);border-color:rgba(255,45,85,.35)}
+.whois-age-card.warn{background:rgba(255,140,0,.1);color:var(--warning);border-color:rgba(255,140,0,.35)}
+.whois-age-card.trust{background:rgba(0,232,120,.1);color:var(--success);border-color:rgba(0,232,120,.35)}
+.vt-bars{display:flex;gap:2px;margin-top:4px;height:5px}
+.vt-bar{flex:0 0 auto;min-width:4px;height:100%}
+.vt-bar.mal{background:var(--danger)}.vt-bar.sus{background:var(--warning)}
+.vt-bar.harm{background:var(--success)}.vt-bar.und{background:var(--muted)}
+.vt-legend{display:flex;gap:9px;margin-top:5px;font-size:8.5px;color:var(--muted);font-family:var(--font-mono)}
+.vt-legend span b{color:var(--text-bright);font-weight:600}
+.abuse-bar{margin-top:4px;height:3px;background:rgba(255,255,255,.05);position:relative;border-radius:2px}
+.abuse-bar-fill{position:absolute;top:0;left:0;bottom:0;border-radius:2px}
+.abuse-bar-fill.low{background:var(--success)}.abuse-bar-fill.mid{background:var(--warning)}.abuse-bar-fill.high{background:var(--danger)}
+
+/* Toast */
+.toastContainer{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:9px;pointer-events:none}
+.toast{background:var(--toast-bg);border:1px solid var(--toast-border);border-left:2px solid var(--primary);
+  padding:13px;border-radius:4px;color:var(--text);font-size:11.5px;width:308px;
+  box-shadow:var(--toast-shadow);pointer-events:auto;transform:translateX(38px);opacity:0;
+  transition:all .26s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.toast.show{transform:translateX(0);opacity:1}
+.toast.hide{transform:translateX(38px);opacity:0}
+.toast.ok{border-left-color:var(--success)}
+.toast.err{border-left-color:var(--danger)}
+.toast.warn{border-left-color:var(--warning)}
+.toastTop{display:flex;justify-content:space-between;align-items:flex-start}
+.toastMsg{flex:1;line-height:1.45;font-size:11.5px;font-family:var(--font-ui)}
+.toastClose{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;
+  padding:0;line-height:1;font-family:var(--font-ui)}
+.toastClose:hover{color:var(--text-bright)}
+.toastBar{height:2px;background:var(--border);margin-top:9px;border-radius:1px;overflow:hidden}
+.toastBar i{display:block;height:100%;background:var(--primary);width:100%;
+  animation:toastProg var(--ttl,3000ms) linear forwards}
+.toast.ok .toastBar i{background:var(--success)}
+.toast.err .toastBar i{background:var(--danger)}
+.toast.warn .toastBar i{background:var(--warning)}
+@keyframes toastProg{from{width:100%}to{width:0}}
+
+/* Help overlay */
+.help-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);
+  display:flex;align-items:center;justify-content:center;animation:fadeIn .18s ease}
+.help-overlay[hidden]{display:none}
+.help-modal{background:var(--elevated);border:1px solid var(--border-mid);border-radius:8px;
+  padding:24px;width:420px;max-width:90vw}
+.help-modal h2{font-size:13px;font-weight:700;color:var(--text-bright);margin-bottom:16px;
+  text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between}
+.help-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0}
+.help-close:hover{color:var(--text-bright)}
+.help-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;
+  border-bottom:1px solid var(--border);font-size:11.5px}
+.help-row:last-child{border-bottom:none}
+.help-keys{display:flex;gap:4px}
+.help-desc{color:var(--muted)}
+
+/* Light theme */
+html[data-arsenal-theme="light"]{
+  --bg:#eef1f8;--surface:#fff;--elevated:#f8fafc;--border:rgba(15,23,42,.1);--border-mid:rgba(15,23,42,.18);
+  --text:#334155;--text-bright:#0f172a;--muted:#64748b;--input-bg:#f8fafc;--input-border:rgba(15,23,42,.12);
+  --card-bg:rgba(255,255,255,.98);--card-border:rgba(15,23,42,.1);
+  --preview-fg:var(--text-bright);--chk-bg:rgba(15,23,42,.04);--chk-border:rgba(15,23,42,.32);
+  --toast-bg:rgba(255,255,255,.98);--toast-border:var(--border-mid);--toast-shadow:0 10px 38px rgba(15,23,42,.18);
+  --bulk-panel-bg:rgba(255,255,255,.98);--bulk-panel-border:var(--border-mid);--bulk-select-bg:rgba(15,23,42,.05);--bulk-divider:rgba(15,23,42,.12)}
+html[data-arsenal-theme="light"] body::before{display:none}
+html[data-arsenal-theme="light"] body::after{opacity:.5}
+html[data-arsenal-theme="light"] thead th,html[data-arsenal-theme="light"] th.col-check,html[data-arsenal-theme="light"] td.col-check{background:rgba(255,255,255,.95)}
+html[data-arsenal-theme="light"] .prov-card,html[data-arsenal-theme="light"] .cti-row{background:rgba(255,255,255,.74)}
+html[data-arsenal-theme="light"] .abuse-bar{background:rgba(0,0,0,.07)}
+html[data-scanlines="off"] body::before{display:none}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.card{animation:fadeUp .36s ease-out both}
+.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.1s}
+.table-card{animation:fadeUp .36s ease-out .16s both}
+.cti-section{animation:fadeUp .36s ease-out .22s both}
+.cti-row{animation:fadeUp .24s ease-out both}
+@keyframes flashLoad{0%{background:var(--primary-soft)}100%{background:transparent}}
+.flash-loaded{animation:flashLoad 1.2s ease-out forwards}
+</style>
 </head>
 <body>
 
-  <div id="toastContainer" class="toastContainer" aria-live="polite" aria-relevant="additions" aria-atomic="false"></div>
+<!-- Guard verdict banner -->
+<div id="guardBanner" class="guard-banner" role="alert" aria-live="polite" hidden>
+  <svg id="guardBannerIcon" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
+  <span id="guardBannerMsg"></span>
+  <button class="guard-banner-close" onclick="document.getElementById('guardBanner').hidden=true" aria-label="Dismiss" data-i18n-aria="aria.dismiss">×</button>
+</div>
 
-  <div class="wrap">
-    <header>
-      <h1>
-        <span class="gradient-text">Defender XDR</span>
-        <span style="font-weight:400; opacity:0.55; font-size: 0.88em;">Indicator Composer</span>
-        <span class="pill-ver">V6.0</span>
-      </h1>
-      <p class="sub">An analyst-focused tool for validating, formatting, and staging indicators for Microsoft Defender XDR. </p>
-    </header>
+<div id="toastContainer" class="toastContainer" aria-live="polite" aria-relevant="additions" aria-atomic="false"></div>
 
-    <div class="main-grid">
-      
-      <div class="card">
-        <div class="input-header">
-          <label>Input Indicators (One per line)</label>
-          <span class="hint"><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> to quick add</span>
-        </div>
-        
-        <textarea id="input" placeholder="Examples:
-1.2.3.4
-evil.example.com
-https://malicious-site.com/login
-44d88612fea8a8f36de82e1278abb02f"></textarea>
-        <input id="bulkFileInput" type="file" accept=".txt,.csv,.ioc,text/plain,text/csv" style="display:none;" />
-
-        
-<div id="dropZone" class="dropZone" role="button" tabindex="0" aria-label="Import indicators file">
-  <div class="dropZoneIcon" aria-hidden="true">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 16V7"></path>
-      <path d="M8.5 10.5 12 7l3.5 3.5"></path>
-      <path d="M20 16.5v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"></path>
-    </svg>
-  </div>
-  <div class="dropZoneText">
-    <strong>Drop file here</strong> or click to import
-    <span>.txt, .csv, .ioc</span>
+<!-- Help overlay -->
+<div id="helpOverlay" class="help-overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" data-i18n-aria="aria.shortcuts" hidden>
+  <div class="help-modal">
+    <h2><span data-i18n="help.title">Keyboard Shortcuts</span> <button class="help-close" onclick="document.getElementById('helpOverlay').hidden=true" aria-label="Close" data-i18n-aria="aria.close">×</button></h2>
+    <div class="help-row"><span class="help-desc" data-i18n="help.selectAll">Select all indicators</span><span class="help-keys"><span class="kbd">Ctrl</span><span class="kbd">A</span></span></div>
+    <div class="help-row"><span class="help-desc" data-i18n="help.deselectAll">Deselect all</span><span class="help-keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">A</span></span></div>
+    <div class="help-row"><span class="help-desc" data-i18n="help.cancelBulk">Cancel bulk mode</span><span class="help-keys"><span class="kbd">Esc</span></span></div>
+    <div class="help-row"><span class="help-desc" data-i18n="help.open">Open this help</span><span class="help-keys"><span class="kbd">?</span></span></div>
   </div>
 </div>
 
-        <div style="margin-top:16px; flex-grow:1; display:flex; flex-direction:column;">
-          <label>Indicators Preview</label>
-          <div id="previewBox" class="previewBox custom-scroll">
-            <div class="previewLine muted" style="justify-content:center; height:100%; color:var(--muted);">Waiting for input...</div>
-          </div>
-        </div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>
+        <span class="gradient-text">Defender XDR</span>
+        <span style="font-weight:400;opacity:.55;font-size:.88em;" data-i18n="page.title.indicators">Indicator Composer</span>
+        <span class="pill-ver">V2.0</span>
+      </h1>
+      <p class="sub" data-i18n="page.sub.indicators">Validate, format and stage indicators for Advanced Hunting and Microsoft Defender XDR.</p>
+    </div>
+    <div class="header-right">
+      <span id="ctiStats" style="font-size:10px;color:var(--muted);font-family:var(--font-mono)">0 indicators</span>
+    </div>
+  </header>
 
-        <div class="btnRow">
-          <div class="btnLeft">
-            <button id="addBtn">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              Add to List
-            </button>
-          </div>
-          <div class="btnRight">
-            <button id="clearBtn" class="danger">Clear</button>
-            <button id="exportBtn" class="secondary" disabled>Export CSV</button>
-          </div>
-        </div>
+  <div class="main-grid">
+    <div class="card">
+      <div class="input-header">
+        <label data-i18n="form.inputIndicators">Input Indicators (one per line)</label>
+        <span class="hint"><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> <span data-i18n="form.quickAdd">to quick add</span></span>
       </div>
-
-      <div class="card">
-        <label style="color:var(--primary); margin-bottom:16px; font-size:10px; letter-spacing:1px; opacity:0.8;">DEFAULT SETTINGS (FOR NEW ENTRIES)</label>
-        
-        <div class="row">
-          <div>
-            <label>Severity</label>
-            <select id="defSeverity">
-              <option selected>Informational</option>
-              <option>Low</option>
-              <option>Medium</option>
-              <option>High</option>
-            </select>
-          </div>
-          <div>
-            <label>Generate Alert</label>
-            <select id="defAlert">
-              <option value="False" selected>False</option>
-              <option value="True">True</option>
-            </select>
-          </div>
+      <textarea id="input" placeholder="Examples:&#10;1.2.3.4&#10;evil.example.com&#10;https://malicious-site.com/login&#10;44d88612fea8a8f36de82e1278abb02f" data-i18n-placeholder="form.input.placeholder"></textarea>
+      <input id="bulkFileInput" type="file" accept=".txt,.csv,.ioc,text/plain,text/csv" style="display:none"/>
+      <div id="dropZone" class="dropZone" role="button" tabindex="0" aria-label="Import indicators file" data-i18n-aria="aria.importFile">
+        <div class="dropZoneIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 16V7"/><path d="M8.5 10.5 12 7l3.5 3.5"/><path d="M20 16.5v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1"/></svg>
         </div>
-
-        <div class="row">
-          <div>
-            <label>Expiration</label>
-            <input id="defExpire" type="datetime-local" step="60" />
-          </div>
-          <div>
-            <label>RBAC Groups</label>
-            <input id="defRbac" placeholder="Optional: GroupName" />
-          </div>
+        <div class="dropZoneText"><strong data-i18n="form.dropFile">Drop file here</strong> <span data-i18n="form.orImport">or click to import</span><span>.txt, .csv, .ioc</span></div>
+      </div>
+      <div style="margin-top:14px;flex-grow:1;display:flex;flex-direction:column">
+        <label data-i18n="form.preview">Indicators Preview</label>
+        <div id="previewBox" class="previewBox"><div class="previewLine muted" style="justify-content:center;height:100%;color:var(--muted)" data-i18n="form.waiting">Waiting for input…</div></div>
+      </div>
+      <div class="btnRow">
+        <div class="btnLeft">
+          <button id="addBtn">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span data-i18n="form.btn.add">Add to List</span>
+          </button>
         </div>
-
-        <div class="row">
-          <div>
-             <label>Title</label>
-             <input id="defTitle" value="Malicious" placeholder="Malicious" />
-          </div>
-          <div>
-             <label>Description</label>
-             <input id="defDesc" value="Malicious" placeholder="Malicious" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Action</label>
-            <input id="defRec" placeholder="e.g. Block and investigate" />
-          </div>
-          <div>
-            <label>Category</label>
-            <input id="defCat" placeholder="e.g. SuspiciousActivity" />
-          </div>
-        </div>
-
-        <label>MITRE Techniques</label>
-        <input id="defMitre" placeholder="e.g. T1046, T1059.001" style="margin-bottom:0;" />
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-label">Total IOCs</span>
-            <span class="stat-value" id="caseCount">0</span>
-          </div>
-          <div class="stat-card">
-             <span class="stat-label">Hash (File)</span>
-             <span class="stat-value" id="hashCount">0</span>
-          </div>
-          <div class="stat-card">
-             <span class="stat-label">Network</span>
-             <span class="stat-value" id="netCount">0</span>
-          </div>
-          <div class="stat-card">
-             <span class="stat-label">Unique Domains</span>
-             <span class="stat-value" id="domainCount">0</span>
-          </div>
+        <div class="btnRight">
+          <button id="clearBtn" class="danger" data-i18n="form.btn.clear">Clear</button>
+          <button id="exportBtn" class="secondary" disabled data-i18n="form.btn.export">Export CSV</button>
         </div>
       </div>
     </div>
 
-    <div class="card table-card">
-      <div class="table-header-wrap">
-        
-        <div class="header-default">
-            <h3 style="margin:0; font-size:16px; font-weight:600; color:white;">Staged Indicators</h3>
-            <div class="pill-badge">Count: <b id="count">0</b></div>
-        </div>
-
-        <div id="bulkPanel" class="bulk-panel">
-            <div class="bulk-left">
-                <span class="bulk-count-badge"><span id="bulkCount">0</span> Selected</span>
-                <span style="color:var(--muted); font-size:12px;">Modify selected items:</span>
-            </div>
-            <div class="bulk-actions">
-              <select id="bulkActionSelect" class="bulk-select">
-                 <option value="">Set Action...</option>
-                 <option value="BlockAndRemediate">BlockAndRemediate</option>
-                 <option value="Block">Block</option>
-                 <option value="Audit">Audit</option>
-                 <option value="Allowed">Allowed</option>
-              </select>
-              <select id="bulkSeveritySelect" class="bulk-select">
-                 <option value="">Set Severity...</option>
-                 <option value="Informational">Informational</option>
-                 <option value="Low">Low</option>
-                 <option value="Medium">Medium</option>
-                 <option value="High">High</option>
-              </select>
-              <select id="bulkAlertSelect" class="bulk-select">
-                 <option value="">Set Alert...</option>
-                 <option value="True">True</option>
-                 <option value="False">False</option>
-              </select>
-              <div style="width:1px; height:20px; background:rgba(255,255,255,0.15); margin:0 4px;"></div>
-              <button id="bulkDeleteBtn" class="danger xs" style="height:32px;">Delete</button>
-            </div>
-        </div>
+    <div class="card">
+      <label style="color:var(--primary);margin-bottom:14px;font-size:9px;letter-spacing:1px;opacity:.8" data-i18n="form.defaults">DEFAULT SETTINGS (FOR NEW ENTRIES)</label>
+      <div class="row">
+        <div><label data-i18n="form.severity">Severity</label><select id="defSeverity"><option selected>Informational</option><option>Low</option><option>Medium</option><option>High</option></select></div>
+        <div><label data-i18n="form.generateAlert">Generate Alert</label><select id="defAlert"><option value="False" selected>False</option><option value="True">True</option></select></div>
       </div>
-      
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="col-check">
-                <div class="chk-wrap">
-                  <input type="checkbox" id="checkAll" class="chk">
-                </div>
-              </th>
-              <th>Type</th>
-              <th>Value</th>
-              <th class="col-guard guardHead" title="Guard status" aria-label="Guard status">
-                <span class="guardHeadIcon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"></path>
-                  </svg>
-                </span>
-              </th>
-              <th class="col-action">Action</th>
-              <th class="col-sev">Severity</th>
-              <th class="col-alert">Alert</th>
-              <th class="col-exp">Expiration</th>
-              <th class="td-remove" style="width:60px; text-align:center;"></th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            </tbody>
-        </table>
+      <div class="row">
+        <div><label data-i18n="form.expiration">Expiration</label><input id="defExpire" type="datetime-local" step="60"/></div>
+        <div><label data-i18n="form.rbac">RBAC Groups</label><input id="defRbac" placeholder="Optional: GroupName" data-i18n-placeholder="form.rbac.placeholder"/></div>
       </div>
-      <div style="padding:12px 24px;">
-        <div class="hint">Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.</div>
+      <div class="row">
+        <div><label data-i18n="form.title">Title</label><input id="defTitle" value="Malicious" placeholder="Malicious" data-i18n-placeholder="form.malicious.placeholder"/></div>
+        <div><label data-i18n="form.description">Description</label><input id="defDesc" value="Malicious" placeholder="Malicious" data-i18n-placeholder="form.malicious.placeholder"/></div>
       </div>
-    </div>
-
-    <div class="card cti-section">
-      <div class="cti-head">
-        <label style="margin:0; font-size:12px;">CTI Results</label>
-        <div class="cti-head-meta">
-          <span id="ctiStats">0 indicators</span>
-          <button id="ctiRefreshBtn" class="secondary" style="padding:6px 12px; font-size:11px;" disabled>Re-check all</button>
-        </div>
+      <div class="row">
+        <div><label data-i18n="form.recommended">Recommended Actions</label><input id="defRec" placeholder="e.g. Block and investigate" data-i18n-placeholder="form.recommended.placeholder"/></div>
+        <div><label data-i18n="form.category">Category</label><input id="defCat" placeholder="e.g. SuspiciousActivity" data-i18n-placeholder="form.category.placeholder"/></div>
       </div>
-      <div id="ctiList" class="cti-list"></div>
-    </div>
-
-  </div>
-
-  <!-- ── KQL dock (fixed bottom) ──────────────────── -->
-  <div id="kqlDock" class="kql-dock" role="region" aria-label="KQL query panel">
-    <div class="kql-dock-handle">
-      <div class="kql-dock-title">
-        <span class="glow" aria-hidden="true"></span>
-        Advanced Hunting KQL
+      <label data-i18n="form.mitre">MITRE Techniques</label>
+      <input id="defMitre" placeholder="e.g. T1046, T1059.001" data-i18n-placeholder="form.mitre.placeholder" style="margin-bottom:0"/>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-label" data-i18n="stats.total">Total IOCs</span><span class="stat-value" id="caseCount">0</span></div>
+        <div class="stat-card"><span class="stat-label" data-i18n="stats.hash">Hash (File)</span><span class="stat-value" id="hashCount">0</span></div>
+        <div class="stat-card"><span class="stat-label" data-i18n="stats.network">Network</span><span class="stat-value" id="netCount">0</span></div>
+        <div class="stat-card"><span class="stat-label" data-i18n="stats.domains">Unique Domains</span><span class="stat-value" id="domainCount">0</span></div>
       </div>
-      <div class="kql-dock-right">
-        <span id="kqlStats" class="kql-dock-stats">0 indicators</span>
-        <button id="kqlPinBtn" class="kql-dock-btn pin-btn" type="button" aria-pressed="false" title="Pin open">Pin</button>
-        <button id="copyKqlBtn" class="kql-dock-btn" type="button" disabled>Copy KQL</button>
-      </div>
-    </div>
-    <div class="kql-dock-body">
-      <textarea id="kqlBox" class="kqlBox" readonly placeholder="// No data yet. Add indicators above to generate query."></textarea>
-      <div class="kql-dock-hint">Hover to peek · Pin to keep open · Blank lines and blocks are auto-cleaned.</div>
     </div>
   </div>
+
+  <div class="card table-card">
+    <div class="table-header-wrap">
+      <div class="header-default">
+        <h3 data-i18n="table.title">Staged Indicators</h3>
+        <div class="pill-badge"><span data-i18n="table.count">Count:</span> <b id="count">0</b></div>
+      </div>
+      <div id="bulkPanel" class="bulk-panel">
+        <div class="bulk-left">
+          <span class="bulk-count-badge"><span id="bulkCount">0</span> <span data-i18n="table.selected">Selected</span></span>
+          <span style="color:var(--muted);font-size:11px" data-i18n="table.modify">Modify selected:</span>
+        </div>
+        <div class="bulk-actions">
+          <select id="bulkActionSelect" class="bulk-select"><option value="" data-i18n="table.setAction">Set Action…</option><option value="BlockAndRemediate">BlockAndRemediate</option><option value="Block">Block</option><option value="Audit">Audit</option><option value="Allowed">Allowed</option></select>
+          <select id="bulkSeveritySelect" class="bulk-select"><option value="" data-i18n="table.setSeverity">Set Severity…</option><option value="Informational">Informational</option><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></select>
+          <select id="bulkAlertSelect" class="bulk-select"><option value="" data-i18n="table.setAlert">Set Alert…</option><option value="True">True</option><option value="False">False</option></select>
+          <div class="bulk-divider"></div>
+          <button id="bulkDeleteBtn" class="danger xs" style="height:28px" data-i18n="table.delete">Delete</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-check"><div class="chk-wrap"><input type="checkbox" id="checkAll" class="chk"></div></th>
+            <th data-i18n="table.type">Type</th><th data-i18n="table.value">Value</th>
+            <th class="col-guard guardHead" title="Guard status" aria-label="Guard status" data-i18n-title="aria.guardStatus" data-i18n-aria="aria.guardStatus"><span class="guardHeadIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/></svg></span></th>
+            <th class="col-action" data-i18n="table.action">Action</th><th class="col-sev" data-i18n="table.severity">Severity</th>
+            <th class="col-alert" data-i18n="table.alert">Alert</th><th class="col-exp" data-i18n="table.expiration">Expiration</th>
+            <th class="td-remove"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 18px"><div class="hint" data-i18n="table.note">Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.</div></div>
+  </div>
+
+  <div class="card cti-section">
+    <div class="cti-head">
+      <label style="margin:0;font-size:11px" data-i18n="cti.title">CTI Results</label>
+    </div>
+    <div id="ctiList" class="cti-list"></div>
+  </div>
+</div>
+
+<!-- KQL dock -->
+<div id="kqlDock" class="kql-dock" role="region" aria-label="KQL query panel" data-i18n-aria="aria.kqlPanel">
+  <div class="kql-dock-handle">
+    <div class="kql-dock-title">
+      <span class="glow" aria-hidden="true"></span>
+      <span data-i18n="kql.title">Advanced Hunting KQL</span>
+    </div>
+    <div class="kql-dock-right">
+      <span id="kqlStats" class="kql-dock-stats">0 indicators</span>
+      <button id="kqlPinBtn" class="kql-dock-btn pin-btn" type="button" aria-pressed="false" title="Pin open" data-i18n-title="kql.pinTitle" data-i18n="kql.pin">Pin</button>
+      <button id="copyKqlBtn" class="kql-dock-btn" type="button" disabled data-i18n="kql.copy">Copy KQL</button>
+    </div>
+  </div>
+  <div class="kql-dock-body">
+    <div class="kql-output-wrap">
+      <pre id="kqlHL" class="kql-hl" aria-label="KQL query output" data-i18n-aria="aria.kqlOutput"></pre>
+      <textarea id="kqlBox" class="kqlBox" readonly aria-label="KQL query output" data-i18n-aria="aria.kqlOutput" placeholder="// No data yet. Add indicators above to generate query." data-i18n-placeholder="kql.placeholder"></textarea>
+    </div>
+    <div class="kql-dock-hint"><span data-i18n="kql.hint">Hover to peek · Pin to keep open ·</span> <span class="kbd">?</span> <span data-i18n="kql.hintSuffix">for shortcuts</span></div>
+  </div>
+</div>
 
 <script>
+
+const I18N = {
+  'page.title.indicators': {en:'Indicator Composer', tr:'İndikatör Yardımcısı'},
+  'page.sub.indicators': {en:'Validate, format and stage indicators for Advanced Hunting and Microsoft Defender XDR.', tr:'Microsoft Defender XDR için indikatörleri doğrulayan, biçimlendiren ve yayına hazırlayan analist odaklı araç.'},
+  'form.inputIndicators': {en:'Input Indicators (one per line)', tr:'İndikatörler (Satır Başına Bir Tane)'},
+  'form.quickAdd': {en:'to quick add', tr:'hızlı ekle'},
+  'form.input.placeholder': {en:'Examples:\n1.2.3.4\nevil.example.com\nhttps://malicious-site.com/login\n44d88612fea8a8f36de82e1278abb02f', tr:'Örnekler:\n1.2.3.4\nzararli.example.com\nhttps://zararli-site.com/giris\n44d88612fea8a8f36de82e1278abb02f'},
+  'form.dropFile': {en:'Drop file here', tr:'Dosyayı buraya bırakın'},
+  'form.orImport': {en:'or click to import', tr:'veya içe aktarmak için tıklayın'},
+  'form.preview': {en:'Indicators Preview', tr:'İndikatör Önizlemesi'},
+  'form.waiting': {en:'Waiting for input…', tr:'Girdi bekleniyor…'},
+  'form.btn.add': {en:'Add to List', tr:'Listeye Ekle'},
+  'form.btn.clear': {en:'Clear', tr:'Temizle'},
+  'form.btn.export': {en:'Export CSV', tr:"CSV'yi Dışa Aktar"},
+  'form.defaults': {en:'DEFAULT SETTINGS (FOR NEW ENTRIES)', tr:'YENİ KAYITLAR İÇİN VARSAYILAN AYARLAR'},
+  'form.severity': {en:'Severity', tr:'Önem Derecesi'},
+  'form.generateAlert': {en:'Generate Alert', tr:'Uyarı Üret'},
+  'form.expiration': {en:'Expiration', tr:'Geçerlilik'},
+  'form.rbac': {en:'RBAC Groups', tr:'RBAC Grupları'},
+  'form.rbac.placeholder': {en:'Optional: GroupName', tr:'İsteğe bağlı: GrupAdı'},
+  'form.title': {en:'Title', tr:'Başlık'},
+  'form.description': {en:'Description', tr:'Açıklama'},
+  'form.malicious.placeholder': {en:'Malicious', tr:'Kötü amaçlı'},
+  'form.recommended': {en:'Recommended Actions', tr:'Önerilen Eylemler'},
+  'form.recommended.placeholder': {en:'e.g. Block and investigate', tr:'örn. Engelle ve incele'},
+  'form.category': {en:'Category', tr:'Kategori'},
+  'form.category.placeholder': {en:'e.g. SuspiciousActivity', tr:'örn. SuspiciousActivity'},
+  'form.mitre': {en:'MITRE Techniques', tr:'MITRE Teknikleri'},
+  'form.mitre.placeholder': {en:'e.g. T1046, T1059.001', tr:'örn. T1046, T1059.001'},
+  'stats.total': {en:'Total IOCs', tr:'Toplam IOC'},
+  'stats.hash': {en:'Hash (File)', tr:"Dosya Hash'i"},
+  'stats.network': {en:'Network', tr:'Ağ'},
+  'stats.domains': {en:'Unique Domains', tr:'Tekil Alan Adları'},
+  'table.title': {en:'Staged Indicators', tr:'Hazırlanan İndikatörler'},
+  'table.count': {en:'Count:', tr:'Adet:'},
+  'table.selected': {en:'Selected', tr:'Seçili'},
+  'table.modify': {en:'Modify selected:', tr:'Seçili öğeleri düzenle:'},
+  'table.setAction': {en:'Set Action…', tr:'Eylem Seç…'},
+  'table.setSeverity': {en:'Set Severity…', tr:'Önem Derecesi Seç…'},
+  'table.setAlert': {en:'Set Alert…', tr:'Uyarı Ayarla…'},
+  'table.delete': {en:'Delete', tr:'Sil'},
+  'table.type': {en:'Type', tr:'Tür'},
+  'table.value': {en:'Value', tr:'Değer'},
+  'table.action': {en:'Action', tr:'Eylem'},
+  'table.severity': {en:'Severity', tr:'Önem Derecesi'},
+  'table.alert': {en:'Alert', tr:'Uyarı'},
+  'table.expiration': {en:'Expiration', tr:'Geçerlilik'},
+  'table.note': {en:'Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.', tr:'Not: Toplu güncellemede "BlockAndRemediate", ağ indikatörleri için otomatik olarak "Block" değerine düşer.'},
+  'kql.title': {en:'Advanced Hunting KQL', tr:'KQL Sorgusu'},
+  'kql.copy': {en:'Copy KQL', tr:"KQL'yi Kopyala"},
+  'kql.pin': {en:'Pin', tr:'Sabitle'},
+  'kql.pinTitle': {en:'Pin open', tr:'Açık tutmak için sabitle'},
+  'kql.placeholder': {en:'// No data yet. Add indicators above to generate query.', tr:'// Henüz veri yok. Sorgu üretmek için yukarıya indikatör ekleyin.'},
+  'kql.hint': {en:'Hover to peek · Pin to keep open ·', tr:'Önizlemek için üzerine gel · Açık tutmak için sabitle ·'},
+  'kql.hintSuffix': {en:'for shortcuts', tr:'kısayollar için'},
+  'cti.title': {en:'CTI Results', tr:'Tehdit İstihbaratı Sonuçları'},
+  'banner.malicious': {en:'MALICIOUS INDICATOR DETECTED - Blocking action should be reviewed immediately.', tr:'ZARARLI GÖSTERGE TESPİT EDİLDİ - Engelleme eylemi hemen incelenmeli.'},
+  'banner.trusted': {en:'TRUSTED INFRASTRUCTURE - Do not block. Review before taking action.', tr:'GÜVENİLİR ALTYAPI - Engellemeyin. İşlem yapmadan önce inceleyin.'},
+  'help.title': {en:'Keyboard Shortcuts', tr:'Klavye Kısayolları'},
+  'help.selectAll': {en:'Select all indicators', tr:'Tüm indikatörleri seç'},
+  'help.deselectAll': {en:'Deselect all', tr:'Tüm seçimleri kaldır'},
+  'help.cancelBulk': {en:'Cancel bulk mode', tr:'Toplu modu iptal et'},
+  'help.open': {en:'Open this help', tr:'Bu yardımı aç'},
+  'aria.dismiss': {en:'Dismiss', tr:'Kapat'},
+  'aria.close': {en:'Close', tr:'Kapat'},
+  'aria.shortcuts': {en:'Keyboard shortcuts', tr:'Klavye kısayolları'},
+  'aria.importFile': {en:'Import indicators file', tr:'İndikatör dosyasını içe aktar'},
+  'aria.guardStatus': {en:'Guard status', tr:'Guard durumu'},
+  'aria.kqlPanel': {en:'KQL query panel', tr:'KQL sorgu paneli'},
+  'aria.kqlOutput': {en:'KQL query output', tr:'KQL sorgu çıktısı'}
+};
+
 (function(){
   const COLS = ["IndicatorType","IndicatorValue","ExpirationTime","Action","Severity","Title","Description","RecommendedActions","RbacGroups","Category","MitreTechniques","GenerateAlert"];
   let list = [];
@@ -2015,7 +797,6 @@ https://malicious-site.com/login
   const kqlStats = el("kqlStats");
   const ctiList = el("ctiList");
   const ctiStats = el("ctiStats");
-  const ctiRefreshBtn = el("ctiRefreshBtn");
   const kqlDock = el("kqlDock");
   const kqlPinBtn = el("kqlPinBtn");
 
@@ -3313,14 +2094,15 @@ https://malicious-site.com/login
     otx:           "AlienVault OTX",
     shodandb:      "Shodan InternetDB",
     malwarebazaar: "MalwareBazaar",
-    urlhaus:       "URLhaus"
+    urlhaus:       "URLhaus",
+    whois:         "WHOIS / RDAP"
   };
-  const PROVIDER_ORDER = ["virustotal","abuseipdb","ipinfo","otx","shodandb","malwarebazaar","urlhaus"];
+  const PROVIDER_ORDER = ["virustotal","abuseipdb","ipinfo","whois","otx","shodandb","malwarebazaar","urlhaus"];
 
   const PROVIDER_SITE_LABEL = {
     virustotal:"VirusTotal", abuseipdb:"AbuseIPDB", ipinfo:"IPInfo",
     otx:"OTX", shodandb:"Shodan", malwarebazaar:"MalwareBazaar",
-    urlhaus:"URLhaus"
+    urlhaus:"URLhaus", whois:"WHOIS"
   };
 
   function anyrunLookupUrl(value){
@@ -3337,11 +2119,24 @@ https://malicious-site.com/login
     return t;
   }
 
+  function vtUrlIdEncode(s){
+    const bytes = new TextEncoder().encode(s);
+    let bin = "";
+    bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
   function providerExtUrl(key, type, value, p){
     type = normalizeProviderIndicatorType(type);
     const enc = encodeURIComponent(value);
     switch(key){
-      case "virustotal":    return p && p.link ? p.link : null;
+      case "virustotal": {
+        if (type === "ip")     return `https://www.virustotal.com/gui/ip-address/${enc}`;
+        if (type === "domain") return `https://www.virustotal.com/gui/domain/${enc}`;
+        if (type === "url")    return `https://www.virustotal.com/gui/url/${vtUrlIdEncode(value)}`;
+        if (type === "hash")   return `https://www.virustotal.com/gui/file/${enc}`;
+        return `https://www.virustotal.com/gui/search?query=${enc}`;
+      }
       case "abuseipdb":     return type === "ip" ? `https://www.abuseipdb.com/check/${enc}` : null;
       case "ipinfo":        return type === "ip" ? `https://ipinfo.io/${enc}` : null;
       case "otx": {
@@ -3354,6 +2149,14 @@ https://malicious-site.com/login
         if(type === "url") return `https://urlhaus.abuse.ch/browse.php?search=${enc}`;
         if(type === "domain" || type === "ip") return `https://urlhaus.abuse.ch/host/${enc}/`;
         return null;
+      }
+      case "whois": {
+        if (type !== "domain" && type !== "url") return null;
+        let host = value;
+        if (type === "url") {
+          try { host = new URL(value).hostname; } catch { host = value; }
+        }
+        return `https://who.is/whois/${encodeURIComponent(host)}`;
       }
       default: return null;
     }
@@ -3380,6 +2183,9 @@ https://malicious-site.com/login
   function renderVirusTotal(p){
     if(p.status !== "ok"){
       return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    if(p.found === false){
+      return `<div class="prov-body">Not seen by VirusTotal.</div>`;
     }
     const mal = Number(p.maliciousScore  || 0);
     const sus = Number(p.suspiciousScore || 0);
@@ -3440,6 +2246,15 @@ https://malicious-site.com/login
     }
     const pulses = Number(p.pulseCount || 0);
     const rep = Number(p.reputation || 0);
+    if(p.found === false && p.basePresent){
+      const out = [];
+      out.push(`<div class="prov-row"><span class="k">Status</span><span class="v"><span class="prov-chip ok">Known to OTX, no pulses</span></span></div>`);
+      out.push(kvRow("Reputation", rep));
+      return `<div class="prov-body">${out.join("")}</div>`;
+    }
+    if(p.found === false){
+      return `<div class="prov-body">Not seen by OTX.</div>`;
+    }
     const pulseChip = pulses > 0 ? "danger" : "ok";
     const out = [];
     out.push(`<div class="prov-row"><span class="k">Pulses</span><span class="v"><span class="prov-chip ${pulseChip}">${pulses}</span></span></div>`);
@@ -3509,6 +2324,51 @@ https://malicious-site.com/login
     return `<div class="prov-body">${out.join("")}</div>`;
   }
 
+  function renderWhois(p){
+    if (p.status !== "ok") {
+      return `<div class="prov-body">${escapeHtml(p.summary || "")}</div>`;
+    }
+    const out = [];
+    if (p.partial) out.push(`<span class="prov-chip warn">DNS only</span>`);
+    if (p.ageDays != null) {
+      const age = Number(p.ageDays || 0);
+      const ageClass = age < 30 ? "danger" : age < 180 ? "warn" : "trust";
+      const ageLabel = age < 30 ? "New domain" : age < 180 ? "Recent" : "Established";
+      out.push(`
+        <div class="whois-age-card ${ageClass}">
+          <div class="whois-age-num">${age}</div>
+          <div class="whois-age-unit">days old</div>
+          <span class="prov-chip ${ageClass}">${escapeHtml(ageLabel)}</span>
+        </div>
+      `);
+    }
+    if (p.createdDate)  out.push(kvRow("Registered", String(p.createdDate).slice(0,10)));
+    if (p.updatedDate)  out.push(kvRow("Updated",    String(p.updatedDate).slice(0,10)));
+    if (p.expiresDate)  out.push(kvRow("Expires",    String(p.expiresDate).slice(0,10)));
+    if (p.registrar)    out.push(kvRow("Registrar",  p.registrar));
+    if (p.registrantCountry) out.push(kvRow("Country", p.registrantCountry));
+    if (p.nameservers && p.nameservers.length) {
+      out.push(`<div class="prov-row"><span class="k">NS</span><span class="v"></span></div>`);
+      out.push(chips(p.nameservers.slice(0, 6)));
+    }
+    if (p.aRecords && p.aRecords.length) {
+      out.push(`<div class="prov-row"><span class="k">A</span><span class="v"></span></div>`);
+      out.push(chips(p.aRecords.slice(0, 6)));
+    }
+    if (p.mxRecords && p.mxRecords.length) {
+      out.push(`<div class="prov-row"><span class="k">MX</span><span class="v"></span></div>`);
+      out.push(chips(p.mxRecords.slice(0, 6)));
+    }
+    if (p.statuses && p.statuses.length) {
+      out.push(`<div class="prov-row"><span class="k">Status</span><span class="v"></span></div>`);
+      out.push(chips(p.statuses.slice(0, 6)));
+    }
+    if (!out.length) {
+      return `<div class="prov-body">No WHOIS data available.</div>`;
+    }
+    return `<div class="prov-body">${out.join("")}</div>`;
+  }
+
   const PROVIDER_RENDERERS = {
     virustotal:    renderVirusTotal,
     abuseipdb:     renderAbuseIPDB,
@@ -3516,7 +2376,8 @@ https://malicious-site.com/login
     otx:           renderOTX,
     shodandb:      renderShodanDB,
     malwarebazaar: renderMalwareBazaar,
-    urlhaus:       renderURLhaus
+    urlhaus:       renderURLhaus,
+    whois:         renderWhois
   };
 
   function relativeTime(iso){
@@ -3596,8 +2457,6 @@ https://malicious-site.com/login
   function renderCti(){
     if(!ctiList) return;
     ctiStats.textContent = isTr() ? `${list.length} i̇ndikatör` : `${list.length} indicator${list.length === 1 ? "" : "s"}`;
-    ctiRefreshBtn.disabled = list.length === 0;
-
     if(list.length === 0){
       ctiList.innerHTML = `<div class="cti-empty">${uiText("// No indicators yet. Add some above to see CTI results.", "// Henüz i̇ndikatör yok. Tehdit istihbaratı sonuçlarını görmek için yukarıdan i̇ndikatör ekleyin.")}</div>`;
       return;
@@ -3605,6 +2464,8 @@ https://malicious-site.com/login
 
     ctiList.innerHTML = list.map((r, i) => renderCtiRow(r, i, ctiOpenKey)).join("");
   }
+
+  window.addEventListener('langchange', () => renderCti());
 
   function revealCtiRow(row){
     if(!row) return;
@@ -3628,13 +2489,6 @@ https://malicious-site.com/login
       const key = rowEl.getAttribute("data-key");
       ctiOpenKey = (ctiOpenKey === key) ? null : key;
       renderCti();
-    });
-  }
-
-  if(ctiRefreshBtn){
-    ctiRefreshBtn.addEventListener("click", ()=>{
-      if(list.length === 0) return;
-      checkGuardsForRows(list.slice());
     });
   }
 
@@ -4367,151 +3221,59 @@ if(dropZone && bulkFileInput){
   };
 })();
 
-// ── Arsenal lang + load bridge ──────────────────
+// Arsenal lang + load bridge
 (function(){
-  const TR = {
-    // KQL dock
-    'Advanced Hunting KQL': "KQL Sorgusu",
-    'Pin': 'Sabitle',
-    'Copy KQL': "KQL'yi Kopyala",
-    // Headers
-    'Indicator Composer': 'İndikatör Yardımcısı',
-    'Staged Indicators': 'Hazırlanan İndikatörler',
-    'CTI Results': 'Tehdit İstihbaratı Sonuçları',
-    'Re-check all': 'Tümünü Yeniden Kontrol Et',
-    'DEFAULT SETTINGS (FOR NEW ENTRIES)': 'YENİ KAYITLAR İÇİN VARSAYILAN AYARLAR',
-    // Labels
-    'Input Indicators (One per line)': 'İndikatörler (Satır Başına Bir Tane)',
-    'Indicators Preview': 'İndikatör Önizlemesi',
-    'Severity': 'Önem Derecesi',
-    'Generate Alert': 'Uyarı Üret',
-    'Expiration (ISO)': 'Geçerlilik Bitişi',
-    'Expiration': 'Geçerlilik',
-    'RBAC Groups': 'RBAC Grupları',
-    'Title': 'Başlık',
-    'Description': 'Açıklama',
-    'Action': 'Eylem',
-    'Category': 'Kategori',
-    'MITRE Techniques': 'MITRE Teknikleri',
-    'Total IOCs': 'Toplam IOC',
-    'Hash (File)': "Dosya Hash'i",
-    'Network': 'Ağ',
-    'Unique Domains': 'Tekil Alan Adları',
-    'Type': 'Tür',
-    'Value': 'Değer',
-    'Alert': 'Uyarı',
-    // Buttons
-    'Add to List': 'Listeye Ekle',
-    'Clear': 'Temizle',
-    'Export CSV': "CSV'yi Dışa Aktar",
-    'Delete': 'Sil',
-    'Selected': 'Seçili',
-    'Modify selected items:': 'Seçili öğeleri düzenle:',
-    'Set Action...': 'Eylem Seç...',
-    'Set Severity...': 'Önem Derecesi Seç...',
-    'Set Alert...': 'Uyarı Ayarla...',
-    'Clear workspace': 'Çalışma Alanını Temizle',
-    'Drop file here': 'Dosyayı buraya bırakın',
-    'or click to import': 'veya içe aktarmak için tıklayın',
-    'Waiting for input...': 'Girdi bekleniyor...',
-    'Count:': 'Adet:',
-    'Note: "BlockAndRemediate" in bulk update automatically falls back to "Block" for network types.': 'Not: Toplu güncellemede "BlockAndRemediate", ağ i̇ndikatörleri için otomatik olarak "Block" değerine düşer.',
-    'Hover to peek · Pin to keep open · Blank lines and blocks are auto-cleaned.': 'Önizlemek için üzerine gel · Açık tutmak için sabitle · Boş satırlar ve bloklar otomatik temizlenir.',
-  };
-  const EN = Object.fromEntries(Object.entries(TR).map(([k,v])=>[v,k]));
-
   function applyLang(lang){
-    document.documentElement.lang = lang === 'tr' ? 'tr' : 'en';
-    const map = lang === 'tr' ? TR : EN;
-    // Page title h1
-    const h1 = document.querySelector('h1');
-    if(h1){
-      const titleMap = lang === 'tr'
-        ? {'TI Indicator CSV Builder': 'TI İndikatör CSV Oluşturucu', 'Indicator Composer': 'İndikatör Yardımcısı'}
-        : {'TI İndikatör CSV Oluşturucu': 'TI Indicator CSV Builder', 'İndikatör Yardımcısı': 'Indicator Composer'};
-      Object.entries(titleMap).forEach(([from, to]) => {
-        if(h1.textContent.includes(from)) h1.innerHTML = h1.innerHTML.replace(from, to);
-      });
-    }
-    // Walk all text nodes
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while(walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(node => {
-      const t = node.textContent.trim();
-      if(map[t]) node.textContent = node.textContent.replace(t, map[t]);
+    const norm = lang === 'tr' ? 'tr' : 'en';
+    document.documentElement.lang = norm;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const e = I18N[el.dataset.i18n];
+      if(e) el.textContent = e[norm];
     });
-    const sub = document.querySelector('.sub');
-    if(sub){
-      sub.textContent = lang === 'tr'
-        ? "Microsoft Defender XDR için i̇ndikatörleri doğrulayan, biçimlendiren ve yayına hazırlayan analist odaklı araç."
-        : "An analyst-focused tool for validating, formatting, and staging indicators for Microsoft Defender XDR. ";
-    }
-    const input = document.getElementById('input');
-    if(input){
-      input.placeholder = lang === 'tr'
-        ? 'Örnekler:\n1.2.3.4\nzararli.example.com\nhttps://zararli-site.com/giris\n44d88612fea8a8f36de82e1278abb02f'
-        : 'Examples:\n1.2.3.4\nevil.example.com\nhttps://malicious-site.com/login\n44d88612fea8a8f36de82e1278abb02f';
-    }
-    const placeholders = lang === 'tr'
-      ? {
-          defExpire: 'örn. 2026-01-31T23:59:59Z',
-          defRbac: 'İsteğe bağlı: GrupAdı',
-          defTitle: 'Kötü amaçlı',
-          defDesc: 'Kötü amaçlı',
-          defRec: 'örn. Engelle ve incele',
-          defCat: 'örn. SuspiciousActivity',
-          defMitre: 'örn. T1046, T1059.001',
-          kqlBox: '// Henüz veri yok. Sorgu üretmek için yukarıya i̇ndikatör ekleyin.'
-        }
-      : {
-          defExpire: 'e.g. 2026-01-31T23:59:59Z',
-          defRbac: 'Optional: GroupName',
-          defTitle: 'Malicious',
-          defDesc: 'Malicious',
-          defRec: 'e.g. Block and investigate',
-          defCat: 'e.g. SuspiciousActivity',
-          defMitre: 'e.g. T1046, T1059.001',
-          kqlBox: '// No data yet. Add indicators above to generate query.'
-        };
-    Object.entries(placeholders).forEach(([id, text]) => {
-      const field = document.getElementById(id);
-      if(field) field.placeholder = text;
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const e = I18N[el.dataset.i18nPlaceholder];
+      if(e) el.placeholder = e[norm];
     });
-    const dropZone = document.getElementById('dropZone');
-    if(dropZone) dropZone.setAttribute('aria-label', lang === 'tr' ? 'İndikatör dosyasını içe aktar' : 'Import indicators file');
-    const pin = document.getElementById('kqlPinBtn');
-    if(pin) pin.title = lang === 'tr' ? 'Açık tutmak için sabitle' : 'Pin open';
-    const dock = document.getElementById('kqlDock');
-    if(dock) dock.setAttribute('aria-label', lang === 'tr' ? 'KQL sorgu paneli' : 'KQL query panel');
-    const guardHead = document.querySelector('.guardHead');
-    if(guardHead){
-      const txt = lang === 'tr' ? 'Guard durumu' : 'Guard status';
-      guardHead.title = txt;
-      guardHead.setAttribute('aria-label', txt);
-    }
-    // KQL dock title (contains child elements)
-    const dockTitle = document.querySelector('.kql-dock-title');
-    if(dockTitle){
-      const txt = lang === 'tr' ? "KQL Sorgusu" : 'Advanced Hunting KQL';
-      const glow = dockTitle.querySelector('.glow');
-      dockTitle.textContent = txt;
-      if(glow) dockTitle.prepend(glow);
-    }
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const e = I18N[el.dataset.i18nTitle];
+      if(e) el.title = e[norm];
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const e = I18N[el.dataset.i18nAria];
+      if(e) el.setAttribute('aria-label', e[norm]);
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const e = I18N[el.dataset.i18nHtml];
+      if(e) el.innerHTML = e[norm];
+    });
+
+    try { localStorage.setItem('arsenal_lang', norm); } catch{}
+    window.dispatchEvent(new CustomEvent('langchange', {detail:{lang:norm}}));
   }
 
   window.addEventListener('message', e => {
-    if(!e.data) return;
-    if(e.data.type === 'arsenal_lang') applyLang(e.data.lang);
-    if(e.data.type === 'arsenal_load_query'){
-      if(e.data.indicatorList && window._arsenalBridge_hunt){
-        window._arsenalBridge_hunt.loadList(e.data.indicatorList);
-      }
-    }
+    if(e && e.data && e.data.type === 'arsenal_lang')
+      applyLang(e.data.lang);
   });
+
+  const initial = (() => {
+    try { return localStorage.getItem('arsenal_lang') || 'en'; }
+    catch { return 'en'; }
+  })();
+  applyLang(initial);
 })();
+
+window.addEventListener('message', e => {
+  if(!e.data || e.data.type !== 'arsenal_load_query') return;
+  if(e.data.indicatorList && window._arsenalBridge_hunt){
+    window._arsenalBridge_hunt.loadList(e.data.indicatorList);
+  }
+});
+
 </script>
 <script>
+
 /* Arsenal theme sync bridge */
 (function(){
   /* Premium palette set — matches Arsenal.html.
@@ -4572,6 +3334,96 @@ if(dropZone && bulkFileInput){
     }
   });
   try { window.parent.postMessage({type:'arsenal:ready'}, '*'); } catch(e){}
+})();
+
+</script>
+<script>
+/* ── New additions: KQL highlight, guard banner, shortcuts ── */
+(function(){
+  // KQL syntax highlighter
+  function highlightKql(code){
+    if(!code) return '<span style="color:var(--muted)">// No data yet. Add indicators above to generate query.</span>';
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return esc(code)
+      .replace(new RegExp('//.*', 'gm'), m => '<span class="kq-c">'+m+'</span>')
+      .replace(/&quot;([^&]*)&quot;/g, (_,g) => '<span class="kq-s">&quot;'+g+'&quot;</span>')
+      .replace(/\b(let|where|extend|project|union|summarize|ago|bin|tostring|iff|isempty|isnotempty|case|dynamic|by|on|join|limit|order|sort|asc|desc|take|top|render|count|has|contains|startswith|endswith|and|or|not|true|false|between|mv-expand|parse|coalesce|strcat|tolong|toint|split|trim|now|datetime|isfuzzy|materialize|make_set|arg_max|countif|distinct|materialize)\b/gi,
+        m => '<span class="kq-k">'+m+'</span>')
+      .replace(/\b(DeviceNetworkEvents|DeviceEvents|DeviceFileEvents|DeviceProcessEvents|DeviceImageLoadEvents|DeviceRegistryEvents|DeviceLogonEvents|DeviceFileCertificateInfo|DeviceInfo|DeviceNetworkInfo|IdentityLogonEvents|IdentityQueryEvents|IdentityEvents|CloudAppEvents|EntraIdSignInEvents|EntraIdSpnSignInEvents|EmailEvents|EmailAttachmentInfo|EmailUrlInfo|EmailPostDeliveryEvents|UrlClickEvents|MessageEvents|MessageUrlInfo|AlertEvidence|FileMaliciousContentInfo)\b/g,
+        m => '<span class="kq-t">'+m+'</span>')
+      .replace(/\|/g, '<span class="kq-p">|</span>');
+  }
+
+  // Sync kqlBox → kqlHL
+  const kqlBox = document.getElementById('kqlBox');
+  const kqlHL = document.getElementById('kqlHL');
+  let lastVal = '';
+  function syncHL(){
+    if(!kqlBox||!kqlHL) return;
+    if(kqlBox.value !== lastVal){
+      lastVal = kqlBox.value;
+      kqlHL.innerHTML = highlightKql(kqlBox.value)
+        || '<span class="kq-c">'+kqlBox.placeholder+'</span>';
+      kqlBox.style.height = kqlHL.scrollHeight + 'px';
+    }
+  }
+  setInterval(syncHL, 350);
+
+  // Guard banner
+  const localText = key => {
+    const lang = document.documentElement.lang === 'tr' ? 'tr' : 'en';
+    return (I18N[key] && I18N[key][lang]) || '';
+  };
+  function setBannerMessage(banner, msg, key){
+    banner.dataset.i18nKey = key;
+    msg.textContent = localText(key);
+  }
+  function updateGuardBanner(){
+    const banner = document.getElementById('guardBanner');
+    const msg = document.getElementById('guardBannerMsg');
+    if(!banner||!msg) return;
+    // Access list from parent IIFE scope via global
+    const rows = typeof list !== 'undefined' ? list : [];
+    if(!rows.length){ banner.hidden=true; return; }
+    const statuses = rows.map(r => r._guard && r._guard.status || 'unknown');
+    const hasTrusted = statuses.some(s=>s==='trusted_infrastructure');
+    const hasMalicious = statuses.some(s=>s==='malicious');
+    const allChecked = statuses.every(s=>s!=='unknown'&&s!=='checking');
+    if(!allChecked){ banner.hidden=true; return; }
+    if(hasMalicious){
+      banner.className='guard-banner malicious'; setBannerMessage(banner, msg, 'banner.malicious'); banner.hidden=false;
+    } else if(hasTrusted){
+      banner.className='guard-banner trusted'; setBannerMessage(banner, msg, 'banner.trusted'); banner.hidden=false;
+    } else {
+      banner.hidden=true;
+    }
+  }
+  setInterval(updateGuardBanner, 800);
+  window.addEventListener('langchange', () => {
+    const banner = document.getElementById('guardBanner');
+    const msg = document.getElementById('guardBannerMsg');
+    const key = banner && banner.dataset.i18nKey;
+    if(banner && msg && key && !banner.hidden) msg.textContent = localText(key);
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e){
+    const active = document.activeElement;
+    const typing = active && (active.tagName==='TEXTAREA'||active.tagName==='INPUT'||active.tagName==='SELECT');
+    if(e.key==='?' && !typing){
+      e.preventDefault();
+      const ov=document.getElementById('helpOverlay');
+      if(ov) ov.hidden=!ov.hidden;
+    }
+    if(e.key==='Escape'){
+      const ov=document.getElementById('helpOverlay');
+      if(ov&&!ov.hidden){ e.preventDefault(); ov.hidden=true; }
+    }
+  });
+
+  // Help overlay close on backdrop click
+  const helpOverlay=document.getElementById('helpOverlay');
+  if(helpOverlay) helpOverlay.addEventListener('click',function(e){if(e.target===helpOverlay)helpOverlay.hidden=true;});
 })();
 </script>
 </body>

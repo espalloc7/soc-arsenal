@@ -1,0 +1,55 @@
+/* ---------------------------------------------------------------
+   Canonical KQL dock styles - shared between
+   src/indicators.html and src/phishing.html.
+   Edits here propagate to BOTH tabs. Do not duplicate
+   these rules inline in either page.
+   --------------------------------------------------------------- */
+
+.kql-dock{position:fixed;left:0;right:0;bottom:0;z-index:900;background:rgba(7,8,18,.98);
+  border-top:1px solid var(--border-mid);box-shadow:0 -8px 32px rgba(0,0,0,.55);
+  transform:translateY(calc(100% - 44px));transition:transform .28s cubic-bezier(.16,1,.3,1)}
+.kql-dock:hover,.kql-dock.pinned,.kql-dock:focus-within{transform:translateY(0)}
+.kql-dock-handle{display:flex;justify-content:space-between;align-items:center;padding:10px 22px;
+  height:44px;box-sizing:border-box;border-bottom:1px solid transparent;transition:border-color .2s}
+.kql-dock:hover .kql-dock-handle,.kql-dock.pinned .kql-dock-handle{border-bottom-color:var(--border)}
+.kql-dock-title{display:flex;align-items:center;gap:9px;font-size:10.5px;color:var(--text-bright);
+  letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-ui)}
+.kql-dock-title .glow{width:6px;height:6px;background:var(--primary);box-shadow:0 0 8px var(--primary);
+  animation:glowPulse 2.5s ease-in-out infinite;flex-shrink:0}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 8px var(--primary);opacity:1}50%{box-shadow:0 0 18px var(--primary);opacity:.7}}
+.kql-dock-right{display:flex;align-items:center;gap:8px}
+.kql-dock-stats{font-size:9.5px;font-family:var(--font-mono);color:var(--muted);letter-spacing:.05em}
+.kql-dock-btn{font-size:9.5px;padding:5px 10px;font-family:var(--font-ui);letter-spacing:.05em;
+  text-transform:uppercase;border:1px solid var(--border);background:transparent;color:var(--text-bright);
+  cursor:pointer;transition:all .15s;border-radius:2px}
+.kql-dock-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.kql-dock-btn:disabled{opacity:.35;cursor:not-allowed}
+.kql-dock-btn.pin-btn.active{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.kql-dock-body{padding:12px 22px 16px;max-height:55vh;overflow:auto;position:relative}
+.kql-output-wrap{position:relative;width:100%;min-height:220px}
+.kql-hl{box-sizing:border-box;font-family:var(--font-mono);font-size:11px;line-height:1.72;color:#88c8a0;
+  position:absolute;inset:0;margin:0;padding:12px 14px;white-space:pre-wrap;word-break:break-word;tab-size:2;
+  background:transparent;pointer-events:none;display:block;z-index:1}
+.kql-hl .kq-k{color:#67e8f9;font-weight:600}
+.kql-hl .kq-kw{color:#c084fc}
+.kql-hl .kq-s{color:#a3e635}
+.kql-hl .kq-c{color:var(--muted);font-style:italic}
+.kql-hl .kq-p{color:var(--primary);font-weight:700}
+.kql-hl .kq-t{color:#fbbf24}
+.kqlBox{box-sizing:border-box;position:relative;display:block;width:100%;min-height:220px;margin:0;padding:12px 14px;
+  font-family:var(--font-mono);font-size:11px;line-height:1.72;white-space:pre-wrap;word-break:break-word;tab-size:2;
+  background:transparent;color:transparent;caret-color:var(--text-bright);border:0;outline:none;box-shadow:none;resize:none;
+  overflow:hidden;z-index:2}
+.kqlBox::placeholder{color:transparent}
+.kqlBox::selection{background:var(--primary-soft);color:inherit}
+.kqlBox:focus,
+.kqlBox:focus-visible{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  outline:none;
+}
+.kql-dock-hint{font-size:9.5px;color:var(--muted);margin-top:6px;letter-spacing:.03em}
+body.kql-pinned{padding-bottom:min(400px,56vh)}
+html[data-arsenal-theme="light"] .kql-dock{background:rgba(255,255,255,.97);border-top-color:var(--border-mid)}
+html[data-arsenal-theme="light"] .kql-hl{color:#166534;background:transparent}

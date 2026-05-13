@@ -1,5 +1,7 @@
 # Defender XDR Arsenal
 
+**Version:** 2.0
+
 Defender XDR Arsenal is a local, browser-based CTI workspace for building and reviewing hunting queries.
 It combines two focused tools:
 
@@ -52,3 +54,9 @@ The broker reads provider keys from `.env`:
 - `URLHAUS_API_KEY`
 
 Some providers work without a key, while others use the key only if you configure it.
+
+## Notes
+
+- The UI is intentionally local-first and analyst-friendly.
+- `Arsenal.html` loads the workspace pages from `src/`.
+- There is no separate frontend build pipeline.

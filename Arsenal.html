@@ -1,1221 +1,519 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8"/>
-  <title>Defender XDR — Arsenal</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="utf-8"/>
+<title>Defender XDR — Arsenal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-ui:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","Cascadia Code","SF Mono","Fira Code",Consolas,"Courier New",monospace;
+  --bg:#05060f;--surface:#090b1a;--elevated:#0d1028;
+  --border:rgba(255,255,255,0.07);--border-mid:rgba(255,255,255,0.13);
+  --accent:#c8956a;--accent2:#e4c28e;
+  --accent-glow:rgba(200,149,106,0.22);--accent-soft:rgba(200,149,106,0.08);
+  --accent-border:rgba(200,149,106,0.26);
+  --accent-grad:linear-gradient(135deg,#c8956a 0%,#e4c28e 100%);
+  --danger:#ff2d55;--success:#00e878;--warning:#ff8c00;
+  --text:#6a7c98;--text-bright:#b4c2d8;--muted:#353f58;
+  --sidebar-w:58px;--sidebar-exp:226px;
+}
+[data-theme="light"]{
+  --bg:#eef1f8;--surface:#ffffff;--elevated:#f8fafc;
+  --border:rgba(0,0,0,0.09);--border-mid:rgba(0,0,0,0.15);
+  --text:#5a6580;--text-bright:#1a2035;--muted:#9ba3bb;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);font-family:var(--font-ui);color:var(--text);display:flex;-webkit-font-smoothing:antialiased}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.022) 3px,rgba(0,0,0,0.022) 4px);
+  display:var(--scan-disp,block)}
+body.no-scan::after{display:none!important}
+[data-theme="light"] body::after{display:none}
 
-    :root {
-      --bg:          #060810;
-      --sidebar-bg:  #07091299;
-      --surface:     #0a0c1a;
-      --border:      rgba(255,255,255,0.07);
-      --border-mid:  rgba(255,255,255,0.13);
+/* sidebar */
+.sidebar{position:relative;width:var(--sidebar-w);height:100vh;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--bg);border-right:1px solid var(--border);
+  transition:width 0.26s cubic-bezier(0.4,0,0.2,1);overflow:hidden;z-index:100}
+.sidebar:hover{width:var(--sidebar-exp)}
 
-      /* Accent system — 6 harmonic palettes.
-         Each palette sets 6 tokens via JS applyAccent().
-         Default: Amber (analog warm, SOC identity). */
-      --accent:       #c89d6a;
-      --accent2:      #e4c28e;
-      --accent-glow:  rgba(200,157,106,0.22);
-      --accent-soft:  rgba(200,157,106,0.08);
-      --accent-border:rgba(200,157,106,0.26);
-      --accent-grad:  linear-gradient(135deg, #c89d6a 0%, #e4c28e 100%);
+.brand{width:100%;padding:15px 0 13px;display:flex;align-items:center;gap:10px;
+  padding-left:15px;border-bottom:1px solid var(--border);overflow:hidden;flex-shrink:0}
+.brand-icon{width:28px;height:28px;background:var(--accent-soft);border:1px solid var(--accent-border);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  color:var(--accent);flex-shrink:0;position:relative}
+.brand-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background .3s}
+.hdot.up{background:var(--success);box-shadow:0 0 5px var(--success)}
+.hdot.dn{background:var(--danger);box-shadow:0 0 5px var(--danger)}
+.hdot.dg{background:var(--warning)}
+.brand-text{white-space:nowrap;overflow:hidden;opacity:0;transform:translateX(-6px);
+  transition:opacity .18s .04s,transform .18s .04s}
+.sidebar:hover .brand-text{opacity:1;transform:translateX(0)}
+.brand-name{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1.2;
+  background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent}
+.brand-sub{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-family:var(--font-mono)}
 
-      --danger:  #ff2d55;
-      --success: #00e878;
-      --warning: #ff8c00;
+/* nav */
+.nav{flex:1;width:100%;padding:7px 0;display:flex;flex-direction:column;gap:1px}
+.ni{position:relative;width:100%;display:flex;align-items:center;gap:10px;
+  padding:9px 0 9px 15px;cursor:pointer;border:none;background:none;
+  color:var(--text);font-family:var(--font-ui);font-size:12px;font-weight:500;
+  transition:color .15s,background .15s;overflow:hidden;white-space:nowrap;text-align:left}
+.ni:hover{color:var(--text-bright);background:rgba(255,255,255,0.035)}
+.ni.active{color:var(--accent);background:var(--accent-soft)}
+.ni.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:2px;height:18px;background:var(--accent-grad);border-radius:0 2px 2px 0}
+.ni-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;border-radius:5px}
+.ni.active .ni-icon{background:var(--accent-soft);color:var(--accent)}
+.ni svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nl{opacity:0;transform:translateX(-8px);transition:opacity .18s .04s,transform .18s .04s;
+  display:flex;align-items:center;gap:7px}
+.sidebar:hover .nl{opacity:1;transform:translateX(0)}
+.nbadge{font-size:9px;font-family:var(--font-mono);background:var(--accent-soft);color:var(--accent);
+  border:1px solid var(--accent-border);border-radius:99px;padding:1px 6px;line-height:1.5}
+.nsep{width:calc(100% - 20px);margin:4px 10px;height:1px;background:var(--border);flex-shrink:0}
 
-      --text:        #6a7c98;
-      --text-bright: #b4c2d8;
-      --muted:       #353f58;
+/* health section */
+.health-row{padding:7px 0 7px 15px;display:flex;align-items:flex-start;gap:9px;overflow:hidden}
+.hdot2{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;margin-top:5px;transition:background .3s}
+.hdot2.up{background:var(--success);box-shadow:0 0 5px var(--success)}
+.hdot2.dn{background:var(--danger)}
+.hdot2.dg{background:var(--warning)}
+.hdetail{opacity:0;transform:translateX(-8px);transition:opacity .18s .04s,transform .18s .04s;min-width:0}
+.sidebar:hover .hdetail{opacity:1;transform:translateX(0)}
+.hlabel{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+  font-family:var(--font-mono);margin-bottom:4px}
+.hprovs{display:flex;flex-wrap:wrap;gap:3px}
+.pk{font-size:8px;padding:1px 5px;border:1px solid var(--border);
+  font-family:var(--font-mono);letter-spacing:.04em;color:var(--muted);border-radius:2px}
+.pk.ok{color:var(--success);border-color:rgba(0,232,120,.3)}
+.pk.no{opacity:.45}
 
-      --font:      'Outfit', system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', monospace;
+/* sidebar foot */
+.sfoot{width:100%;padding:9px 0 14px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:1px}
+.cb{width:100%;display:flex;align-items:center;gap:10px;padding:7px 0 7px 15px;
+  cursor:pointer;border:none;background:none;color:var(--muted);
+  font-family:var(--font-ui);font-size:11px;font-weight:500;
+  transition:color .15s;overflow:hidden;white-space:nowrap;text-align:left}
+.cb:hover{color:var(--text-bright)}
+.cb .ni-icon{width:26px;height:26px;border-radius:5px;flex-shrink:0}
+.cb svg{width:14px;height:14px}
+.cl{opacity:0;transform:translateX(-8px);transition:opacity .18s .04s,transform .18s .04s;
+  display:flex;align-items:center;gap:8px}
+.sidebar:hover .cl{opacity:1;transform:translateX(0)}
 
-      --sidebar-w: 62px;
-      --sidebar-expanded: 228px;
-      --topbar-h: 0px;
-    }
+.ltog{display:inline-flex;border-radius:99px;overflow:hidden;
+  border:1px solid var(--border);background:rgba(0,0,0,.18);
+  font-size:9px;font-family:var(--font-mono)}
+.lo{padding:2px 7px;cursor:pointer;color:var(--muted);transition:color .15s,background .15s;line-height:1.6}
+.lo.active{background:var(--accent-soft);color:var(--accent)}
 
-    /* ── Dark mode refined ───── */
-    :root {
-      --bg:          #08091a;
-      --sidebar-bg:  rgba(10,11,26,0.95);
-      --surface:     #0e1028;
-      --border:      rgba(255,255,255,0.08);
-      --border-mid:  rgba(255,255,255,0.14);
-      --text:        #7080a0;
-      --text-bright: #c0ceea;
-      --muted:       #38435e;
-    }
+/* main */
+.main{flex:1;height:100vh;overflow:hidden;position:relative}
+.panel{position:absolute;inset:0;z-index:0;opacity:0;pointer-events:none;transform:translateY(5px);
+  transition:opacity .22s ease,transform .24s cubic-bezier(.2,1,.3,1)}
+.panel.active{z-index:2;opacity:1;pointer-events:auto;transform:translateY(0)}
+.panel iframe{width:100%;height:100%;border:0;display:block}
 
-    [data-theme="light"] {
-      --bg:          #eef1f8;
-      --sidebar-bg:  rgba(230,234,248,0.97);
-      --surface:     #ffffff;
-      --border:      rgba(0,0,0,0.09);
-      --border-mid:  rgba(0,0,0,0.15);
-      --text:        #5a6580;
-      --text-bright: #1a2035;
-      --muted:       #9ba3bb;
-    }
+/* history */
+.hwrap{height:100%;overflow-y:auto;padding:28px 28px 60px;font-family:var(--font-ui)}
+.hwrap::-webkit-scrollbar{width:3px}
+.hwrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+.hhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.htitle{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text-bright)}
+.htitle span{background:var(--accent-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent}
+.hclear{font-size:10px;font-family:var(--font-mono);background:transparent;
+  border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:4px;
+  cursor:pointer;transition:all .15s;letter-spacing:.06em;text-transform:uppercase}
+.hclear:hover{color:var(--danger);border-color:rgba(255,45,85,.3)}
+.hempty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:280px;gap:12px;color:var(--muted);font-size:12px;text-align:center}
+.hempty-icon{width:48px;height:48px;border-radius:12px;background:var(--accent-soft);
+  border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.hempty-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.hlist{display:flex;flex-direction:column;gap:8px}
+.hcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;
+  align-items:start;transition:border-color .18s,background .18s;cursor:pointer}
+.hcard:hover{border-color:var(--border-mid);background:var(--elevated)}
+.hcard-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hcard-icon.hunt{background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent)}
+.hcard-icon.phish{background:rgba(232,168,32,.08);border:1px solid rgba(232,168,32,.22);color:#e8a820}
+.hcard-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hcard-body{min-width:0}
+.hcard-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.hcard-tool{font-size:9px;font-family:var(--font-mono);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.hcard-tool.hunt{color:var(--accent)}.hcard-tool.phish{color:#e8a820}
+.hcard-count{font-size:9px;font-family:var(--font-mono);color:var(--muted)}
+.hcard-preview{font-size:10px;font-family:var(--font-mono);color:var(--text);line-height:1.55;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hcard-time{font-size:9px;font-family:var(--font-mono);color:var(--muted);white-space:nowrap;padding-top:1px}
 
-    html, body { height: 100%; overflow: hidden; }
-
-    body {
-      background: var(--bg);
-      background-image: radial-gradient(ellipse at 70% 0%, var(--accent-soft) 0%, transparent 50%),
-                        radial-gradient(ellipse at 5% 100%, rgba(17,24,39,0.05) 0%, transparent 50%);
-      font-family: var(--font);
-      color: var(--text);
-      display: flex;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── Sidebar ─────────────────────────────── */
-    .sidebar {
-      position: relative;
-      width: var(--sidebar-w);
-      height: 100vh;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: var(--bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-right: 0;
-      border-left: 0;
-      transition: width 0.28s cubic-bezier(0.4,0,0.2,1), background 0.4s ease;
-      overflow: hidden;
-      z-index: 100;
-    }
-    .sidebar:hover { width: var(--sidebar-expanded); }
-
-    .sidebar::before { display: none; }
-
-    /* ── Brand ───────────────────────────────── */
-    .brand {
-      width: 100%;
-      padding: 18px 0 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-left: 17px;
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .brand-icon {
-      width: 28px; height: 28px;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--accent);
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-    .brand-icon::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: var(--accent-grad);
-      opacity: 0.12;
-    }
-    .brand-icon svg { position: relative; z-index: 1; }
-    .brand-text {
-      white-space: nowrap;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateX(-6px);
-      transition: opacity 0.2s 0.05s, transform 0.2s 0.05s;
-    }
-    .sidebar:hover .brand-text { opacity: 1; transform: translateX(0); }
-    .brand-name {
-      font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
-      line-height: 1.2;
-      background: var(--accent-grad);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-    }
-    .brand-sub {
-      font-size: 9px; color: var(--muted); letter-spacing: 0.14em;
-      text-transform: uppercase; font-family: var(--font-mono);
-    }
-
-    /* ── Nav ─────────────────────────────────── */
-    .nav {
-      flex: 1;
-      width: 100%;
-      padding: 10px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .nav-item {
-      position: relative;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0 10px 17px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      transition: color 0.15s, background 0.15s;
-      overflow: hidden;
-      white-space: nowrap;
-      text-align: left;
-    }
-    .nav-item:hover { color: var(--text-bright); background: rgba(255,255,255,0.04); }
-    .nav-item.active {
-      color: var(--accent);
-      background: var(--accent-soft);
-    }
-    .nav-item.active::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 50%;
-      transform: translateY(-50%);
-      width: 3px; height: 22px;
-      background: var(--accent-grad);
-      border-radius: 0 2px 2px 0;
-    }
-    .nav-icon {
-      width: 28px; height: 28px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      border-radius: 7px;
-      transition: background 0.15s;
-    }
-    .nav-item.active .nav-icon {
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-    .nav-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-    .nav-label {
-      opacity: 0;
-      transform: translateX(-8px);
-      transition: opacity 0.2s 0.05s, transform 0.2s 0.05s;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .sidebar:hover .nav-label { opacity: 1; transform: translateX(0); }
-
-    .nav-badge {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid var(--accent-border);
-      border-radius: 99px;
-      padding: 1px 7px;
-      line-height: 1.5;
-    }
-
-    .nav-sep {
-      width: calc(100% - 24px);
-      margin: 6px 12px;
-      height: 1px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-
-    /* ── Sidebar bottom controls ─────────────── */
-    .sidebar-foot {
-      width: 100%;
-      padding: 12px 0 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .ctrl-btn {
-      width: 100%;
-      display: flex; align-items: center; gap: 12px;
-      padding: 8px 0 8px 17px;
-      cursor: pointer; border: none; background: none;
-      color: var(--muted); font-family: var(--font); font-size: 12px;
-      font-weight: 500; transition: color 0.15s; overflow: hidden;
-      white-space: nowrap; text-align: left;
-    }
-    .ctrl-btn:hover { color: var(--text-bright); }
-    .ctrl-btn .nav-icon { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
-    .ctrl-btn svg { width: 15px; height: 15px; }
-    .ctrl-label {
-      opacity: 0; transform: translateX(-8px);
-      transition: opacity 0.2s 0.05s, transform 0.2s 0.05s;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .sidebar:hover .ctrl-label { opacity: 1; transform: translateX(0); }
-
-    /* Toggle pill */
-    .lang-toggle {
-      display: inline-flex; border-radius: 99px; overflow: hidden;
-      border: 1px solid var(--border); background: rgba(0,0,0,0.2);
-      font-size: 10px; font-family: var(--font-mono);
-    }
-    .lang-opt {
-      padding: 2px 8px; cursor: pointer; color: var(--muted);
-      transition: color 0.15s, background 0.15s; line-height: 1.6;
-    }
-    .lang-opt.active {
-      background: var(--accent-soft); color: var(--accent);
-    }
-
-    /* ── Main area ───────────────────────────── */
-    .main {
-      flex: 1;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .panel {
-      position: absolute; inset: 0;
-      z-index: 0;
-      opacity: 0; pointer-events: none;
-      transform: translateY(6px);
-      transition: opacity 0.25s ease, transform 0.28s cubic-bezier(0.2,1,0.3,1);
-    }
-    .panel.active {
-      z-index: 2;
-      opacity: 1; pointer-events: auto; transform: translateY(0);
-    }
-    /* Accent wash on body so sidebar & iframe feel tied together */
-    body {
-      background-color: var(--bg);
-      background-image: var(--accent-mesh);
-      background-attachment: fixed;
-    }
-    .main {
-      background: var(--bg);
-      position: relative;
-    }
-    .main::before {
-      display: none;
-    }
-    .panel iframe {
-      width: 100%; height: 100%; border: 0; display: block;
-    }
-
-    /* ── History panel ───────────────────────── */
-    .history-wrap {
-      height: 100%; overflow-y: auto; padding: 32px 32px 60px;
-      font-family: var(--font);
-    }
-    .history-wrap::-webkit-scrollbar { width: 4px; }
-    .history-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-
-    .history-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px;
-    }
-    .history-title {
-      font-size: 20px; font-weight: 700; letter-spacing: -0.03em;
-      color: var(--text-bright);
-    }
-    .history-title span {
-      background: var(--accent-grad);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-    }
-    .history-clear-btn {
-      font-size: 11px; font-family: var(--font-mono);
-      background: transparent; border: 1px solid var(--border);
-      color: var(--muted); padding: 5px 12px; border-radius: 6px;
-      cursor: pointer; transition: all 0.15s; letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .history-clear-btn:hover { color: var(--danger); border-color: rgba(255,45,85,0.3); }
-
-    .history-empty {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; height: 300px; gap: 14px;
-      color: var(--muted); font-size: 13px; text-align: center;
-    }
-    .history-empty-icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--accent);
-    }
-    .history-empty-icon svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-
-    .history-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .history-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 14px;
-      align-items: start;
-      transition: border-color 0.18s;
-      cursor: default;
-    }
-    .history-card:hover { border-color: var(--border-mid); }
-
-    .history-card-icon {
-      width: 34px; height: 34px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .history-card-icon.hunt {
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      color: var(--accent);
-    }
-    .history-card-icon.phish {
-      background: rgba(232,168,32,0.08);
-      border: 1px solid rgba(232,168,32,0.22);
-      color: #e8a820;
-    }
-    .history-card-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-    .history-card-body { min-width: 0; }
-    .history-card-meta {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
-    }
-    .history-card-tool {
-      font-size: 10px; font-family: var(--font-mono); font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.09em;
-    }
-    .history-card-tool.hunt { color: var(--accent); }
-    .history-card-tool.phish { color: #e8a820; }
-    .history-card-count {
-      font-size: 10px; font-family: var(--font-mono);
-      color: var(--muted);
-    }
-    .history-card-preview {
-      font-size: 11px; font-family: var(--font-mono);
-      color: var(--text); line-height: 1.55;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 100%;
-      opacity: 0.8;
-    }
-    .history-card-time {
-      font-size: 10px; font-family: var(--font-mono);
-      color: var(--muted); white-space: nowrap; padding-top: 2px;
-    }
-
-    /* ── Tweaks panel ────────────────────────── */
-    .tweaks-panel {
-      position: fixed; bottom: 20px; right: 20px; z-index: 9000;
-      width: 260px; background: var(--surface);
-      border: 1px solid var(--border-mid);
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.55);
-      display: none;
-    }
-    .tweaks-panel.open { display: block; }
-    .tweaks-title {
-      font-size: 11px; font-family: var(--font-mono); font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.1em;
-      color: var(--text-bright); margin-bottom: 16px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .tweaks-close {
-      background: none; border: none; color: var(--muted);
-      cursor: pointer; font-size: 18px; line-height: 1; padding: 0;
-    }
-    .tweaks-close:hover { color: var(--text-bright); }
-    .tweak-row { margin-bottom: 14px; }
-    .tweak-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; display: block; }
-    .tweak-opts { display: flex; gap: 6px; }
-    .tweak-opt {
-      flex: 1; padding: 7px 10px; text-align: center;
-      font-size: 11px; font-family: var(--font-mono);
-      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-      border-radius: 7px; cursor: pointer; color: var(--muted);
-      transition: all 0.15s;
-    }
-    .tweak-opt:hover { color: var(--text-bright); border-color: var(--border-mid); }
-    .tweak-opt.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-
-    /* ── Accent palette grid ─────────────────── */
-    .tweak-swatches {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-    .swatch {
-      position: relative;
-      aspect-ratio: 1 / 0.82;
-      border-radius: 8px;
-      cursor: pointer;
-      overflow: hidden;
-      background: var(--sw-bg, #333);
-      border: 1px solid var(--border);
-      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 6px 7px;
-      min-height: 46px;
-    }
-    .swatch::before {
-      /* full-bleed color wash */
-      content: '';
-      position: absolute; inset: 0;
-      background: var(--sw-wash);
-      opacity: 0.95;
-      z-index: 0;
-    }
-    .swatch::after {
-      /* bottom accent2 stripe */
-      content: '';
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      height: 4px;
-      background: var(--sw-stripe);
-      z-index: 1;
-    }
-    .swatch-name {
-      position: relative;
-      z-index: 2;
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--sw-text);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-      line-height: 1;
-    }
-    .swatch:hover {
-      transform: translateY(-1px);
-      border-color: var(--border-mid);
-    }
-    .swatch.active {
-      border-color: var(--sw-primary);
-      box-shadow: 0 0 0 2px var(--sw-primary), 0 4px 16px -6px var(--sw-primary);
-    }
-    .swatch.active .swatch-check {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .swatch-check {
-      position: absolute;
-      top: 5px; right: 5px;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--sw-primary);
-      color: var(--sw-text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transform: scale(0.6);
-      transition: opacity 0.15s, transform 0.15s cubic-bezier(0.2,1.4,0.6,1);
-      z-index: 3;
-      box-shadow: 0 0 0 1.5px rgba(0,0,0,0.25);
-    }
-    .swatch-check svg {
-      width: 8px; height: 8px;
-      stroke: currentColor;
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    body.sidebar-right .tweaks-panel { left: 20px; right: auto; }
-
-    /* Sidebar density */
-    .density-slider {
-      width: 100%; accent-color: var(--accent);
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(5px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Tooltip */
-    .nav-item[data-tip]:not(.sidebar:hover *) {
-      position: relative;
-    }
-    /* Scanlines overlay */
-    body::after {
-      content: '';
-      position: fixed; inset: 0; pointer-events: none; z-index: 999;
-      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px);
-      display: var(--scan-display, block);
-    }
-    [data-theme="light"] body::after { display: none; }
-  </style>
+/* tweaks */
+.tweaks-panel{position:fixed;bottom:18px;right:18px;z-index:9000;width:248px;
+  background:var(--elevated);border:1px solid var(--border-mid);border-radius:10px;
+  padding:16px;box-shadow:0 14px 44px rgba(0,0,0,.55);display:none}
+.tweaks-panel.open{display:block}
+.tweaks-title{font-size:10px;font-family:var(--font-mono);font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-bright);margin-bottom:14px;
+  display:flex;justify-content:space-between;align-items:center}
+.tweaks-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.tweaks-close:hover{color:var(--text-bright)}
+.tr{margin-bottom:12px}
+.tlbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;
+  margin-bottom:7px;display:block;font-family:var(--font-mono)}
+.topts{display:flex;gap:5px}
+.to{flex:1;padding:6px 8px;text-align:center;font-size:10px;font-family:var(--font-mono);
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:4px;
+  cursor:pointer;color:var(--muted);transition:all .15s}
+.to:hover{color:var(--text-bright);border-color:var(--border-mid)}
+.to.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tsw{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.sw{position:relative;aspect-ratio:1/.8;border-radius:5px;cursor:pointer;overflow:hidden;
+  border:1px solid var(--border);transition:transform .12s,border-color .12s;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:5px 6px;min-height:42px}
+.sw::before{content:'';position:absolute;inset:0;background:var(--sw-wash);opacity:.95;z-index:0}
+.sw::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--sw-stripe);z-index:1}
+.sw-name{position:relative;z-index:2;font-family:var(--font-mono);font-size:8px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--sw-text);text-shadow:0 1px 2px rgba(0,0,0,.4);line-height:1}
+.sw:hover{transform:translateY(-1px);border-color:var(--border-mid)}
+.sw.active{border-color:var(--sw-primary);box-shadow:0 0 0 2px var(--sw-primary),0 4px 14px -5px var(--sw-primary)}
+.sw.active .sw-chk{opacity:1;transform:scale(1)}
+.sw-chk{position:absolute;top:4px;right:4px;width:13px;height:13px;border-radius:50%;
+  background:var(--sw-primary);color:var(--sw-text);display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.6);transition:opacity .14s,transform .14s cubic-bezier(.2,1.4,.6,1);z-index:3}
+.sw-chk svg{width:7px;height:7px;stroke:currentColor;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+body.sb-right .tweaks-panel{left:18px;right:auto}
+</style>
 </head>
 <body>
 
-<!-- ── Sidebar ──────────────────────────────── -->
 <nav class="sidebar" id="sidebar">
-
   <div class="brand">
     <div class="brand-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/>
-        <path d="M9 12l2 2 4-4"/>
-      </svg>
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span class="hdot" id="hdot0"></span>
     </div>
     <div class="brand-text">
-      <div class="brand-name">DEFENDER XDR</div>
-      <div class="brand-sub">Arsenal v3</div>
+      <div class="brand-name">Defender XDR</div>
+      <div class="brand-sub">Arsenal v2</div>
     </div>
   </div>
 
   <nav class="nav">
-    <button class="nav-item active" id="nav-hunt" onclick="switchPanel('hunt')">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      </div>
-      <span class="nav-label" id="lbl-hunt">Hunt Query</span>
+    <button class="ni active" id="nav-hunt" onclick="switchPanel('hunt')" aria-label="Hunt Query">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+      <span class="nl" id="lbl-hunt">Hunt Query</span>
     </button>
-
-    <button class="nav-item" id="nav-phish" onclick="switchPanel('phish')">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-      </div>
-      <span class="nav-label" id="lbl-phish">Phishing Query</span>
+    <button class="ni" id="nav-phish" onclick="switchPanel('phish')" aria-label="Phishing Query">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+      <span class="nl" id="lbl-phish">Phishing Query</span>
     </button>
-
-    <div class="nav-sep"></div>
-
-    <button class="nav-item" id="nav-history" onclick="switchPanel('history')">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <span class="nav-label">
-        <span id="lbl-history">History</span>
-        <span class="nav-badge" id="history-badge" style="display:none">0</span>
-      </span>
+    <div class="nsep"></div>
+    <button class="ni" id="nav-history" onclick="switchPanel('history')" aria-label="History">
+      <div class="ni-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <span class="nl"><span id="lbl-history">History</span><span class="nbadge" id="history-badge" style="display:none">0</span></span>
     </button>
   </nav>
 
-  <div class="sidebar-foot">
-    <!-- Theme toggle -->
-    <button class="ctrl-btn" id="btn-theme" onclick="toggleTheme()">
-      <div class="nav-icon">
-        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      </div>
-      <span class="ctrl-label" id="lbl-theme">Dark Mode</span>
-    </button>
-
-    <!-- Language toggle -->
-    <div class="ctrl-btn" id="btn-lang" style="cursor:default;">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-      </div>
-      <span class="ctrl-label">
-        <div class="lang-toggle" id="lang-toggle">
-          <div class="lang-opt active" data-lang="en" onclick="setLang('en')">EN</div>
-          <div class="lang-opt" data-lang="tr" onclick="setLang('tr')">TR</div>
-        </div>
-      </span>
+  <div class="nsep" style="margin:0 10px;width:calc(100% - 20px)"></div>
+  <div class="health-row">
+    <span class="hdot2" id="hdot2"></span>
+    <div class="hdetail">
+      <div class="hlabel">BROKER STATUS</div>
+      <div class="hprovs" id="hprovs"></div>
     </div>
+  </div>
 
-    <!-- Tweaks -->
-    <button class="ctrl-btn" onclick="document.getElementById('tweaks').classList.toggle('open')">
-      <div class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M20.66 16a10 10 0 0 0 0-8M3.34 8a10 10 0 0 0 0 8"/>
-        </svg>
-      </div>
-      <span class="ctrl-label" id="lbl-tweaks">Tweaks</span>
+  <div class="sfoot">
+    <button class="cb" id="btn-theme" onclick="toggleTheme()" aria-label="Toggle theme">
+      <div class="ni-icon"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+      <span class="cl" id="lbl-theme">Light Mode</span>
+    </button>
+    <div class="cb" style="cursor:default">
+      <div class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <span class="cl"><div class="ltog" id="lang-toggle"><div class="lo active" data-lang="en" onclick="setLang('en')">EN</div><div class="lo" data-lang="tr" onclick="setLang('tr')">TR</div></div></span>
+    </div>
+    <button class="cb" onclick="document.getElementById('tweaks').classList.toggle('open')" aria-label="Tweaks">
+      <div class="ni-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M20.66 16a10 10 0 0 0 0-8M3.34 8a10 10 0 0 0 0 8"/></svg></div>
+      <span class="cl" id="lbl-tweaks">Tweaks</span>
     </button>
   </div>
 </nav>
 
-<!-- ── Main panels ───────────────────────────── -->
 <main class="main">
-
   <div class="panel active" id="panel-hunt">
-    <iframe src="src/indicators.html" id="frame-hunt"></iframe>
+    <iframe src="src/indicators.html" id="frame-hunt" title="Indicator Composer"></iframe>
   </div>
-
   <div class="panel" id="panel-phish">
-    <iframe src="src/phishing.html" id="frame-phish"></iframe>
+    <iframe src="src/phishing.html" id="frame-phish" title="Phishing Query Helper"></iframe>
   </div>
-
   <div class="panel" id="panel-history">
-    <div class="history-wrap">
-      <div class="history-head">
-        <div class="history-title" id="hist-title"><span>Query</span> History</div>
-        <button class="history-clear-btn" id="lbl-clear" onclick="clearHistory()">Clear All</button>
+    <div class="hwrap">
+      <div class="hhead">
+        <div class="htitle" id="hist-title"><span>Query</span> History</div>
+        <button class="hclear" id="lbl-clear" onclick="clearHistory()">Clear All</button>
       </div>
       <div id="history-content"></div>
     </div>
   </div>
-
 </main>
 
-<!-- ── Tweaks ────────────────────────────────── -->
-<div class="tweaks-panel" id="tweaks">
-  <div class="tweaks-title">
-    Tweaks
-    <button class="tweaks-close" onclick="document.getElementById('tweaks').classList.remove('open')">×</button>
-  </div>
-
-  <div class="tweak-row">
-    <span class="tweak-label" id="tweak-lbl-accent">Accent Color</span>
-    <div class="tweak-swatches" id="accent-swatches"></div>
-  </div>
-
-  <div class="tweak-row">
-    <span class="tweak-label" id="tweak-lbl-scan">Scanlines</span>
-    <div class="tweak-opts">
-      <div class="tweak-opt active" onclick="setScanlines(true,this)" id="lbl-scan-on">On</div>
-      <div class="tweak-opt" onclick="setScanlines(false,this)" id="lbl-scan-off">Off</div>
-    </div>
-  </div>
-
-  <div class="tweak-row">
-    <span class="tweak-label" id="tweak-lbl-sidebar">Sidebar</span>
-    <div class="tweak-opts">
-      <div class="tweak-opt active" id="lbl-sidebar-left" data-sidebar-side="left" onclick="setSidebarSide('left',this)">Left</div>
-      <div class="tweak-opt" id="lbl-sidebar-right" data-sidebar-side="right" onclick="setSidebarSide('right',this)">Right</div>
-    </div>
-  </div>
+<div class="tweaks-panel" id="tweaks" role="dialog" aria-label="Tweaks">
+  <div class="tweaks-title">Tweaks<button class="tweaks-close" onclick="document.getElementById('tweaks').classList.remove('open')" aria-label="Close">×</button></div>
+  <div class="tr"><span class="tlbl" id="tweak-lbl-accent">Accent Color</span><div class="tsw" id="accent-swatches"></div></div>
+  <div class="tr"><span class="tlbl" id="tweak-lbl-scan">Scanlines</span><div class="topts"><div class="to active" onclick="setScanlines(true,this)" id="lbl-scan-on">On</div><div class="to" onclick="setScanlines(false,this)" id="lbl-scan-off">Off</div></div></div>
+  <div class="tr"><span class="tlbl" id="tweak-lbl-sidebar">Sidebar</span><div class="topts"><div class="to active" id="lbl-sidebar-left" data-sidebar-side="left" onclick="setSidebarSide('left',this)">Left</div><div class="to" id="lbl-sidebar-right" data-sidebar-side="right" onclick="setSidebarSide('right',this)">Right</div></div></div>
 </div>
 
 <script>
-  /* ── State ──────────────────────────────────── */
-  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "accent": "watermelon",
-    "scanlines": true,
-    "sidebar": "left",
-    "theme": "light",
-    "lang": "en"
-  }/*EDITMODE-END*/;
+/* ── State ─────────────────────────────────────── */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "havana",
+  "scanlines": true,
+  "sidebar": "left",
+  "theme": "dark",
+  "lang": "en"
+}/*EDITMODE-END*/;
 
-  const HISTORY_KEY = 'arsenal_history_v1';
-  let currentPanel = 'hunt';
-  let lang = localStorage.getItem('arsenal_lang') || TWEAK_DEFAULTS.lang;
-  let theme = localStorage.getItem('arsenal_theme') || TWEAK_DEFAULTS.theme;
-  let scanlines = localStorage.getItem('arsenal_scanlines') !== 'false';
-  let accentKey = localStorage.getItem('arsenal_accent') || TWEAK_DEFAULTS.accent;
-  let sidebarSide = localStorage.getItem('arsenal_sidebar_side') || TWEAK_DEFAULTS.sidebar;
+const HISTORY_KEY='arsenal_history_v1';
+let currentPanel='hunt';
+let lang=localStorage.getItem('arsenal_lang')||TWEAK_DEFAULTS.lang;
+let theme=localStorage.getItem('arsenal_theme')||TWEAK_DEFAULTS.theme;
+let scanlines=localStorage.getItem('arsenal_scanlines')!=='false';
+let accentKey=localStorage.getItem('arsenal_accent')||TWEAK_DEFAULTS.accent;
+let sidebarSide=localStorage.getItem('arsenal_sidebar_side')||TWEAK_DEFAULTS.sidebar;
 
-  /* ── Labels ─────────────────────────────────── */
-  const LABELS = {
-    en: {
-      hunt: 'Hunt Query', phish: 'Phishing Query', history: 'History',
-      clear: 'Clear All', theme: 'Dark Mode', tweaks: 'Tweaks',
-      histTitle: ['Query', 'History'], histEmpty: 'No queries saved yet.\nGenerate a query to see it here.',
-      huntTool: 'HUNT', phishTool: 'PHISH',
-      tweak_accent: 'Accent Color', tweak_scan: 'Scanlines', tweak_sidebar: 'Sidebar',
-      scan_on: 'On', scan_off: 'Off', sidebar_left: 'Left', sidebar_right: 'Right',
-    },
-    tr: {
-      hunt: 'Tehdit Avı', phish: 'Kimlik Avı Sorgusu', history: 'Geçmiş',
-      clear: 'Tümünü Temizle', theme: 'Koyu Mod', tweaks: 'Ayarlar',
-      histTitle: ['Sorgu', 'Geçmişi'], histEmpty: 'Henüz kaydedilmiş sorgu yok.\nGeçmişte görmek için bir sorgu oluşturun.',
-      huntTool: 'TEHDİT AVI', phishTool: 'KİMLİK AVI',
-      tweak_accent: 'Vurgu Rengi', tweak_scan: 'Tarama Çizgileri', tweak_sidebar: 'Kenar Çubuğu',
-      scan_on: 'Açık', scan_off: 'Kapalı', sidebar_left: 'Sol', sidebar_right: 'Sağ',
+const LABELS={
+  en:{hunt:'Hunt Query',phish:'Phishing Query',history:'History',clear:'Clear All',
+    theme_d:'Light Mode',theme_l:'Dark Mode',tweaks:'Tweaks',
+    histTitle:['Query','History'],histEmpty:'No queries saved yet.\nGenerate a query to see it here.',
+    huntTool:'HUNT',phishTool:'PHISH',
+    ta:'Accent Color',ts:'Scanlines',tsb:'Sidebar',son:'On',soff:'Off',sl:'Left',sr:'Right'},
+  tr:{hunt:'Tehdit Avı',phish:'Kimlik Avı Sorgusu',history:'Geçmiş',clear:'Tümünü Temizle',
+    theme_d:'Açık Mod',theme_l:'Koyu Mod',tweaks:'Ayarlar',
+    histTitle:['Sorgu','Geçmişi'],histEmpty:'Henüz kaydedilmiş sorgu yok.\nBir sorgu oluşturun.',
+    huntTool:'TEHDİT AVI',phishTool:'KİMLİK AVI',
+    ta:'Vurgu Rengi',ts:'Tarama Çizgileri',tsb:'Kenar Çubuğu',son:'Açık',soff:'Kapalı',sl:'Sol',sr:'Sağ'}
+};
+
+const AMOLED={bg:'#000000',surface:'#080808'};
+const ACCENT_PALETTES=[
+  {key:'obsidian',  label:'OBSIDIAN',  angle:145,dark:{p:'#e4e4e7',m:'#a1a1aa',s:'#52525b',on:'#0a0a0a',solid:'#d4d4d8'},light:{p:'#0f172a',m:'#334155',s:'#1e293b',on:'#fafafa',solid:'#18181b'}},
+  {key:'havana',    label:'HAVANA',    angle:120,dark:{p:'#fbbf77',m:'#e89a5c',s:'#c26846',on:'#1a0e06',solid:'#e89a5c'},light:{p:'#659999',m:'#c87b2a',s:'#f4791f',on:'#fff',solid:'#d06a1e'}},
+  {key:'meridian',  label:'MERIDIAN',  angle:115,dark:{p:'#67e8f9',m:'#60a5fa',s:'#a78bfa',on:'#050b1f',solid:'#60a5fa'},light:{p:'#614385',m:'#4a4a8f',s:'#516395',on:'#fff',solid:'#5a4a8f'}},
+  {key:'watermelon',label:'WATERMELON',angle:135,dark:{p:'#fb7185',m:'#f472b6',s:'#86efac',on:'#1a0509',solid:'#f472b6'},light:{p:'#dd3e54',m:'#e07050',s:'#6be585',on:'#fff',solid:'#dd3e54'}},
+  {key:'aurora',    label:'AURORA',    angle:150,dark:{p:'#86efac',m:'#60a5fa',s:'#c084fc',on:'#03150e',solid:'#60a5fa'},light:{p:'#1f4037',m:'#3d8b74',s:'#99f2c8',on:'#fff',solid:'#2d6a5a'}},
+  {key:'shifter',   label:'SHIFTER',   angle:125,dark:{p:'#f0abfc',m:'#e879f9',s:'#fb7185',on:'#1a0514',solid:'#e879f9'},light:{p:'#bc4e9c',m:'#d93880',s:'#f80759',on:'#fff',solid:'#c93a8a'}},
+];
+const ACCENT_MAP={};
+ACCENT_PALETTES.forEach(p=>{ACCENT_MAP[p.key]=p;});
+const LEGACY={vesper:'shifter',champagne:'havana',emerald:'aurora',sapphire:'meridian',rosegold:'watermelon',copper:'shifter',platinum:'obsidian',amber:'havana',cyan:'meridian',matrix:'aurora',crimson:'watermelon',amethyst:'meridian',mono:'obsidian',amoled:'obsidian',ink:'obsidian',violet:'meridian',ocean:'meridian',black:'obsidian',graphite:'obsidian',arctic:'meridian',ion:'aurora',ember:'shifter',pulse:'watermelon'};
+const normAcc=k=>ACCENT_MAP[k]?k:(LEGACY[k]||TWEAK_DEFAULTS.accent);
+
+function hexRgb(h){const v=h.replace('#','');const n=parseInt(v.length===3?v.split('').map(c=>c+c).join(''):v,16);return[(n>>16)&255,(n>>8)&255,n&255];}
+function rgba(h,a){const[r,g,b]=hexRgb(h);return`rgba(${r},${g},${b},${a})`;}
+
+function resolveAcc(key){
+  const p=ACCENT_MAP[key]||ACCENT_MAP.obsidian;
+  const il=theme==='light';const v=il?p.light:p.dark;const ang=p.angle||135;
+  const solid=v.solid||(il?v.m:v.p);
+  const grad=`linear-gradient(${ang}deg,${v.p} 0%,${v.m} 52%,${v.s} 100%)`;
+  return{accent:solid,accent2:v.s,accentMid:v.m,glow:rgba(solid,.22),soft:rgba(solid,il?.10:.08),border:rgba(solid,.26),grad,onAccent:v.on,primary:v.p,secondary:v.s,mid:v.m};
+}
+
+function renderSwatches(){
+  const host=document.getElementById('accent-swatches');if(!host)return;
+  const il=theme==='light';
+  host.innerHTML=ACCENT_PALETTES.map(p=>{
+    const v=il?p.light:p.dark;const ang=p.angle||135;
+    const wash=`linear-gradient(${ang}deg,${v.p} 0%,${v.m} 52%,${v.s} 100%)`;
+    const pri=v.solid||(il?v.m:v.p);
+    const style=[`--sw-wash:${wash}`,`--sw-stripe:${v.s}`,`--sw-primary:${pri}`,`--sw-text:${v.on}`].join(';');
+    return`<div class="sw${p.key===accentKey?' active':''}" style="${style}" onclick="setAccent('${p.key}')" title="${p.label}">
+      <div class="sw-chk"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+      <div class="sw-name">${p.label}</div></div>`;
+  }).join('');
+}
+
+function init(){
+  const na=normAcc(accentKey);if(na!==accentKey){accentKey=na;localStorage.setItem('arsenal_accent',accentKey);}
+  applyTheme(theme);applyLang(lang);applyAccent(accentKey);applyScanlines(scanlines);applySidebarSide(sidebarSide);
+  renderHistory();
+  const saved=localStorage.getItem('arsenal_panel');if(saved)switchPanel(saved,true);
+  checkHealth();setInterval(checkHealth,30000);
+}
+
+function switchPanel(id,silent){
+  currentPanel=id;if(!silent)localStorage.setItem('arsenal_panel',id);
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id)?.classList.add('active');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  if(id==='history')renderHistory();
+}
+
+function toggleTheme(){theme=theme==='dark'?'light':'dark';localStorage.setItem('arsenal_theme',theme);applyTheme(theme);window.parent?.postMessage({type:'__edit_mode_set_keys',edits:{theme}},'*');}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const icon=document.getElementById('theme-icon');
+  if(t==='light')icon.innerHTML='<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  else icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  const L=LABELS[lang];
+  document.getElementById('lbl-theme').textContent=t==='dark'?L.theme_d:L.theme_l;
+  if(typeof accentKey!=='undefined')applyAccent(accentKey);
+  broadcastTheme();
+}
+
+function setLang(l){lang=l;localStorage.setItem('arsenal_lang',l);applyLang(l);broadcastLang(l);}
+function broadcastLang(l){['frame-hunt','frame-phish'].forEach(id=>{try{document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal_lang',lang:l},'*');}catch(e){}});}
+function broadcastTheme(){['frame-hunt','frame-phish'].forEach(id=>{try{document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal:theme',accent:accentKey,theme},'*');}catch(e){}});}
+function broadcastScanlines(){['frame-hunt','frame-phish'].forEach(id=>{try{document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal:scanlines',enabled:scanlines},'*');}catch(e){}});}
+window.addEventListener('message',e=>{if(e.data?.type==='arsenal:ready'){broadcastTheme();broadcastScanlines();}});
+['frame-hunt','frame-phish'].forEach(id=>{
+  const f=document.getElementById(id);
+  if(f)f.addEventListener('load',()=>{try{f.contentWindow.postMessage({type:'arsenal_lang',lang},'*');f.contentWindow.postMessage({type:'arsenal:theme',accent:accentKey,theme},'*');f.contentWindow.postMessage({type:'arsenal:scanlines',enabled:scanlines},'*');}catch(e){}});
+});
+
+function applyLang(l){
+  const L=LABELS[l];
+  document.getElementById('lbl-hunt').textContent=L.hunt;
+  document.getElementById('lbl-phish').textContent=L.phish;
+  document.getElementById('lbl-history').textContent=L.history;
+  document.getElementById('lbl-clear').textContent=L.clear;
+  document.getElementById('lbl-tweaks').textContent=L.tweaks;
+  document.getElementById('hist-title').innerHTML=`<span>${L.histTitle[0]}</span> ${L.histTitle[1]}`;
+  document.getElementById('tweak-lbl-accent').textContent=L.ta;
+  document.getElementById('tweak-lbl-scan').textContent=L.ts;
+  document.getElementById('tweak-lbl-sidebar').textContent=L.tsb;
+  document.getElementById('lbl-scan-on').textContent=L.son;
+  document.getElementById('lbl-scan-off').textContent=L.soff;
+  document.getElementById('lbl-sidebar-left').textContent=L.sl;
+  document.getElementById('lbl-sidebar-right').textContent=L.sr;
+  applyTheme(theme);
+  document.querySelectorAll('.lo').forEach(o=>o.classList.toggle('active',o.dataset.lang===l));
+  renderHistory();
+}
+
+function setAccent(key){key=normAcc(key);accentKey=key;localStorage.setItem('arsenal_accent',key);applyAccent(key);window.parent?.postMessage({type:'__edit_mode_set_keys',edits:{accent:key}},'*');}
+function applyAccent(key){
+  key=normAcc(key);accentKey=key;try{localStorage.setItem('arsenal_accent',key);}catch(e){}
+  const a=resolveAcc(key);const r=document.documentElement.style;
+  r.setProperty('--accent',a.accent);r.setProperty('--accent2',a.accent2);r.setProperty('--accent-glow',a.glow);
+  r.setProperty('--accent-soft',a.soft);r.setProperty('--accent-border',a.border);r.setProperty('--accent-grad',a.grad);
+  if(theme==='dark'){r.setProperty('--bg',AMOLED.bg);r.setProperty('--surface',AMOLED.surface);}
+  else{r.removeProperty('--bg');r.removeProperty('--surface');}
+  renderSwatches();broadcastTheme();
+}
+
+function setScanlines(val){scanlines=val;localStorage.setItem('arsenal_scanlines',val);applyScanlines(val);
+  document.querySelectorAll('#lbl-scan-on,#lbl-scan-off').forEach(o=>o.classList.toggle('active',(o.id==='lbl-scan-on')===val));}
+function applyScanlines(val){scanlines=!!val;document.body.classList.toggle('no-scan',!val);broadcastScanlines();}
+
+function setSidebarSide(side){sidebarSide=side==='right'?'right':'left';localStorage.setItem('arsenal_sidebar_side',sidebarSide);applySidebarSide(sidebarSide);}
+function applySidebarSide(side){
+  sidebarSide=side==='right'?'right':'left';
+  document.body.classList.toggle('sb-right',sidebarSide==='right');
+  document.querySelectorAll('[data-sidebar-side]').forEach(o=>o.classList.toggle('active',o.dataset.sidebarSide===sidebarSide));
+  document.body.style.flexDirection=sidebarSide==='right'?'row-reverse':'row';
+}
+
+/* ── Health check ────────────────────────────── */
+async function checkHealth(){
+  const dots=[document.getElementById('hdot0'),document.getElementById('hdot2')];
+  const provEl=document.getElementById('hprovs');
+  const clearDots=()=>dots.forEach(x=>{if(x)x.classList.remove('up','dg','dn');});
+  try{
+    const res=await fetch('http://127.0.0.1:8787/health',{signal:AbortSignal.timeout(3000)});
+    if(!res.ok)throw new Error(res.status);
+    const d=await res.json();
+    const status=(d&&(d.status||(d.ok?'ok':'down')))||'down';
+    const cls=status==='ok'?'up':status==='degraded'?'dg':'dn';
+    const degraded=d&&d.providers
+      ? Object.entries(d.providers).filter(([,v])=>v==='disabled'||v==='error'||v?.status==='disabled'||v?.status==='error').map(([k,v])=>`${k}:${typeof v==='string'?v:v.status}`)
+      : [];
+    const title=status==='ok'
+      ? 'Broker: online (provider checks passing)'
+      : status==='degraded'
+        ? `Broker: degraded${degraded.length?` (${degraded.join(', ')})`:''}`
+        : 'Broker: down';
+    clearDots();
+    dots.forEach(x=>{if(x){x.classList.add(cls);x.title=title;}});
+    if(provEl&&d.providers){
+      provEl.innerHTML=Object.entries(d.providers).map(([k,v])=>{
+        const ok=v==='ok'||v===true||v?.configured===true||v?.status==='ok'||v?.keyPresent===true;
+        return`<span class="pk ${ok?'ok':'no'}" title="${k}">${k.slice(0,3).toUpperCase()}</span>`;
+      }).join('');
     }
-  };
-
-  const AMOLED_BG = { bg:'#000000', surface:'#080808', sidebarBg:'rgba(0,0,0,0.98)' };
-
-  /* ── Accent palettes — 6 harmonic, AMOLED + Ink White variants ──
-     Each palette: label + dark(AMOLED) + light(Ink) config.
-     Tokens applied: --accent, --accent2, --accent-glow, --accent-soft,
-                     --accent-border, --accent-grad (2-stop, 135°).          */
-  /* ── Premium palette set ───────────────────────────────────────
-     Each palette is a DUAL-TONE gradient (primary → mid → secondary)
-     across opposing hues — inspired by sunset / fire-ice / gem
-     palettes. Dark = muted luxury; Light = vivid dual-tone gradients
-     (teal↔ember, crimson↔lime, etc.). Angle per palette so the
-     gradient has character, not a default 135° cliché.                 */
-  const ACCENT_PALETTES = [
-    { key:'obsidian',  label:'OBSIDIAN',  angle: 145,
-      dark:  { primary:'#e4e4e7', mid:'#a1a1aa', secondary:'#52525b', onPrimary:'#0a0a0a', solid:'#d4d4d8' },
-      light: { primary:'#0f172a', mid:'#334155', secondary:'#1e293b', onPrimary:'#fafafa', solid:'#18181b' } },
-
-    { key:'havana',    label:'HAVANA',    angle: 120,
-      dark:  { primary:'#fbbf77', mid:'#e89a5c', secondary:'#c26846', onPrimary:'#1a0e06', solid:'#e89a5c' },
-      light: { primary:'#659999', mid:'#c87b2a', secondary:'#f4791f', onPrimary:'#ffffff', solid:'#d06a1e' } },
-
-    { key:'meridian',  label:'MERIDIAN',  angle: 115,
-      dark:  { primary:'#67e8f9', mid:'#60a5fa', secondary:'#a78bfa', onPrimary:'#050b1f', solid:'#60a5fa' },
-      light: { primary:'#614385', mid:'#4a4a8f', secondary:'#516395', onPrimary:'#ffffff', solid:'#5a4a8f' } },
-
-    { key:'watermelon', label:'WATERMELON', angle: 135,
-      dark:  { primary:'#fb7185', mid:'#f472b6', secondary:'#86efac', onPrimary:'#1a0509', solid:'#f472b6' },
-      light: { primary:'#dd3e54', mid:'#e07050', secondary:'#6be585', onPrimary:'#ffffff', solid:'#dd3e54' } },
-
-    { key:'aurora',    label:'AURORA',    angle: 150,
-      dark:  { primary:'#86efac', mid:'#60a5fa', secondary:'#c084fc', onPrimary:'#03150e', solid:'#60a5fa' },
-      light: { primary:'#1f4037', mid:'#3d8b74', secondary:'#99f2c8', onPrimary:'#ffffff', solid:'#2d6a5a' } },
-
-    { key:'shifter',   label:'SHIFTER',   angle: 125,
-      dark:  { primary:'#f0abfc', mid:'#e879f9', secondary:'#fb7185', onPrimary:'#1a0514', solid:'#e879f9' },
-      light: { primary:'#bc4e9c', mid:'#d93880', secondary:'#f80759', onPrimary:'#ffffff', solid:'#c93a8a' } },
-  ];
-  const ACCENT_MAP = {};
-  ACCENT_PALETTES.forEach(p => { ACCENT_MAP[p.key] = p; });
-
-  /* Legacy keys → nearest new premium palette. */
-  const LEGACY_ACCENTS = {
-    vesper:'shifter',
-    champagne:'havana', emerald:'aurora', sapphire:'meridian',
-    rosegold:'watermelon', copper:'shifter', platinum:'obsidian',
-    amber:'havana', cyan:'meridian', matrix:'aurora',
-    crimson:'watermelon', amethyst:'meridian',
-    hunt01:'havana', hunt02:'meridian', hunt03:'meridian',
-    hunt04:'meridian', hunt05:'watermelon', hunt06:'aurora',
-    hunt07:'meridian',
-    mono:'obsidian', amoled:'obsidian', ink:'obsidian',
-    violet:'meridian', ocean:'meridian', black:'obsidian',
-    graphite:'obsidian', arctic:'meridian', ion:'aurora',
-    ember:'shifter', pulse:'watermelon',
-  };
-  function normalizeAccentKey(key){
-    return ACCENT_MAP[key] ? key : (LEGACY_ACCENTS[key] || TWEAK_DEFAULTS.accent);
+  }catch(e){
+    clearDots();
+    dots.forEach(x=>{if(x){x.classList.add('dn');x.title='Broker: unreachable';}});
+    if(provEl)provEl.innerHTML='';
   }
+}
 
-  function hexToRgb(h){
-    const v = h.replace('#','');
-    const full = v.length === 3 ? v.split('').map(c=>c+c).join('') : v;
-    const n = parseInt(full, 16);
-    return [(n>>16)&255, (n>>8)&255, n&255];
-  }
-  function rgba(hex, a){ const [r,g,b] = hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+/* ── History ─────────────────────────────────── */
+function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch(e){return[];}}
+function saveHistory(h){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,40)));}catch(e){}}
+function addHistory(entry){
+  const h=getHistory();const last=h[0];
+  if(last&&last.tool===entry.tool&&last.query===entry.query&&last.preview===entry.preview){if(Number(entry.ts||Date.now())-Number(last.ts||0)<2000)return;}
+  h.unshift(entry);saveHistory(h);
+  const b=document.getElementById('history-badge');const c=h.length;b.textContent=c;b.style.display=c>0?'':'none';
+  if(currentPanel==='history')renderHistory();
+}
+function clearHistory(){
+  if(!confirm(lang==='tr'?'Tüm geçmişi silmek istiyor musunuz?':'Clear all history?'))return;
+  localStorage.removeItem(HISTORY_KEY);document.getElementById('history-badge').style.display='none';renderHistory();
+}
+function relTime(ts){
+  const d=Date.now()-ts,s=Math.round(d/1000);if(s<60)return s+'s ago';
+  const m=Math.round(s/60);if(m<60)return m+'m ago';const h=Math.round(m/60);if(h<24)return h+'h ago';
+  return new Date(ts).toLocaleDateString();
+}
+function loadHistoryEntry(i){
+  const h=getHistory();const e=h[i];if(!e)return;
+  switchPanel(e.tool);
+  setTimeout(()=>{try{document.getElementById(e.tool==='hunt'?'frame-hunt':'frame-phish')?.contentWindow?.postMessage({type:'arsenal_load_query',query:e.query||'',indicatorList:e.indicatorList||null,formData:e.formData||null},'*');}catch(x){}},180);
+}
+function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderHistory(){
+  const h=getHistory();const el=document.getElementById('history-content');const L=LABELS[lang];
+  const b=document.getElementById('history-badge');b.textContent=h.length;b.style.display=h.length>0?'':'none';
+  if(!h.length){el.innerHTML=`<div class="hempty"><div class="hempty-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="white-space:pre-line;line-height:1.7">${L.histEmpty}</div></div>`;return;}
+  const hi=`<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
+  const pi=`<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+  el.innerHTML=`<div class="hlist">${h.map((e,i)=>`<div class="hcard" onclick="loadHistoryEntry(${i})" title="${lang==='tr'?'Yükle':'Load'}">
+    <div class="hcard-icon ${e.tool}">${e.tool==='hunt'?hi:pi}</div>
+    <div class="hcard-body">
+      <div class="hcard-meta"><span class="hcard-tool ${e.tool}">${e.tool==='hunt'?L.huntTool:L.phishTool}</span>${e.count?`<span class="hcard-count">${e.count} indicators</span>`:''}</div>
+      <div class="hcard-preview">${escH(e.preview||'')}</div>
+    </div>
+    <div class="hcard-time">${relTime(e.ts)}</div>
+  </div>`).join('')}</div>`;
+}
 
-  function resolveAccentConfig(key){
-    const p = ACCENT_MAP[key] || ACCENT_MAP.obsidian;
-    const isLight = (theme === 'light');
-    const v = isLight ? p.light : p.dark;
-    const angle = p.angle || 135;
-    // SOLID token: a single representative color (for borders/text/fills
-    // where a gradient doesn't make sense). Use `mid` on light mode for
-    // punch, `primary` on dark for legibility on black.
-    const solid   = v.solid || (isLight ? v.mid : v.primary);
-    const solid2  = v.secondary;
-    // Multi-stop gradient: primary → mid → secondary for dual-tone depth.
-    const grad    = `linear-gradient(${angle}deg, ${v.primary} 0%, ${v.mid} 52%, ${v.secondary} 100%)`;
-    // Subtle mesh wash used for backgrounds (three soft radial blobs).
-    const meshAlpha = isLight ? 0.18 : 0.14;
-    const mesh    = `radial-gradient(ellipse at 0% 0%, ${rgba(v.primary, meshAlpha)} 0%, transparent 55%),`
-                  + `radial-gradient(ellipse at 100% 30%, ${rgba(v.secondary, meshAlpha)} 0%, transparent 55%),`
-                  + `radial-gradient(ellipse at 50% 120%, ${rgba(v.mid, meshAlpha*0.8)} 0%, transparent 50%)`;
-    return {
-      accent:   solid,
-      accent2:  solid2,
-      accentMid: v.mid,
-      glow:     rgba(solid, 0.22),
-      soft:     rgba(solid, isLight ? 0.10 : 0.08),
-      border:   rgba(solid, 0.26),
-      grad,
-      mesh,
-      angle,
-      onAccent: v.onPrimary,
-      palette:  p,
-      primary:  v.primary,
-      secondary:v.secondary,
-      mid:      v.mid,
-    };
-  }
+/* ── PostMessage bridge ──────────────────────── */
+window.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='arsenal_query')addHistory({tool:e.data.tool,preview:e.data.preview,query:e.data.query||'',count:e.data.count,ts:e.data.ts||Date.now(),indicatorList:e.data.indicatorList||null,formData:e.data.formData||null});
+});
+window.addEventListener('message',e=>{
+  if(e.data?.type==='__activate_edit_mode')document.getElementById('tweaks').classList.add('open');
+  if(e.data?.type==='__deactivate_edit_mode')document.getElementById('tweaks').classList.remove('open');
+});
+window.parent.postMessage({type:'__edit_mode_available'},'*');
 
-  /* Render the swatch grid dynamically */
-  function renderSwatches(){
-    const host = document.getElementById('accent-swatches');
-    if(!host) return;
-    const isLight = (theme === 'light');
-    host.innerHTML = ACCENT_PALETTES.map(p => {
-      const v = isLight ? p.light : p.dark;
-      const angle = p.angle || 135;
-      // wash: 3-stop dual-tone gradient showing the palette's full range
-      const wash = `linear-gradient(${angle}deg, ${v.primary} 0%, ${v.mid} 52%, ${v.secondary} 100%)`;
-      const primary = v.solid || (isLight ? v.mid : v.primary);
-      const style = [
-        `--sw-wash:${wash}`,
-        `--sw-stripe:${v.secondary}`,
-        `--sw-primary:${primary}`,
-        `--sw-text:${v.onPrimary}`,
-      ].join(';');
-      return `<div class="swatch${p.key===accentKey?' active':''}" data-accent="${p.key}" style="${style}" onclick="setAccent('${p.key}',this)" title="${p.label}">
-        <div class="swatch-check"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
-        <div class="swatch-name">${p.label}</div>
-      </div>`;
-    }).join('');
-  }
+/* ── Scanlines style patch ───────────────────── */
+const _ss=document.createElement('style');_ss.textContent='.no-scan::after{display:none!important}';document.head.appendChild(_ss);
 
-  // Harmonize sidebar tint with iframe feel by lightly blending the surface with the accent
-  function harmonizeSurface(a){
-    const r = document.documentElement.style;
-    // subtle accent wash across main bg so sidebar feels connected to iframe content
-    const wash = a.soft.replace(/0\.09\)/, '0.05)').replace(/0\.08\)/, '0.04)');
-    r.setProperty('--bg-wash', wash);
-  }
-
-  /* ── Init ───────────────────────────────────── */
-  function init(){
-    const normalizedAccent = normalizeAccentKey(accentKey);
-    if(normalizedAccent !== accentKey){
-      accentKey = normalizedAccent;
-      localStorage.setItem('arsenal_accent', accentKey);
-    }
-    applyTheme(theme);
-    applyLang(lang);
-    applyAccent(accentKey);
-    applyScanlines(scanlines);
-    applySidebarSide(sidebarSide);
-    renderHistory();
-    // restore last panel
-    const saved = localStorage.getItem('arsenal_panel');
-    if(saved) switchPanel(saved, true);
-  }
-
-  /* ── Panel switching ────────────────────────── */
-  function switchPanel(id, silent){
-    currentPanel = id;
-    if(!silent) localStorage.setItem('arsenal_panel', id);
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-' + id)?.classList.add('active');
-    document.getElementById('nav-' + id)?.classList.add('active');
-    if(id === 'history') renderHistory();
-  }
-
-  /* ── Theme ──────────────────────────────────── */
-  function toggleTheme(){
-    theme = theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('arsenal_theme', theme);
-    applyTheme(theme);
-    window.parent?.postMessage({type:'__edit_mode_set_keys', edits:{theme}}, '*');
-  }
-  function applyTheme(t){
-    document.documentElement.setAttribute('data-theme', t);
-    const icon = document.getElementById('theme-icon');
-    if(t === 'light'){
-      icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
-    } else {
-      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-    }
-    const lbl = document.getElementById('lbl-theme');
-    lbl.textContent = t === 'dark' ? (lang==='tr'?'Koyu Mod':'Dark Mode') : (lang==='tr'?'Açık Mod':'Light Mode');
-    // re-apply accent so AMOLED swaps bg/text vars for current theme
-    if(typeof accentKey !== 'undefined') applyAccent(accentKey);
-    broadcastTheme();
-  }
-
-  /* ── Language ───────────────────────────────── */
-  function setLang(l){
-    lang = l;
-    localStorage.setItem('arsenal_lang', l);
-    applyLang(l);
-    broadcastLang(l);
-  }
-  function broadcastLang(l){
-    ['frame-hunt','frame-phish'].forEach(id => {
-      try { document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal_lang', lang:l}, '*'); }
-      catch(e){}
-    });
-  }
-  function broadcastTheme(){
-    ['frame-hunt','frame-phish'].forEach(id => {
-      try { document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal:theme', accent:accentKey, theme}, '*'); }
-      catch(e){}
-    });
-  }
-  function broadcastScanlines(){
-    ['frame-hunt','frame-phish'].forEach(id => {
-      try { document.getElementById(id)?.contentWindow?.postMessage({type:'arsenal:scanlines', enabled:scanlines}, '*'); }
-      catch(e){}
-    });
-  }
-  // Listen for iframe ready pings to push initial theme
-  window.addEventListener('message', e => {
-    if(e.data?.type === 'arsenal:ready') {
-      broadcastTheme();
-      broadcastScanlines();
-    }
-  });
-  // Send lang + theme when iframes finish loading
-  ['frame-hunt','frame-phish'].forEach(id => {
-    const frame = document.getElementById(id);
-    if(frame) frame.addEventListener('load', () => {
-      try {
-        frame.contentWindow.postMessage({type:'arsenal_lang', lang}, '*');
-        frame.contentWindow.postMessage({type:'arsenal:theme', accent:accentKey, theme}, '*');
-        frame.contentWindow.postMessage({type:'arsenal:scanlines', enabled:scanlines}, '*');
-      } catch(e){}
-    });
-  });
-  function applyLang(l){
-    const L = LABELS[l];
-    document.getElementById('lbl-hunt').textContent = L.hunt;
-    document.getElementById('lbl-phish').textContent = L.phish;
-    document.getElementById('lbl-history').textContent = L.history;
-    document.getElementById('lbl-clear').textContent = L.clear;
-    document.getElementById('lbl-tweaks').textContent = L.tweaks;
-    document.getElementById('hist-title').innerHTML = `<span>${L.histTitle[0]}</span> ${L.histTitle[1]}`;
-    document.getElementById('tweak-lbl-accent').textContent = L.tweak_accent;
-    document.getElementById('tweak-lbl-scan').textContent = L.tweak_scan;
-    document.getElementById('tweak-lbl-sidebar').textContent = L.tweak_sidebar;
-    document.getElementById('lbl-scan-on').textContent = L.scan_on;
-    document.getElementById('lbl-scan-off').textContent = L.scan_off;
-    document.getElementById('lbl-sidebar-left').textContent = L.sidebar_left;
-    document.getElementById('lbl-sidebar-right').textContent = L.sidebar_right;
-    applyTheme(theme); // refresh theme label text
-    document.querySelectorAll('.lang-opt').forEach(o => {
-      o.classList.toggle('active', o.dataset.lang === l);
-    });
-    renderHistory();
-  }
-
-  /* ── Accent ─────────────────────────────────── */
-  function setAccent(key, el){
-    key = normalizeAccentKey(key);
-    accentKey = key;
-    localStorage.setItem('arsenal_accent', key);
-    applyAccent(key);
-    window.parent?.postMessage({type:'__edit_mode_set_keys', edits:{accent:key}}, '*');
-  }
-  function applyAccent(key){
-    key = normalizeAccentKey(key);
-    accentKey = key;
-    try { localStorage.setItem('arsenal_accent', key); } catch(e){}
-    const a = resolveAccentConfig(key);
-    const r = document.documentElement.style;
-    r.setProperty('--accent', a.accent);
-    r.setProperty('--accent2', a.accent2);
-    r.setProperty('--accent-mid', a.accentMid);
-    r.setProperty('--accent-glow', a.glow);
-    r.setProperty('--accent-soft', a.soft);
-    r.setProperty('--accent-border', a.border);
-    r.setProperty('--accent-grad', a.grad);
-    r.setProperty('--accent-mesh', a.mesh);
-    r.setProperty('--accent-angle', a.angle + 'deg');
-    r.setProperty('--on-accent', a.onAccent);
-    r.setProperty('--iframe-filter', 'hue-rotate(0deg)');
-    if(theme === 'dark'){
-      document.documentElement.setAttribute('data-amoled', 'true');
-      r.setProperty('--bg', AMOLED_BG.bg);
-      r.setProperty('--surface', AMOLED_BG.surface);
-      r.setProperty('--sidebar-bg', AMOLED_BG.sidebarBg);
-    } else {
-      r.removeProperty('--bg');
-      r.removeProperty('--surface');
-      r.removeProperty('--sidebar-bg');
-      r.removeProperty('--text-bright');
-      r.removeProperty('--text');
-      r.removeProperty('--muted');
-      r.removeProperty('--border');
-      r.removeProperty('--border-mid');
-      document.documentElement.removeAttribute('data-amoled');
-    }
-    renderSwatches();
-    broadcastTheme();
-  }
-
-  /* ── Scanlines ──────────────────────────────── */
-  function setScanlines(val, el){
-    scanlines = val;
-    localStorage.setItem('arsenal_scanlines', val);
-    applyScanlines(val);
-    document.querySelectorAll('.tweak-opt').forEach(o => {
-      if(o.id === 'lbl-scan-on' || o.id === 'lbl-scan-off'){
-        o.classList.toggle('active', (o.id === 'lbl-scan-on') === val);
-      }
-    });
-  }
-  function applyScanlines(val){
-    scanlines = !!val;
-    document.body.style.setProperty('--scanlines', val ? '1' : '0');
-    const el = document.querySelector('body');
-    if(!val) el.style.setProperty('--scan-display','none');
-    else el.style.removeProperty('--scan-display');
-    // toggle ::after via class
-    document.body.classList.toggle('no-scanlines', !val);
-    document.querySelectorAll('#lbl-scan-on, #lbl-scan-off').forEach(o => {
-      o.classList.toggle('active', (o.id === 'lbl-scan-on') === scanlines);
-    });
-    broadcastScanlines();
-  }
-
-  /* ── Sidebar side ────────────────────────────── */
-  function setSidebarSide(side, el){
-    sidebarSide = side === 'right' ? 'right' : 'left';
-    localStorage.setItem('arsenal_sidebar_side', sidebarSide);
-    applySidebarSide(sidebarSide);
-  }
-  function applySidebarSide(side){
-    sidebarSide = side === 'right' ? 'right' : 'left';
-    const sb = document.getElementById('sidebar');
-    document.body.classList.toggle('sidebar-right', sidebarSide === 'right');
-    document.querySelectorAll('[data-sidebar-side]').forEach(o => {
-      o.classList.toggle('active', o.dataset.sidebarSide === sidebarSide);
-    });
-    if(sidebarSide === 'right'){
-      document.body.style.flexDirection = 'row-reverse';
-      sb.style.borderRight = 'none';
-      sb.style.borderLeft = 'none';
-    } else {
-      document.body.style.flexDirection = 'row';
-      sb.style.borderRight = 'none';
-      sb.style.borderLeft = 'none';
-    }
-  }
-
-  /* ── History ─────────────────────────────────── */
-  function getHistory(){
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
-    catch(e){ return []; }
-  }
-  function saveHistory(h){
-    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0,40))); }
-    catch(e){}
-  }
-  function addHistory(entry){
-    const h = getHistory();
-    const last = h[0];
-    if(last && last.tool === entry.tool && last.query === entry.query && last.preview === entry.preview){
-      const lastTs = Number(last.ts || 0);
-      const nextTs = Number(entry.ts || Date.now());
-      if(nextTs - lastTs < 2000) return;
-    }
-    h.unshift(entry);
-    saveHistory(h);
-    const badge = document.getElementById('history-badge');
-    const count = h.length;
-    badge.textContent = count;
-    badge.style.display = count > 0 ? '' : 'none';
-    if(currentPanel === 'history') renderHistory();
-  }
-  function clearHistory(){
-    if(!confirm(lang === 'tr' ? 'Tüm geçmişi silmek istiyor musunuz?' : 'Clear all history?')) return;
-    localStorage.removeItem(HISTORY_KEY);
-    document.getElementById('history-badge').style.display = 'none';
-    renderHistory();
-  }
-
-  function relTime(ts){
-    const diff = Date.now() - ts;
-    const s = Math.round(diff/1000);
-    if(s < 60) return s + 's ago';
-    const m = Math.round(s/60);
-    if(m < 60) return m + 'm ago';
-    const hr = Math.round(m/60);
-    if(hr < 24) return hr + 'h ago';
-    return new Date(ts).toLocaleDateString();
-  }
-
-  function loadHistoryEntry(index){
-    const h = getHistory();
-    const entry = h[index];
-    if(!entry) return;
-    switchPanel(entry.tool);
-    const frameId = entry.tool === 'hunt' ? 'frame-hunt' : 'frame-phish';
-    const send = () => {
-      try {
-        document.getElementById(frameId)?.contentWindow?.postMessage({
-          type: 'arsenal_load_query',
-          query: entry.query || '',
-          indicatorList: entry.indicatorList || null,
-          formData: entry.formData || null
-        }, '*');
-      } catch(e){}
-    };
-    setTimeout(send, 180);
-  }
-
-  function renderHistory(){
-    const h = getHistory();
-    const el = document.getElementById('history-content');
-    const L = LABELS[lang];
-    const badge = document.getElementById('history-badge');
-    badge.textContent = h.length;
-    badge.style.display = h.length > 0 ? '' : 'none';
-
-    if(!h.length){
-      el.innerHTML = `<div class="history-empty">
-        <div class="history-empty-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div style="white-space:pre-line;line-height:1.7">${L.histEmpty}</div>
-      </div>`;
-      return;
-    }
-
-    const huntIcon = `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
-    const phishIcon = `<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
-
-    el.innerHTML = `<div class="history-list">${h.map((entry,i) => `
-      <div class="history-card" onclick="loadHistoryEntry(${i})" style="cursor:pointer;" title="${lang==='tr'?'Yüklemek için tıkla':'Click to load'}">
-        <div class="history-card-icon ${entry.tool}">
-          ${entry.tool === 'hunt' ? huntIcon : phishIcon}
-        </div>
-        <div class="history-card-body">
-          <div class="history-card-meta">
-            <span class="history-card-tool ${entry.tool}">${entry.tool === 'hunt' ? L.huntTool : L.phishTool}</span>
-            ${entry.count ? `<span class="history-card-count">${entry.count} indicators</span>` : ''}
-            ${entry.query ? `<span class="history-card-count" style="color:var(--accent);opacity:0.7">${lang==='tr'?'↩ yükle':'↩ load'}</span>` : ''}
-          </div>
-          <div class="history-card-preview">${escH(entry.preview || '')}</div>
-        </div>
-        <div class="history-card-time">${relTime(entry.ts)}</div>
-      </div>
-    `).join('')}</div>`;
-  }
-
-  function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  /* ── PostMessage bridge ──────────────────────── */
-  window.addEventListener('message', e => {
-    if(!e.data || e.data.type !== 'arsenal_query') return;
-    addHistory({
-      tool: e.data.tool,
-      preview: e.data.preview,
-      query: e.data.query || '',
-      count: e.data.count,
-      ts: e.data.ts || Date.now(),
-      indicatorList: e.data.indicatorList || null,
-      formData: e.data.formData || null
-    });
-  });
-
-  /* ── Tweaks host protocol ────────────────────── */
-  window.addEventListener('message', e => {
-    if(e.data?.type === '__activate_edit_mode') document.getElementById('tweaks').classList.add('open');
-    if(e.data?.type === '__deactivate_edit_mode') document.getElementById('tweaks').classList.remove('open');
-  });
-  window.parent.postMessage({type:'__edit_mode_available'}, '*');
-
-  /* ── Scroll restore ─────────────────────────── */
-  const scrollPos = {hunt:0, phish:0};
-  function getFrameScroll(id){ try{ return document.getElementById('frame-'+id)?.contentWindow?.scrollY||0; }catch(e){return 0;} }
-  function setFrameScroll(id, y){ try{ document.getElementById('frame-'+id)?.contentWindow?.scrollTo(0,y); }catch(e){} }
-
-  /* ── Scanlines toggle via class ─────────────── */
-  const style = document.createElement('style');
-  style.textContent = '.no-scanlines::after { display: none !important; }';
-  document.head.appendChild(style);
-
-  init();
+init();
 </script>
 </body>
 </html>
