@@ -15,7 +15,7 @@ The project is designed for fast analyst workflows, lightweight local usage, and
 - Builds KQL from indicator and phishing inputs
 - Keeps a compact query history inside the Arsenal launcher
 - Lets you load previous work back into either workspace
-- Includes guard-driven enrichment and provider lookups through the local broker
+- Includes guard-driven enrichment, provider lookups, and WHOIS/RDAP fallback through the local broker
 - Runs entirely as a local HTML-based experience, with no build step required
 
 ## Project structure
@@ -23,7 +23,9 @@ The project is designed for fast analyst workflows, lightweight local usage, and
 - `Arsenal.html` - main launcher and history hub
 - `src/indicators.html` - indicator composer workspace
 - `src/phishing.html` - phishing query helper workspace
+- `src/shared/kql-dock.css` - shared KQL dock styling used by both workspaces
 - `guard_broker_env.js` - optional local guard broker for reputation and enrichment checks
+- `package-lock.json` - locked Node dependency versions for the broker
 - `.env` - API keys for the broker, if you want external provider lookups
 
 ## Getting started
@@ -51,9 +53,20 @@ The broker reads provider keys from `.env`:
 - `ABUSEIPDB_API_KEY`
 - `IPINFO_API_KEY`
 - `OTX_API_KEY`
+- `MB_API_KEY`
 - `URLHAUS_API_KEY`
+- `WHOIS_API_KEY`
 
 Some providers work without a key, while others use the key only if you configure it.
+
+## Git hygiene
+
+The repository intentionally ignores local-only and sensitive files:
+
+- `.env` for API keys
+- `node_modules/` for installed packages
+- `graphify-out/`, `.claude/`, `CLAUDE.md`, `prompt.txt`, and `prompts/` for local workflow artifacts
+- generated screenshots such as `*.png`
 
 ## Notes
 
